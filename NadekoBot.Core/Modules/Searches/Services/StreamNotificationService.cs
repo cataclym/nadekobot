@@ -400,6 +400,7 @@ namespace NadekoBot.Modules.Searches.Services
                 /*.AddField(efb => efb.WithName(GetText(guildId, "viewers"))
                     .WithValue(status.IsLive ? status.Viewers.ToString() : "-")
                     .WithIsInline(true))*/
+                // removed viewer count stream notifs
                 .WithColor(status.IsLive ? NadekoBot.OkColor : NadekoBot.ErrorColor);
 
             if (!string.IsNullOrWhiteSpace(status.Title))
