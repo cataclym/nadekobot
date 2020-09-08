@@ -400,7 +400,6 @@ namespace NadekoBot.Modules.Searches.Services
                 /*.AddField(efb => efb.WithName(GetText(guildId, "viewers"))
                     .WithValue(status.IsLive ? status.Viewers.ToString() : "-")
                     .WithIsInline(true))*/
-                    
                 .WithColor(status.IsLive ? NadekoBot.OkColor : NadekoBot.ErrorColor);
 
             if (!string.IsNullOrWhiteSpace(status.Title))
