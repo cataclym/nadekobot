@@ -29,7 +29,7 @@ namespace NadekoBot.Modules.Games
                 {
                     var msg = await ReplyConfirmLocalizedAsync("picked", picked + Bc.BotConfig.CurrencySign)
                        .ConfigureAwait(false);
-                    msg.DeleteAfter(10);
+                    // msg.DeleteAfter(10);
                 }
 
                 if (((SocketGuild)ctx.Guild).CurrentUser.GuildPermissions.ManageMessages)

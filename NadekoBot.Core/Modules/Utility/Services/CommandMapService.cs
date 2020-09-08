@@ -85,7 +85,7 @@ namespace NadekoBot.Modules.Utility.Services
                         else
                             continue;
 
-                        try
+                        /*try
                         {
                             var toDelete = await channel.SendConfirmAsync($"{input} => {newInput}").ConfigureAwait(false);
                             var _ = Task.Run(async () =>
@@ -97,7 +97,7 @@ namespace NadekoBot.Modules.Utility.Services
                                 }).ConfigureAwait(false);
                             });
                         }
-                        catch { }
+                        catch { }*/
                         return newInput;
                     }
                 }

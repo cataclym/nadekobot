@@ -984,7 +984,7 @@ namespace NadekoBot.Modules.Administration.Services
                 try
                 {
                     var msg = (optMsg.HasValue ? optMsg.Value : null) as IUserMessage;
-                    if (msg == null || msg.IsAuthor(_client))
+                    if (msg == null || msg.Author.IsBot)
                         return;
 
                     if (!(ch is ITextChannel channel))
