@@ -120,9 +120,13 @@ namespace NadekoBot.Modules.Gambling
                             {
                                 full = "❌ " + full;
                             }
-                            else
+                            else if (p.State == User.UserState.Won)
                             {
                                 full = "✅ " + full;
+                            }
+                            else
+                            {
+                                full = "✋ " + full;
                             }
                         }
                         else if (p == bj.CurrentUser)
