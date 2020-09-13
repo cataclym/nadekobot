@@ -231,6 +231,8 @@ namespace NadekoBot.Core.Modules.Gambling.Common.Blackjack
                     else if (usr.State == User.UserState.Stand)
                         usr.State = hw < usr.GetHandValue()
                             ? User.UserState.Won
+                            : hw == usr.GetHandValue()
+                            ? User.UserState.Push
                             : User.UserState.Lost;
                     else
                         usr.State = User.UserState.Lost;
@@ -242,6 +244,10 @@ namespace NadekoBot.Core.Modules.Gambling.Common.Blackjack
                 if (usr.State == User.UserState.Won || usr.State == User.UserState.Blackjack)
                 {
                     await _cs.AddAsync(usr.DiscordUser.Id, "BlackJack-win", usr.Bet * 2, gamble: true).ConfigureAwait(false);
+                }
+                else if (usr.State == User.UserState.Push)
+                {
+                    await _cs.AddAsync(usr.DiscordUser.Id, "BlackJack-push", usr.Bet, gamble: true).ConfigureAwait(false);
                 }
             }
         }

@@ -45,7 +45,8 @@ namespace NadekoBot.Core.Modules.Gambling.Common.Blackjack
             Bust,
             Blackjack,
             Won,
-            Lost
+            Lost,
+            Push
         }
 
         public User(IUser user, long bet)
