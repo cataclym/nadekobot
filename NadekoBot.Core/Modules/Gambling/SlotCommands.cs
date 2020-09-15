@@ -147,12 +147,12 @@ namespace NadekoBot.Modules.Gambling
                 {
                     if (!await CheckBetMandatory(amount).ConfigureAwait(false))
                         return;
-                    const int maxAmount = 9999;
+                    /*const int maxAmount = 9999;
                     if (amount > maxAmount)
                     {
                         await ReplyErrorLocalizedAsync("max_bet_limit", maxAmount + Bc.BotConfig.CurrencySign).ConfigureAwait(false);
                         return;
-                    }
+                    }*/
 
                     if (!await _cs.RemoveAsync(ctx.User, "Slot Machine", amount, false, gamble: true).ConfigureAwait(false))
                     {
@@ -215,7 +215,7 @@ namespace NadekoBot.Modules.Gambling
 
                         using (var imgStream = bgImage.ToStream())
                         {
-                            await ctx.Channel.SendFileAsync(imgStream, "result.png", ctx.User.Mention + " " + msg + $"\n`{GetText("slot_bet")}:`{amount} `{GetText("won")}:` {amount * result.Multiplier}{Bc.BotConfig.CurrencySign}").ConfigureAwait(false);
+                            await ctx.Channel.SendFileAsync(imgStream, "result.png", Format.Bold(ctx.User.ToString()) + " " + msg + $"\n`{GetText("slot_bet")}:`{amount} `{GetText("won")}:` {amount * result.Multiplier}{Bc.BotConfig.CurrencySign}").ConfigureAwait(false);
                         }
                     }
                 }
