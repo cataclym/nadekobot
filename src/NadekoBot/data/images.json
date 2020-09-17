@@ -39,25 +39,13 @@
   },
   "Slots": {
     "Emojis": [
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/0.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/1.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/2.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/3.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/4.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/5.png"
+      "https://cdn.nadeko.bot/slots/0.png",
+      "https://cdn.nadeko.bot/slots/1.png",
+      "https://cdn.nadeko.bot/slots/2.png",
+      "https://cdn.nadeko.bot/slots/3.png",
+      "https://cdn.nadeko.bot/slots/4.png",
+      "https://media.discordapp.net/attachments/636372851485573120/756198782999330976/Discord_Money_Bag_Edited.png"
     ],
-    "Numbers": [
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/0.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/1.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/2.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/3.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/4.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/5.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/6.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/7.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/8.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/9.png"
-    ],
-    "Bg": "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/bg.png"
+    "Bg": "https://media.discordapp.net/attachments/636372851485573120/756199535163736224/Barbershop_Slots_Alans_Slots.png"
   }
 }
