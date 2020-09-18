@@ -251,10 +251,13 @@ namespace NadekoBot.Modules.Gambling.Services
         /// <returns>A hexadecimal string from 1000 to ffff</returns>
         private string GenerateCurrencyPassword()
         {
+            String[] gcPasswords = new String[] {"dreb", "baed", "cata", "dawid","yay", "nani", "pogg", "pizza", "rice", "texas"};
             // generate a number from 1000 to ffff
-            var num = _rng.Next(4096, 65536);
+            // var num = _rng.Next(4096, 65536);
             // convert it to hexadecimal
-            return num.ToString("x4");
+            // return num.ToString("x4");
+            var num = _rng.Next(0,10);
+            return gcPasswords[num]; 
         }
 
         public async Task<long> PickAsync(ulong gid, ITextChannel ch, ulong uid, string pass)
