@@ -301,6 +301,36 @@ namespace NadekoBot.Modules.Gambling
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.Administrator)]
+            public async Task ShopPriceChange(int index, int price)
+            {
+                index -= 1;
+                if (index < 0)
+                    return;
+                ShopEntry entry;
+                using (var uow = _db.GetDbContext())
+                {
+                    var entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
+                        set => set.Include(x => x.ShopEntries)
+                                  .ThenInclude(x => x.Items)).ShopEntries);
+                    entry = entries.ElementAtOrDefault(index);
+                    if (entry != null)
+                    {
+                       entry.Price = price;
+                    }
+                    uow.GuildConfigs.ForId(ctx.Guild.Id, set => set).ShopEntries = entries;
+                    uow.SaveChanges();
+                }
+                
+                if (entry == null)
+                    await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
+                else
+                    await ctx.Channel.EmbedAsync(EntryToEmbed(entry)
+                        .WithTitle(GetText("shop_item_price_changed"))).ConfigureAwait(false);
+            }
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [UserPerm(GuildPerm.Administrator)]
             public async Task ShopRemove(int index)
             {
                 index -= 1;

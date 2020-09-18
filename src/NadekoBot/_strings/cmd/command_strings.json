@@ -2812,6 +2812,13 @@
       "{0}shoprm 1"
     ]
   },
+  "shoppricechange": {
+    "Cmd": "shoppricechange shoppc",
+    "Desc": "Changes the price of an item from the shop by its ID.",
+    "Usage": [
+      "{0}shoppc 1 2000"
+    ]
+  },
   "shop": {
     "Cmd": "shop",
     "Desc": "Lists this server's administrators' shop. Paginated.",

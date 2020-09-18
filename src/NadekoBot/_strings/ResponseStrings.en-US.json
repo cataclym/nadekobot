@@ -785,6 +785,7 @@
   "gambling_random_unique_item": "Random unique item.",
   "gambling_shop_buy_error": "Error DMing item. You've been refunded.",
   "gambling_shop_item_not_found": "No item on that index found.",
+  "gambling_shop_item_price_changed": "Price updated.",
   "gambling_shop_item_purchase": "Item purchase successful.",
   "gambling_shop_item_rm": "Shop item removed",
   "gambling_shop_item_wrong_type": "That shop entry does not support item adding.",
