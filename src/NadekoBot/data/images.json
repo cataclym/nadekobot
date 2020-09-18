@@ -2,10 +2,10 @@
   "Version": 3,
   "Coins": {
     "Heads": [
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/coins/heads.png"
+      "https://cdn.nadeko.bot/coins/headsr.png"
     ],
     "Tails": [
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/coins/tails.png"
+      "https://cdn.nadeko.bot/coins/tailsr.png"
     ]
   },
   "Currency": [
@@ -37,12 +37,12 @@
   },
   "Slots": {
     "Emojis": [
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/0.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/1.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/2.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/3.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/4.png",
-      "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/emojis/5.png"
+      "https://cdn.nadeko.bot/slots/0.png",
+      "https://cdn.nadeko.bot/slots/1.png",
+      "https://cdn.nadeko.bot/slots/2.png",
+      "https://cdn.nadeko.bot/slots/3.png",
+      "https://cdn.nadeko.bot/slots/4.png",
+      "https://media.discordapp.net/attachments/717045059215687691/756612662619799562/OnoHatDerpSlots.gif"
     ],
     "Numbers": [
       "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/0.png",
@@ -56,6 +56,6 @@
       "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/8.png",
       "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/numbers/9.png"
     ],
-    "Bg": "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/slots/bg.png"
+    "Bg": "https://cdn.nadeko.bot/slots/slots_bg.png"
   }
 }
