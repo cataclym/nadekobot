@@ -358,7 +358,42 @@ namespace NadekoBot.Modules.Gambling
                 if (entry == null || entry2 == null)
                     await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
                 else
-                    await ReplyConfirmLocalizedAsync("shop_list_items_switched").ConfigureAwait(false);
+                    await ReplyConfirmLocalizedAsync("shop_switched").ConfigureAwait(false);
+            }
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [UserPerm(GuildPerm.Administrator)]
+            
+            public async Task ShopMove(int currentIndex, int newIndex)
+            {
+                currentIndex -= 1;
+                //newIndex -= 1;
+                if (currentIndex < 0 || newIndex <1)
+                    return;
+                ShopEntry entry;
+                ShopEntry last;
+                using (var uow = _db.GetDbContext())
+                {
+                    var entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
+                        set => set.Include(x => x.ShopEntries)
+                                  .ThenInclude(x => x.Items)).ShopEntries);
+                    entry = entries.ElementAtOrDefault(currentIndex);
+                    last = entries.LastOrDefault();
+                    if (newIndex > last.Index)
+                        newIndex = last.Index;
+                    if (entry != null)
+                        entry.Index = newIndex;
+                    uow.GuildConfigs.ForId(ctx.Guild.Id, set => set).ShopEntries = entries;
+                    uow.SaveChanges();
+                }
+                
+                if (entry == null)
+                    await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
+                else if (entry.Type == 0)
+                    await ReplyConfirmLocalizedAsync("shop_role_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex).ConfigureAwait(false);
+                else
+                    await ReplyConfirmLocalizedAsync("shop_list_item_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex).ConfigureAwait(false);
             }
 
             [NadekoCommand, Usage, Description, Aliases]

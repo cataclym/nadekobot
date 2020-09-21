@@ -2826,6 +2826,13 @@
       "{0}shopswap 2 15"
     ]
   },
+  "shopmove": {
+    "Cmd": "shopmove",
+    "Desc": "Moves an item in the shop by it's ID. First parameter is the current ID. Second paramater is the new ID",
+    "Usage": [
+      "{0}shopmove 2 15"
+    ]
+  },
   "shop": {
     "Cmd": "shop",
     "Desc": "Lists this server's administrators' shop. Paginated.",
