@@ -394,7 +394,8 @@ namespace NadekoBot.Modules.Gambling
                             foreach (int num in rangeToBeMoved)
                             {
                                 toBeMoved = entries.ElementAtOrDefault(num);
-                                toBeMoved.Index = num+1;
+                                if (toBeMoved != null) //not actually sure why this is necessary, it doesn't seem like it ever should be null.
+                                    toBeMoved.Index = num+1;
                             }
                         }
                         else
