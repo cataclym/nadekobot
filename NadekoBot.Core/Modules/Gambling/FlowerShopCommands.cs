@@ -368,8 +368,8 @@ namespace NadekoBot.Modules.Gambling
             public async Task ShopMove(int currentIndex, int newIndex)
             {
                 currentIndex -= 1;
-                //newIndex -= 1;
-                if (currentIndex < 0 || newIndex <1)
+                newIndex -= 1;
+                if (currentIndex < 0 || newIndex <0)
                     return;
                 ShopEntry entry;
                 ShopEntry last;
@@ -382,8 +382,32 @@ namespace NadekoBot.Modules.Gambling
                     last = entries.LastOrDefault();
                     if (newIndex > last.Index)
                         newIndex = last.Index;
-                    if (entry != null)
+                    if (entry != null && currentIndex != newIndex)
+                    {
+                        //the following loops drag the rest of the items in the shop to the right place after moving the selected entry.
+                        //this was the cleanest way I could find to make sure the command saves things at the right index. 
+                        //It kind of works without them, but will put things on an index one off from where it's supposed to.
+                        ShopEntry toBeMoved;
+                        if (currentIndex > newIndex)
+                        { 
+                            IEnumerable<int> rangeToBeMoved = Enumerable.Range(newIndex, currentIndex-1);
+                            foreach (int num in rangeToBeMoved)
+                            {
+                                toBeMoved = entries.ElementAtOrDefault(num);
+                                toBeMoved.Index = num+1;
+                            }
+                        }
+                        else
+                        {
+                            IEnumerable<int> rangeToBeMoved = Enumerable.Range(currentIndex, newIndex-1);
+                            foreach (int num in rangeToBeMoved)
+                            {
+                                toBeMoved = entries.ElementAtOrDefault(num);
+                                toBeMoved.Index = num-1;
+                            }
+                        }
                         entry.Index = newIndex;
+                    }
                     uow.GuildConfigs.ForId(ctx.Guild.Id, set => set).ShopEntries = entries;
                     uow.SaveChanges();
                 }
@@ -391,9 +415,9 @@ namespace NadekoBot.Modules.Gambling
                 if (entry == null)
                     await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
                 else if (entry.Type == 0)
-                    await ReplyConfirmLocalizedAsync("shop_role_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex).ConfigureAwait(false);
+                    await ReplyConfirmLocalizedAsync("shop_role_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex+1).ConfigureAwait(false);
                 else
-                    await ReplyConfirmLocalizedAsync("shop_list_item_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex).ConfigureAwait(false);
+                    await ReplyConfirmLocalizedAsync("shop_list_item_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex+1).ConfigureAwait(false);
             }
 
             [NadekoCommand, Usage, Description, Aliases]
