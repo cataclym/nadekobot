@@ -399,11 +399,12 @@ namespace NadekoBot.Modules.Gambling
                         }
                         else
                         {
-                            IEnumerable<int> rangeToBeMoved = Enumerable.Range(currentIndex, newIndex-1);
+                            IEnumerable<int> rangeToBeMoved = Enumerable.Range(currentIndex+1, newIndex);
                             foreach (int num in rangeToBeMoved)
                             {
                                 toBeMoved = entries.ElementAtOrDefault(num);
-                                toBeMoved.Index = num-1;
+                                if (toBeMoved != null) //not actually sure why this is necessary, it doesn't seem like it ever should be null.
+                                    toBeMoved.Index = num-1;
                             }
                         }
                         entry.Index = newIndex;
