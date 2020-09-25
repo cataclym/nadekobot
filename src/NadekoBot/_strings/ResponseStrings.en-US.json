@@ -622,6 +622,7 @@
   "utility_listservers_none": "No servers found on that page.",
   "utility_list_of_repeaters": "List of repeaters",
   "utility_members": "Members",
+  "utility_members_text": "Total: {0}\nHumans: {1}\n Bots: {2}",
   "utility_memory": "Memory",
   "utility_messages": "Messages",
   "utility_repeater_created": "Repeater Created",
