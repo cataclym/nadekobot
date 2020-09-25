@@ -390,22 +390,20 @@ namespace NadekoBot.Modules.Gambling
                         ShopEntry toBeMoved;
                         if (currentIndex > newIndex)
                         { 
-                            IEnumerable<int> rangeToBeMoved = Enumerable.Range(newIndex, currentIndex-1);
+                            var rangeToBeMoved = Enumerable.Range(newIndex, currentIndex-newIndex);
                             foreach (int num in rangeToBeMoved)
                             {
                                 toBeMoved = entries.ElementAtOrDefault(num);
-                                if (toBeMoved != null) //not actually sure why this is necessary, it doesn't seem like it ever should be null.
-                                    toBeMoved.Index = num+1;
+                                toBeMoved.Index = num+1;
                             }
                         }
                         else
                         {
-                            IEnumerable<int> rangeToBeMoved = Enumerable.Range(currentIndex+1, newIndex);
-                            foreach (int num in rangeToBeMoved)
+                            var rangeToBeMoved = Enumerable.Range(currentIndex+1, newIndex-currentIndex);
+                            foreach (var num in rangeToBeMoved)
                             {
                                 toBeMoved = entries.ElementAtOrDefault(num);
-                                if (toBeMoved != null) //not actually sure why this is necessary, it doesn't seem like it ever should be null.
-                                    toBeMoved.Index = num-1;
+                                toBeMoved.Index = num-1;
                             }
                         }
                         entry.Index = newIndex;
@@ -419,7 +417,7 @@ namespace NadekoBot.Modules.Gambling
                 else if (entry.Type == 0)
                     await ReplyConfirmLocalizedAsync("shop_role_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex+1).ConfigureAwait(false);
                 else
-                    await ReplyConfirmLocalizedAsync("shop_list_item_moved", Format.Bold(entry.RoleName), currentIndex+1, newIndex+1).ConfigureAwait(false);
+                    await ReplyConfirmLocalizedAsync("shop_list_item_moved", Format.Bold(entry.Name), currentIndex+1, newIndex+1).ConfigureAwait(false);
             }
 
             [NadekoCommand, Usage, Description, Aliases]
