@@ -63,7 +63,7 @@ namespace NadekoBot.Modules.Utility
                     .WithColor(NadekoBot.OkColor);
                 if (Uri.IsWellFormedUriString(guild.IconUrl, UriKind.Absolute))
                     embed.WithThumbnailUrl(guild.IconUrl);
-                if (guild.Emotes.Any())
+                /*if (guild.Emotes.Any())
                 {
                     embed.AddField(fb => 
                         fb.WithName(GetText("custom_emojis") + $"({guild.Emotes.Count})")
@@ -72,7 +72,7 @@ namespace NadekoBot.Modules.Utility
                             .Take(20)
                             .Select(e => $"{e.Name} {e.ToString()}"))
                             .TrimTo(1020)));
-                }
+                }*/
                 await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
             }
 
