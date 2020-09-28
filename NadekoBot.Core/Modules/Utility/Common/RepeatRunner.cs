@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 using Discord.WebSocket;
+using NadekoBot.Common;
 using NadekoBot.Extensions;
 using NadekoBot.Core.Services.Database.Models;
 using NLog;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using NadekoBot.Modules.Utility.Services;
 
 namespace NadekoBot.Modules.Utility.Common
@@ -160,7 +160,7 @@ namespace NadekoBot.Modules.Utility.Common
             // next execution is interval amount of time after now
             NextDateTime = DateTime.UtcNow + Repeater.Interval;
 
-            var toSend = "🔄 " + Repeater.Message;
+            var toSend = Repeater.Message;
             try
             {
                 Channel = Channel ?? Guild.GetTextChannel(Repeater.ChannelId);
@@ -198,8 +198,24 @@ namespace NadekoBot.Modules.Utility.Common
                 {
                     // ignored
                 }
+                IMessage newMsg = null;
 
-                var newMsg = await Channel.SendMessageAsync(toSend.SanitizeMentions()).ConfigureAwait(false);
+                if (CREmbed.TryParse(toSend, out var embedData))
+                {
+                    try
+                    {
+                        newMsg = await Channel.EmbedAsync(embedData.ToEmbed(), embedData.PlainText?.SanitizeMentions() ?? "").ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Warn(ex);
+                    }
+                }
+                else
+                {
+                    newMsg = await Channel.SendMessageAsync(toSend.SanitizeMentions()).ConfigureAwait(false);
+                }
+
 
                 if (Repeater.NoRedundant)
                 {
