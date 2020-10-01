@@ -2850,7 +2850,7 @@
   },
   "refund": {
     "Cmd": "refund",
-    "Desc": "Refundss an item from the shop on a given index. Only roles can be refunded.",
+    "Desc": "Refunds an item from the shop on a given index. Only roles can be refunded.",
     "Usage": [
       "{0}refund 2"
     ]
