@@ -195,9 +195,69 @@ namespace NadekoBot.Modules.Gambling
                         return;
                     }
                 }
-
             }
 
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            public async Task Refund(int index)
+            {
+                index -= 1;
+                if (index < 0)
+                    return;
+                ShopEntry entry;
+                using (var uow = _db.GetDbContext())
+                {
+                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id, set => set
+                        .Include(x => x.ShopEntries)
+                        .ThenInclude(x => x.Items));
+                    var entries = new IndexedCollection<ShopEntry>(config.ShopEntries);
+                    entry = entries.ElementAtOrDefault(index);
+                    uow.SaveChanges();
+                }
+
+                if (entry == null)
+                {
+                    await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
+                    return;
+                }
+
+                if (entry.Type == ShopEntryType.Role)
+                {
+                    var guser = (IGuildUser)ctx.User;
+                    var role = ctx.Guild.GetRole(entry.RoleId);
+
+                    if (role == null)
+                    {
+                        await ReplyErrorLocalizedAsync("shop_role_not_found").ConfigureAwait(false);
+                        return;
+                    }
+                    if (guser.GetRoles().Contains(role))
+                    {
+                        try
+                        {
+                            await guser.RemoveRoleAsync(role).ConfigureAwait(false);
+                        }
+                            catch (Exception ex)
+                        {
+                            _log.Warn(ex);
+                            await ReplyErrorLocalizedAsync("shop_role_refund_error").ConfigureAwait(false);
+                            return;
+                        }
+                        await _cs.AddAsync(ctx.User.Id, $"Shop role refund", entry.Price).ConfigureAwait(false);
+                        await ReplyConfirmLocalizedAsync("shop_role_refund").ConfigureAwait(false);
+                        return;
+                    }
+                    else
+                    {
+                        await ReplyErrorLocalizedAsync("shop_role_not_had").ConfigureAwait(false);
+                    }
+                }
+                else if (entry.Type == ShopEntryType.List)
+                {
+                    await ReplyErrorLocalizedAsync("shop_non_refundable").ConfigureAwait(false);
+                    return;
+                }
+            }
             private static long GetProfitAmount(int price) =>
                 (int)(Math.Ceiling(0.90 * price));
 
