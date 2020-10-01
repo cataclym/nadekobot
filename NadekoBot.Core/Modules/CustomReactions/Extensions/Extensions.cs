@@ -73,7 +73,7 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
 
             var rep = new ReplacementBuilder()
                 .WithDefault(ctx.Author, ctx.Channel, (ctx.Channel as ITextChannel)?.Guild as SocketGuild, client)
-                .WithOverride("%target%", () => ctx.Content.Substring(substringIndex).Trim())
+                .WithOverride("%target%", () => ctx.Resolve(roleHandling: TagHandling.NameNoPrefix).Substring(substringIndex).Trim())
                 .Build();
 
             str = rep.Replace(str);
@@ -95,7 +95,6 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
         public static async Task<IUserMessage> Send(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, CustomReactionsService crs)
         {
             var channel = cr.DmResponse ? await ctx.Author.GetOrCreateDMChannelAsync().ConfigureAwait(false) : ctx.Channel;
-
             if (CREmbed.TryParse(cr.Response, out CREmbed crembed))
             {
                 var trigger = cr.Trigger.ResolveTriggerString(ctx, client);
@@ -113,7 +112,7 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
 
                 var rep = new ReplacementBuilder()
                     .WithDefault(ctx.Author, ctx.Channel, (ctx.Channel as ITextChannel)?.Guild as SocketGuild, client)
-                    .WithOverride("%target%", () => ctx.Content.Substring(substringIndex).Trim())
+                    .WithOverride("%target%", () => ctx.Resolve(roleHandling: TagHandling.NameNoPrefix).Substring(substringIndex).Trim())
                     .Build();
 
                 rep.Replace(crembed);
