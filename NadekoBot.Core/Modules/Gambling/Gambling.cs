@@ -1,4 +1,4 @@
-﻿using Discord;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using NadekoBot.Common;
@@ -77,7 +77,7 @@ namespace NadekoBot.Modules.Gambling
                 .AddField(GetText("bot_currency"), ec.Bot + _bc.BotConfig.CurrencySign)
                 .AddField(GetText("total"), ((BigInteger)(ec.Cash + ec.Planted + ec.Waifus)).ToString("N", _enUsCulture) + _bc.BotConfig.CurrencySign)
                 .WithOkColor();
-                // ec.Cash already includes ec.Bot, as it's just the sum of all items in the CurrencyAmount column of the DiscordUser table
+                // ec.Cash already contains ec.Bot as it's the total of all values in the CurrencyAmount column of the DiscordUser table
             await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
         }
 
