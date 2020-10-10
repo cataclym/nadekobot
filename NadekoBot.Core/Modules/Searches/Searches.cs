@@ -701,7 +701,7 @@ namespace NadekoBot.Modules.Searches
             if (usr == null)
                 usr = (IGuildUser)ctx.User;
 
-            var avatarUrl = usr.GetAvatarUrl(ImageFormat.Auto, 2048);
+            var avatarUrl = usr.RealAvatarUrl(2048);
 
             if (avatarUrl == null)
             {
@@ -714,6 +714,7 @@ namespace NadekoBot.Modules.Searches
                 .AddField(efb => efb.WithName("Avatar Url").WithValue(avatarUrl).WithIsInline(false))
                 .WithThumbnailUrl(avatarUrl.ToString())
                 .WithImageUrl(avatarUrl.ToString()), ctx.User.Mention).ConfigureAwait(true);
+                .WithThumbnailUrl(avatarUrl.ToString()), ctx.User.Mention).ConfigureAwait(false);
         }
 
         // done in 3.0
