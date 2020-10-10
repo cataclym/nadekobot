@@ -713,7 +713,7 @@ namespace NadekoBot.Modules.Searches
                 .AddField(efb => efb.WithName("Username").WithValue(usr.ToString()).WithIsInline(false))
                 .AddField(efb => efb.WithName("Avatar Url").WithValue(avatarUrl).WithIsInline(false))
                 .WithThumbnailUrl(avatarUrl.ToString())
-                .WithImageUrl(avatarUrl.ToString()), ctx.User.Mention).ConfigureAwait(true);
+                .WithImageUrl(avatarUrl.ToString())
                 .WithThumbnailUrl(avatarUrl.ToString()), ctx.User.Mention).ConfigureAwait(false);
         }
 
