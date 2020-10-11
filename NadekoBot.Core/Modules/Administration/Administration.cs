@@ -187,7 +187,7 @@ namespace NadekoBot.Modules.Administration
         [RequireContext(ContextType.Guild)]
         [UserPerm(GuildPerm.ManageChannels)]
         [BotPerm(GuildPerm.ManageChannels)]
-        public async Task Nsfwtgl()
+        public async Task NsfwToggle()
         {
             var channel = (ITextChannel)ctx.Channel;
             var isEnabled = channel.IsNsfw;
