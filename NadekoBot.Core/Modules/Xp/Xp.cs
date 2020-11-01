@@ -35,7 +35,7 @@ namespace NadekoBot.Modules.Xp
         [RequireContext(ContextType.Guild)]
         public async Task Experience([Leftover] IUser user = null)
         {
-            user = user ?? ctx.User;
+            user ??= ctx.User;
             await ctx.Channel.TriggerTypingAsync().ConfigureAwait(false);
             var (img, fmt) = await _service.GenerateXpImageAsync((IGuildUser)user).ConfigureAwait(false);
             using (img)
@@ -236,14 +236,7 @@ namespace NadekoBot.Modules.Xp
                     .WithOkColor();
 
                 List<UserXpStats> users;
-                if (opts.Clean)
-                {
-                    users = allUsers.Skip(curPage * 9).Take(9).ToList();
-                }
-                else
-                {
-                    users = _service.GetUserXps(ctx.Guild.Id, curPage);
-                }
+                users = opts.Clean ? allUsers.Skip(curPage * 9).Take(9).ToList() : _service.GetUserXps(ctx.Guild.Id, curPage);
 
                 if (!users.Any())
                     return embed.WithDescription("-");
