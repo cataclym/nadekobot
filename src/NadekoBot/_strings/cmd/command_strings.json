@@ -3287,6 +3287,13 @@
       "{0}rip @Someone"
     ]
   },
+  "simp": {
+    "cmd": "simp",
+    "desc": "Show just how much of a simp someone is.",
+    "usage": [
+      "{0}simp @Someone"
+    ]
+  },
   "autodisconnect": {
     "cmd": "autodisconnect autodc",
     "desc": "Toggles whether the bot should disconnect from the voice channel once it's done playing all of the songs.",

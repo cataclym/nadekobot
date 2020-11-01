@@ -204,6 +204,67 @@ namespace NadekoBot.Modules.Searches.Services
                 return bg.ToStream().ToArray();
             }
         }
+        public async Task<Stream> GetSimpPictureAsync(string text, Uri imgUrl)
+        {
+                byte[] data = await _cache.GetOrAddCachedDataAsync<(string text, Uri), byte[]>($"nadeko_simp_{text}_{imgUrl}",
+                GetSimpPictureFactory,
+                (text, imgUrl),
+                TimeSpan.FromDays(1)).ConfigureAwait(false);
+
+            return data.ToStream();
+        }
+
+        private void DrawSimpAvatar(Image bg, Image avatarImage)
+            => bg.Mutate(x => x.DrawImage(avatarImage, new Point(600, 280), new GraphicsOptions()));
+
+        public async Task<byte[]> GetSimpPictureFactory((string text, Uri avatarUrl) arg)
+        {
+            var (text, avatarUrl) = arg;
+            using (var bg = Image.Load<Rgba32>(_imgs.Simp.ToArray()))
+            {
+                var (succ, data) = (false, (byte[])null); //await _cache.TryGetImageDataAsync(avatarUrl);
+                if (!succ)
+                {
+                    using (var http = _httpFactory.CreateClient())
+                    {
+                        data = await http.GetByteArrayAsync(avatarUrl);
+                        using (var avatarImg = Image.Load<Rgba32>(data))
+                        {
+                            avatarImg.Mutate(x => x
+                                .Resize(250, 250));
+                            data = avatarImg.ToStream().ToArray();
+                            DrawSimpAvatar(bg, avatarImg);
+                        }
+                        await _cache.SetImageDataAsync(avatarUrl, data);
+                    }
+                }
+                else
+                {
+                    using (var avatarImg = Image.Load<Rgba32>(data))
+                    {
+                        DrawAvatar(bg, avatarImg);
+                    }
+                }
+
+                bg.Mutate(x => x.DrawText(
+                    new TextGraphicsOptions()
+                    {
+                        TextOptions = new TextOptions
+                        {
+                            DpiX = 200,
+                            DpiY = 200,
+                            HorizontalAlignment = HorizontalAlignment.Center
+                        }.WithFallbackFonts(_fonts.FallBackFonts)
+                    },
+                    text,
+                    _fonts.RipFont,
+                    SixLabors.ImageSharp.Color.White,
+                    new PointF(700, 525)));
+
+                return bg.ToStream().ToArray();
+            }
+        }
+
 
         public Task<WeatherData> GetWeatherDataAsync(string query)
         {

@@ -65,6 +65,22 @@ namespace NadekoBot.Modules.Searches
         }
 
         [NadekoCommand, Usage, Description, Aliases]
+        public async Task Simp([Leftover] IGuildUser usr)
+        {
+            var av = usr.RealAvatarUrl(128);
+            if (av == null)
+                return;
+            using (var picStream = await _service.GetSimpPictureAsync(usr.Nickname ?? usr.Username, av).ConfigureAwait(false))
+            {
+                await ctx.Channel.SendFileAsync(
+                    picStream,
+                    "simp.png",
+                    $"Haha, you're a simp {usr.Mention}")
+                    .ConfigureAwait(false);
+            }
+        }
+
+        [NadekoCommand, Usage, Description, Aliases]
         [RequireContext(ContextType.Guild)]
         [UserPerm(GuildPerm.ManageMessages)]
         [Priority(1)]

@@ -26,6 +26,7 @@ namespace NadekoBot.Core.Services
 
         byte[] Rip { get; }
         byte[] RipOverlay { get; }
+        byte[] Simp { get; }
 
         byte[] GetCard(string key);
 

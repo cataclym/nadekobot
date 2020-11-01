@@ -51,6 +51,7 @@ namespace NadekoBot.Core.Services.Impl
         public byte[] XpBackground => GetByteData(ImageKey.Xp_Bg);
 
         public byte[] Rip => GetByteData(ImageKey.Rip_Bg);
+        public byte[] Simp => GetByteData(ImageKey.Simp_Bg);
 
         public byte[] RipOverlay => GetByteData(ImageKey.Rip_Overlay);
 
@@ -73,6 +74,7 @@ namespace NadekoBot.Core.Services.Impl
             Rip_Bg,
             Rip_Overlay,
             Currency,
+            Simp_Bg
         }
 
         public RedisImagesCache(ConnectionMultiplexer con, IBotCredentials creds)
