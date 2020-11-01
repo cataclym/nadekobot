@@ -140,7 +140,7 @@ namespace NadekoBot.Modules.Searches.Services
 
         public async Task<Stream> GetRipPictureAsync(string text, Uri imgUrl)
         {
-            byte[] data = await _cache.GetOrAddCachedDataAsync<(string text, Uri), byte[]>($"nadeko_rip_{text}_{imgUrl}",
+            byte[] data = await _cache.GetOrAddCachedDataAsync($"nadeko_rip_{text}_{imgUrl}",
                 GetRipPictureFactory,
                 (text, imgUrl),
                 TimeSpan.FromDays(1)).ConfigureAwait(false);
@@ -149,7 +149,7 @@ namespace NadekoBot.Modules.Searches.Services
         }
 
         private void DrawAvatar(Image bg, Image avatarImage)
-            => bg.Mutate(x => x.DrawImage(avatarImage, new Point(600, 280), new GraphicsOptions()));
+            => bg.Mutate(x => x.Grayscale().DrawImage(avatarImage, new Point(83, 139), new GraphicsOptions()));
 
         public async Task<byte[]> GetRipPictureFactory((string text, Uri avatarUrl) arg)
         {
@@ -165,7 +165,7 @@ namespace NadekoBot.Modules.Searches.Services
                         using (var avatarImg = Image.Load<Rgba32>(data))
                         {
                             avatarImg.Mutate(x => x
-                                .Resize(320, 320)
+                                .Resize(85, 85)
                                 .ApplyRoundedCorners(42));
                             data = avatarImg.ToStream().ToArray();
                             DrawAvatar(bg, avatarImg);
@@ -192,8 +192,14 @@ namespace NadekoBot.Modules.Searches.Services
                     },
                     text,
                     _fonts.RipFont,
-                    SixLabors.ImageSharp.Color.White,
-                    new PointF(500, 790)));
+                    SixLabors.ImageSharp.Color.Black,
+                    new PointF(25, 225)));
+
+                //flowa
+                using (var flowers = Image.Load(_imgs.RipOverlay.ToArray()))
+                {
+                    bg.Mutate(x => x.DrawImage(flowers, new Point(0, 0), new GraphicsOptions()));
+                }
 
                 return bg.ToStream().ToArray();
             }
