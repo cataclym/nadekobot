@@ -138,20 +138,11 @@ namespace NadekoBot.Extensions
 
         public static string Unmention(this string str) => str.Replace("@", "ම", StringComparison.InvariantCulture);
 
-        public static string SanitizeMentions(this string str)
-        {
-            var newStr = str.Replace("@everyone", "@everyοne", StringComparison.InvariantCultureIgnoreCase)
-                            .Replace("@here", "@һere", StringComparison.InvariantCultureIgnoreCase);
-            var wordsInStr = newStr.Split(' ');
-            foreach (var word in wordsInStr)
-            {
-                if(MentionUtils.TryParseRole(word, out var roleId))
-                {
-                    newStr = newStr.Replace(roleId.ToString(), $"‍{roleId}");
-                }
-            }
-            return newStr;
-        }
+        public static string SanitizeMentions(this string str) =>
+            str.Replace("@everyone", "@everyοne", StringComparison.InvariantCultureIgnoreCase)
+               .Replace("@here", "@һere", StringComparison.InvariantCultureIgnoreCase)
+               .Replace("<@&", "<ම&", StringComparison.InvariantCultureIgnoreCase);
+
         public static string ToBase64(this string plainText)
         {
             var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
