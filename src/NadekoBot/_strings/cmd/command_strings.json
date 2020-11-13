@@ -1579,7 +1579,7 @@
     "Cmd": "memegen",
     "Desc": "Generates a meme from memelist with specified text. Separate multiple text values with semicolons. Provide no meme test to see an example meme with that template.",
     "Usage": [
-      "{0}memegen biw gets iced coffee;in the winter;",
+      "{0}memegen biw gets iced coffee;in the winter",
       "{0}memegen ntot"
     ]
   },
