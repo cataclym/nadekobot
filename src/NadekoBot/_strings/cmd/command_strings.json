@@ -1570,16 +1570,17 @@
   },
   "memelist": {
     "Cmd": "memelist",
-    "Desc": "Pulls a list of memes you can use with `{0}memegen` from http://memegen.link/templates/",
+    "Desc": "Pulls a list of memes you can use with `{0}memegen` from http://api.memegen.link/templates/\nDisplays the meme name in bold, followed by the key you use in the command.\nFor intance, for \"**Ancient Aliens Guy:** aag\" you'd use `aag`",
     "Usage": [
       "{0}memelist"
     ]
   },
   "memegen": {
     "Cmd": "memegen",
-    "Desc": "Generates a meme from memelist with top and bottom text.",
+    "Desc": "Generates a meme from memelist with specified text. Separate multiple text values with semicolons.",
     "Usage": [
-      "{0}memegen biw \"gets iced coffee\" \"in the winter\""
+      "{0}memegen biw gets iced coffee;in the winter;",
+      "{0}memegen ntot pls fix;no troubleshoot;only fix"
     ]
   },
   "weather": {
