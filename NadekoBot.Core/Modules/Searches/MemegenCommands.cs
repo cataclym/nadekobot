@@ -75,14 +75,17 @@ namespace NadekoBot.Modules.Searches
             }
 
             [NadekoCommand, Usage, Description, Aliases]
-            public async Task Memegen(string meme, [Leftover] string memeText)
+            public async Task Memegen(string meme, [Leftover] string memeText = null)
             {
-                var memeTextArray = memeText.Split(';');
                 var memeUrl = $"http://api.memegen.link/{meme}";
-                foreach(var text in memeTextArray)
+                if (memeText != null)
                 {
-                    var newText = Replace(text);
-                    memeUrl += $"/{newText}";
+                    var memeTextArray = memeText.Split(';');
+                    foreach(var text in memeTextArray)
+                    {
+                        var newText = Replace(text);
+                        memeUrl += $"/{newText}";
+                    }
                 }
                 memeUrl += ".png";
                 await ctx.Channel.SendMessageAsync(memeUrl)
