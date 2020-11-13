@@ -1570,7 +1570,7 @@
   },
   "memelist": {
     "Cmd": "memelist",
-    "Desc": "Pulls a list of memes you can use with `{0}memegen` from http://api.memegen.link/templates/\nDisplays the meme name in bold, followed by the key you use in the command.\nFor intance, for \"**Ancient Aliens Guy:** aag\" you'd use `aag`",
+    "Desc": "Shows a list of template keys (and their repspective names) used for `{0}memegen`.",
     "Usage": [
       "{0}memelist"
     ]

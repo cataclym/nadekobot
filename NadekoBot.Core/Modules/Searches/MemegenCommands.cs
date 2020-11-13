@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -60,16 +61,16 @@ namespace NadekoBot.Modules.Searches
                     await ctx.SendPaginatedConfirmAsync(page, curPage =>
                     {
                         var templates = "";
-                        foreach (var template in data.Skip(curPage * 20).Take(20))
+                        foreach (var template in data.Skip(curPage * 15).Take(15))
                         {
-                            templates += $"**{template.Name}:**  {template.Key}\n";
+                            templates += $"**{template.Name}:**\n key: `{template.Key}`\n";
                         }
                         var embed = new EmbedBuilder()
                             .WithOkColor()
                             .WithDescription(templates);
 
                         return embed;
-                    }, data.Count, 20);
+                    }, data.Count, 15);
                     //await ctx.Channel.SendTableAsync(data, x => $"{x,-15}", 3).ConfigureAwait(false);
                 }
             }
@@ -78,7 +79,7 @@ namespace NadekoBot.Modules.Searches
             public async Task Memegen(string meme, [Leftover] string memeText = null)
             {
                 var memeUrl = $"http://api.memegen.link/{meme}";
-                if (memeText != null)
+                if (!string.IsNullOrWhiteSpace(memeText))
                 {
                     var memeTextArray = memeText.Split(';');
                     foreach(var text in memeTextArray)
