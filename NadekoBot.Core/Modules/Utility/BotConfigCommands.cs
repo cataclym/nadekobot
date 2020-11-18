@@ -22,9 +22,9 @@ namespace NadekoBot.Modules.Utility
                 foreach(var name in names)
                 {
                     data.TryGetValue(name, out var value);
-                    if(value?.Length > 30 )
+                    if(value?.Length > 30 && name != "CurrencySign")
                         value = value.Substring(0, 30) + "...";
-                    values += $"{value}\n";
+                    values += $"{value.Replace('\n',' ')}\n";
                 }
                 
                 var embed = new EmbedBuilder();
