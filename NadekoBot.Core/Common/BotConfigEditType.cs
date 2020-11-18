@@ -67,7 +67,7 @@
         /// How it looks: https://puu.sh/B0BLV.png
         /// Default is "Use `.h` for help". 
         /// </summary>
-        DmHelpString,
+        DMHelpString,
         /// <summary>
         /// The strings which will be sent whenever someone types `.h`. Supports embeds.
         /// You can also use {0} placeholder which will be replaced with your bot's
