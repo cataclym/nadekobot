@@ -24,7 +24,7 @@ namespace NadekoBot.Modules.Utility
                     data.TryGetValue(name, out var value);
                     if(value?.Length > 30 && name != "CurrencySign")
                         value = value.Substring(0, 30) + "...";
-                    values += $"{value.Replace('\n',' ')}\n";
+                    values += $"{value?.Replace("\n","")}\n";
                 }
                 
                 var embed = new EmbedBuilder();
