@@ -1,4 +1,5 @@
-﻿using NadekoBot.Common;
+﻿using System.Collections.Generic;
+using NadekoBot.Common;
 using NadekoBot.Core.Services.Database.Models;
 
 namespace NadekoBot.Core.Services
@@ -8,5 +9,6 @@ namespace NadekoBot.Core.Services
         BotConfig BotConfig { get; }
         void Reload();
         bool Edit(BotConfigEditType type, string newValue);
+        Dictionary<string, string> GetValues();
     }
 }

@@ -2,6 +2,7 @@
 using Discord.Commands;
 using NadekoBot.Common;
 using NadekoBot.Common.Attributes;
+using NadekoBot.Extensions;
 using System;
 using System.Threading.Tasks;
 
@@ -16,7 +17,22 @@ namespace NadekoBot.Modules.Utility
             public async Task BotConfigEdit()
             {
                 var names = Enum.GetNames(typeof(BotConfigEditType));
-                await ReplyAsync(string.Join(", ", names)).ConfigureAwait(false);
+                var data = Bc.GetValues();
+                var values = "";
+                foreach(var name in names)
+                {
+                    data.TryGetValue(name, out var value);
+                    if(value?.Length > 30 )
+                        value = value.Substring(0, 30) + "...";
+                    values += $"{value}\n";
+                }
+                
+                var embed = new EmbedBuilder();
+                embed.WithTitle("Bot Config");
+                embed.WithOkColor();
+                embed.AddField(fb => fb.WithName("Names").WithValue(string.Join("\n", names)).WithIsInline(true));
+                embed.AddField(fb => fb.WithName("Values").WithValue(values).WithIsInline(true));
+                await ctx.Channel.EmbedAsync(embed: embed).ConfigureAwait(false);
             }
 
             [NadekoCommand, Usage, Description, Aliases]
