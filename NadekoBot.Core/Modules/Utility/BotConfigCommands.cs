@@ -4,6 +4,7 @@ using NadekoBot.Common;
 using NadekoBot.Common.Attributes;
 using NadekoBot.Extensions;
 using System;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace NadekoBot.Modules.Utility
@@ -17,22 +18,21 @@ namespace NadekoBot.Modules.Utility
             public async Task BotConfigEdit()
             {
                 var names = Enum.GetNames(typeof(BotConfigEditType));
-                var data = Bc.GetValues();
-                var values = "";
+                var valuesSb = new StringBuilder();
                 foreach(var name in names)
                 {
-                    data.TryGetValue(name, out var value);
-                    if(value?.Length > 30 && name != "CurrencySign")
-                        value = value.Substring(0, 30) + "...";
-                    values += $"{value?.Replace("\n","")}\n";
+                    var value = Bc.GetValue(name);
+                    if(name != "CurrencySign")
+                        value = value.TrimTo(30);
+                    valuesSb.AppendLine(value.Replace("\n", ""));
                 }
                 
-                var embed = new EmbedBuilder();
-                embed.WithTitle("Bot Config");
-                embed.WithOkColor();
-                embed.AddField(fb => fb.WithName("Names").WithValue(string.Join("\n", names)).WithIsInline(true));
-                embed.AddField(fb => fb.WithName("Values").WithValue(values).WithIsInline(true));
-                await ctx.Channel.EmbedAsync(embed: embed).ConfigureAwait(false);
+                var embed = new EmbedBuilder()
+                    .WithTitle("Bot Config")
+                    .WithOkColor()
+                    .AddField(fb => fb.WithName("Names").WithValue(string.Join("\n", names)).WithIsInline(true))
+                    .AddField(fb => fb.WithName("Values").WithValue(valuesSb.ToString()).WithIsInline(true));
+                await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
             }
 
             [NadekoCommand, Usage, Description, Aliases]

@@ -2,7 +2,7 @@
 using NadekoBot.Common;
 using NadekoBot.Core.Services.Database.Models;
 using System;
-using System.Collections.Generic;
+using System.Reflection;
 
 namespace NadekoBot.Core.Services.Impl
 {
@@ -237,18 +237,12 @@ namespace NadekoBot.Core.Services.Impl
             return true;
         }
 
-        public Dictionary<string, string> GetValues()
+        public string GetValue(string name)
         {
-            var values = new Dictionary<string, string>();
-            var props = BotConfig.GetType().GetProperties();
-            foreach(var prop in props)
-            {
-                if(prop.GetValue(BotConfig) == null)
-                    values.Add(prop.Name, "null");
-                else
-                    values.Add(prop.Name, prop.GetValue(BotConfig).ToString());
-            }
-            return values;
+            var value = typeof(BotConfig)
+                .GetProperty(name, BindingFlags.IgnoreCase| BindingFlags.Public | BindingFlags.Instance)
+                .GetValue(BotConfig);
+            return value?.ToString() ?? "-";
         }
     }
 }
