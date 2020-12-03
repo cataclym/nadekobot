@@ -251,15 +251,15 @@ namespace NadekoBot.Modules.Searches.Services
                     {
                         TextOptions = new TextOptions
                         {
-                            DpiX = 200,
-                            DpiY = 200,
+                            DpiX = 200 - (text.Length / 10) * 40,
+                            DpiY = 200 - (text.Length / 10) * 40,
                             HorizontalAlignment = HorizontalAlignment.Center
                         }.WithFallbackFonts(_fonts.FallBackFonts)
                     },
                     text,
                     _fonts.RipFont,
                     SixLabors.ImageSharp.Color.White,
-                    new PointF(700, 525)));
+                    new PointF(725, 525)));
 
                 return bg.ToStream().ToArray();
             }
