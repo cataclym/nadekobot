@@ -355,17 +355,16 @@ namespace NadekoBot.Modules.Administration
                 }
 
                 var dmFailed = false;
-                if (!string.IsNullOrWhiteSpace(msg))
+
+                try
                 {
-                    try
-                    {
-                        await user.SendErrorAsync(GetText("bandm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        dmFailed = true;
-                    }
+                    await user.SendErrorAsync(GetText("bandm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
                 }
+                catch
+                {
+                    dmFailed = true;
+                }
+
 
                 await _mute.TimedBan(user, time.Time, ctx.User.ToString() + " | " + msg).ConfigureAwait(false);
                 var toSend = new EmbedBuilder().WithOkColor()
@@ -378,7 +377,7 @@ namespace NadekoBot.Modules.Administration
                 {
                     toSend.WithFooter("⚠️ " + GetText("unable_to_dm_user"));
                 }
-                    
+
                 await ctx.Channel.EmbedAsync(toSend)
                     .ConfigureAwait(false);
             }
@@ -420,16 +419,14 @@ namespace NadekoBot.Modules.Administration
                 }
 
                 var dmFailed = false;
-                if (!string.IsNullOrWhiteSpace(msg))
+
+                try
                 {
-                    try
-                    {
-                        await user.SendErrorAsync(GetText("bandm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        dmFailed = true;
-                    }
+                    await user.SendErrorAsync(GetText("bandm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
+                }
+                catch
+                {
+                    dmFailed = true;
                 }
 
                 await ctx.Guild.AddBanAsync(user, 7, ctx.User.ToString() + " | " + msg).ConfigureAwait(false);
@@ -507,16 +504,14 @@ namespace NadekoBot.Modules.Administration
                 }
 
                 var dmFailed = false;
-                if (!string.IsNullOrWhiteSpace(msg))
+
+                try
                 {
-                    try
-                    {
-                        await user.SendErrorAsync(GetText("sbdm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
-                    }
+                    await user.SendErrorAsync(GetText("sbdm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
+                }
                     catch
-                    {
-                        dmFailed = true;
-                    }
+                {
+                    dmFailed = true;
                 }
 
                 await ctx.Guild.AddBanAsync(user, 7, "Softban | " + ctx.User.ToString() + " | " + msg).ConfigureAwait(false);
@@ -550,20 +545,17 @@ namespace NadekoBot.Modules.Administration
                 }
 
                 var dmFailed = false;
-                if (!string.IsNullOrWhiteSpace(msg))
-                {
-                    try
-                    {
-                        await user.SendErrorAsync(GetText("kickdm", Format.Bold(ctx.Guild.Name), msg))
-                            .ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        
-                        dmFailed = true;
-                    }
-                }
 
+                try
+                {
+                    await user.SendErrorAsync(GetText("kickdm", Format.Bold(ctx.Guild.Name), msg))
+                        .ConfigureAwait(false);
+                }
+                catch
+                {                        
+                    dmFailed = true;
+                }
+            
                 await user.KickAsync(ctx.User.ToString() + " | " + msg).ConfigureAwait(false);
                 
                 var toSend = new EmbedBuilder().WithOkColor()
