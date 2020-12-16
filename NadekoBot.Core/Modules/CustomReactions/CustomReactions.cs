@@ -26,7 +26,8 @@ namespace NadekoBot.Modules.CustomReactions
         }
 
         private bool AdminInGuildOrOwnerInDm() => (ctx.Guild == null && _creds.IsOwner(ctx.User))
-                || (ctx.Guild != null && ((IGuildUser)ctx.User).GuildPermissions.Administrator);
+                || (ctx.Guild != null && ((IGuildUser)ctx.User).GuildPermissions.Administrator)
+                || (ctx.Guild != null && ((IGuildUser)ctx.User).GuildPermissions.ManageEmojis);
 
         [NadekoCommand, Usage, Description, Aliases]
         public async Task AddCustReact(string key, [Leftover] string message)
@@ -58,7 +59,7 @@ namespace NadekoBot.Modules.CustomReactions
             if (string.IsNullOrWhiteSpace(message) || id < 0)
                 return;
 
-            if ((channel == null && !_creds.IsOwner(ctx.User)) || (channel != null && !((IGuildUser)ctx.User).GuildPermissions.Administrator))
+            if (!AdminInGuildOrOwnerInDm())
             {
                 await ReplyErrorLocalizedAsync("insuff_perms").ConfigureAwait(false);
                 return;
