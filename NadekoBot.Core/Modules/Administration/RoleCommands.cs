@@ -8,6 +8,7 @@ using NadekoBot.Extensions;
 using NadekoBot.Modules.Administration.Services;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,10 +20,24 @@ namespace NadekoBot.Modules.Administration
         {
             public enum Exclude { Excl }
 
-            public async Task InternalReactionRoles(bool exclusive, params string[] input)
+            public async Task InternalReactionRoles(bool exclusive, ITextChannel channel = null, ulong messageId = default, params string[] input)
             {
-                var msgs = await ((SocketTextChannel)ctx.Channel).GetMessagesAsync().FlattenAsync().ConfigureAwait(false);
-                var prev = (IUserMessage)msgs.FirstOrDefault(x => x is IUserMessage && x.Id != ctx.Message.Id);
+                var ch = channel ?? (ITextChannel)ctx.Channel;
+                if (ch == null) return;
+                
+                IEnumerable<IMessage> msgs = await ch.GetMessagesAsync().FlattenAsync()
+                    .ConfigureAwait(false);
+                IUserMessage prev = null;
+                if (messageId == default)
+                {
+                    prev = (IUserMessage) msgs.FirstOrDefault(x => x is IUserMessage && x.Id != ctx.Message.Id);
+                }
+                
+                else
+                {
+                    prev = (IUserMessage) msgs.FirstOrDefault((message =>
+                        message is IUserMessage && message.Id == messageId));
+                }
 
                 if (prev == null)
                     return;
@@ -100,7 +115,25 @@ namespace NadekoBot.Modules.Administration
             [BotPerm(GuildPerm.ManageRoles)]
             [Priority(0)]
             public Task ReactionRoles(params string[] input) =>
-                InternalReactionRoles(false, input);
+                InternalReactionRoles(false, default, default, input);
+            
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [NoPublicBot]
+            [UserPerm(GuildPerm.ManageRoles)]
+            [BotPerm(GuildPerm.ManageRoles)]
+            [Priority(1)]
+            public Task ReactionRoles(ITextChannel channel, ulong messageId, params string[] input) =>
+                InternalReactionRoles(true, channel, messageId, input);
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [NoPublicBot]
+            [UserPerm(GuildPerm.ManageRoles)]
+            [BotPerm(GuildPerm.ManageRoles)]
+            [Priority(1)]
+            public Task ReactionRoles(ITextChannel channel, params string[] input) =>
+                InternalReactionRoles(true, channel, default, input);
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
@@ -109,8 +142,26 @@ namespace NadekoBot.Modules.Administration
             [BotPerm(GuildPerm.ManageRoles)]
             [Priority(1)]
             public Task ReactionRoles(Exclude _, params string[] input) =>
-                InternalReactionRoles(true, input);
+                InternalReactionRoles(true, default, default, input);
+            
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [NoPublicBot]
+            [UserPerm(GuildPerm.ManageRoles)]
+            [BotPerm(GuildPerm.ManageRoles)]
+            [Priority(1)]
+            public Task ReactionRoles(Exclude _, ITextChannel channel, ulong messageId, params string[] input) =>
+                InternalReactionRoles(true, channel, messageId, input);
 
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [NoPublicBot]
+            [UserPerm(GuildPerm.ManageRoles)]
+            [BotPerm(GuildPerm.ManageRoles)]
+            [Priority(1)]
+            public Task ReactionRoles(Exclude _, ITextChannel channel, params string[] input) =>
+                InternalReactionRoles(true, channel, default, input);
+            
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [NoPublicBot]
