@@ -115,7 +115,7 @@ namespace NadekoBot.Modules.Administration
             [BotPerm(GuildPerm.ManageRoles)]
             [Priority(0)]
             public Task ReactionRoles(params string[] input) =>
-                InternalReactionRoles(false, default, default, input);
+                InternalReactionRoles(false, null, default, input);
             
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
@@ -124,7 +124,7 @@ namespace NadekoBot.Modules.Administration
             [BotPerm(GuildPerm.ManageRoles)]
             [Priority(1)]
             public Task ReactionRoles(ITextChannel channel, ulong messageId, params string[] input) =>
-                InternalReactionRoles(true, channel, messageId, input);
+                InternalReactionRoles(false, channel, messageId, input);
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
@@ -133,7 +133,7 @@ namespace NadekoBot.Modules.Administration
             [BotPerm(GuildPerm.ManageRoles)]
             [Priority(1)]
             public Task ReactionRoles(ITextChannel channel, params string[] input) =>
-                InternalReactionRoles(true, channel, default, input);
+                InternalReactionRoles(false, channel, default, input);
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
@@ -142,7 +142,7 @@ namespace NadekoBot.Modules.Administration
             [BotPerm(GuildPerm.ManageRoles)]
             [Priority(1)]
             public Task ReactionRoles(Exclude _, params string[] input) =>
-                InternalReactionRoles(true, default, default, input);
+                InternalReactionRoles(true, null, default, input);
             
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
