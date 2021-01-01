@@ -122,7 +122,7 @@ namespace NadekoBot.Modules.Administration
             [NoPublicBot]
             [UserPerm(GuildPerm.ManageRoles)]
             [BotPerm(GuildPerm.ManageRoles)]
-            [Priority(1)]
+            [Priority(0)]
             public Task ReactionRoles(ITextChannel channel, ulong messageId, params string[] input) =>
                 InternalReactionRoles(false, channel, messageId, input);
 
@@ -131,7 +131,7 @@ namespace NadekoBot.Modules.Administration
             [NoPublicBot]
             [UserPerm(GuildPerm.ManageRoles)]
             [BotPerm(GuildPerm.ManageRoles)]
-            [Priority(1)]
+            [Priority(0)]
             public Task ReactionRoles(ITextChannel channel, params string[] input) =>
                 InternalReactionRoles(false, channel, default, input);
 
