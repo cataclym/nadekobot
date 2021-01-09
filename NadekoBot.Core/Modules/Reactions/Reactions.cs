@@ -38,7 +38,7 @@ namespace NadekoBot.Modules.Reactions
                 if (data != null) emb.WithImageUrl(data.URL);
             }
             
-            if (text != null)
+            if (!string.IsNullOrWhiteSpace(text))
             {
                 emb.WithDescription($"{ctx.User.Mention} hugged {text}");
             }
@@ -62,9 +62,9 @@ namespace NadekoBot.Modules.Reactions
                 if (data != null) emb.WithImageUrl(data.URL);
             }
 
-            if (text != null)
+            if (!string.IsNullOrWhiteSpace(text))
             {
-                emb.WithDescription($"{ctx.User.Mention} hugged {text}");
+                emb.WithDescription($"{ctx.User.Mention} patted {text}");
             }
 
             await ctx.Channel.EmbedAsync(emb);
@@ -86,9 +86,9 @@ namespace NadekoBot.Modules.Reactions
                 if (data != null) emb.WithImageUrl(data.URL);
             }
 
-            if (text != null)
+            if (!string.IsNullOrWhiteSpace(text))
             {
-                emb.WithDescription($"{ctx.User.Mention} hugged {text}");
+                emb.WithDescription($"{ctx.User.Mention} kissed {text}");
             }
 
             await ctx.Channel.EmbedAsync(emb);
