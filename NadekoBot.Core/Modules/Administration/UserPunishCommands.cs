@@ -371,7 +371,7 @@ namespace NadekoBot.Modules.Administration
                     .WithTitle("⛔️ " + GetText("banned_user"))
                     .AddField(efb => efb.WithName(GetText("username")).WithValue(user.ToString()).WithIsInline(true))
                     .AddField(efb => efb.WithName("ID").WithValue(user.Id.ToString()).WithIsInline(true))
-                    .WithFooter($"{time.Time.Days}d {time.Time.Hours}h {time.Time.Minutes}m");
+                    .AddField(efb => efb.WithName(GetText("duration")).WithValue($"{time.Time.Days}d {time.Time.Hours}h {time.Time.Minutes}m").WithIsInline(true));
 
                 if (dmFailed)
                 {
