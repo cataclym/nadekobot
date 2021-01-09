@@ -73,7 +73,13 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
 
             var rep = new ReplacementBuilder()
                 .WithDefault(ctx.Author, ctx.Channel, (ctx.Channel as ITextChannel)?.Guild as SocketGuild, client)
-                .WithOverride("%target%", () => ctx.Resolve(userHandling: TagHandling.NameNoPrefix, emojiHandling: TagHandling.Ignore, channelHandling: TagHandling.Ignore, roleHandling: TagHandling.NameNoPrefix).Substring(substringIndex).Trim())
+                .WithOverride("%target%", () => ctx.Resolve(userHandling: TagHandling.NameNoPrefix, 
+                                                            emojiHandling: TagHandling.Ignore, 
+                                                            channelHandling: TagHandling.Ignore, 
+                                                            roleHandling: TagHandling.NameNoPrefix, 
+                                                            everyoneHandling: TagHandling.Sanitize)
+                                                    .Substring(substringIndex)
+                                                    .Trim())
                 .Build();
 
             str = rep.Replace(str);
