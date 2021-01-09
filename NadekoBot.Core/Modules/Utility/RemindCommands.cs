@@ -169,7 +169,7 @@ namespace NadekoBot.Modules.Utility
                     await ctx.Channel.SendConfirmAsync(
                         "⏰ " + GetText("remind",
                             Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username),
-                            Format.Bold(message.SanitizeMentions()),
+                            Format.Bold(message),
                             $"{ts.Days}d {ts.Hours}h {ts.Minutes}min",
                             gTime, gTime)).ConfigureAwait(false);
                 }
