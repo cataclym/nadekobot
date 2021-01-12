@@ -145,15 +145,6 @@ namespace NadekoBot.Modules.Utility
                 if (ts > TimeSpan.FromDays(60))
                     return false;
 
-                if (ctx.Guild != null)
-                {
-                    var perms = ((IGuildUser)ctx.User).GetPermissions((IGuildChannel)ctx.Channel);
-                    if (!perms.MentionEveryone)
-                    {
-                        message = message.SanitizeAllMentions();
-                    }
-                }
-
                 var rem = new Reminder
                 {
                     ChannelId = targetId,
