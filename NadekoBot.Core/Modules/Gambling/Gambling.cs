@@ -280,7 +280,7 @@ namespace NadekoBot.Modules.Gambling
         [NadekoCommand, Usage, Description, Aliases]
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
-        [Priority(2)]
+        [Priority(3)]
         public async Task Award(ShmartNumber amount, [Leftover] IRole role)
         {
             var users = (await ctx.Guild.GetUsersAsync().ConfigureAwait(false))
