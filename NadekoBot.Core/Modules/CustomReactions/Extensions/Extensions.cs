@@ -98,7 +98,7 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
         public static Task<string> ResponseWithContextAsync(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, bool containsAnywhere)
             => cr.Response.ResolveResponseStringAsync(ctx, client, cr.Trigger.ResolveTriggerString(ctx, client), containsAnywhere);
 
-        public static async Task<IUserMessage> Send(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, CustomReactionsService crs)
+        public static async Task<IUserMessage> Send(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, bool sanitize)
         {
             var channel = cr.DmResponse ? await ctx.Author.GetOrCreateDMChannelAsync().ConfigureAwait(false) : ctx.Channel;
             if (CREmbed.TryParse(cr.Response, out CREmbed crembed))

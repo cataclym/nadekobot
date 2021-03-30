@@ -1,4 +1,4 @@
-{
+﻿{
   "h": {
     "Cmd": "help h",
     "Desc": "Either shows a help for a single command, or DMs you help link if no parameters are specified.",
@@ -2007,16 +2007,17 @@
       "{0}konachan yuri"
     ]
   },
-  "setmuterole": {
-    "Cmd": "setmuterole",
-    "Desc": "Sets a name of the role which will be assigned to people who should be muted. Default is nadeko-mute.",
+  "muterole": {
+    "Cmd": "muterole setmuterole",
+    "Desc": "Sets a name of the role which will be assigned to people who should be muted. Provide no arguments to see currently set mute role. Default is nadeko-mute.",
     "Usage": [
-      "{0}setmuterole Silenced"
+      "{0}muterole",
+      "{0}muterole Silenced"
     ]
   },
   "adsarm": {
     "Cmd": "adsarm",
-    "Desc": "Toggles the automatic deletion of confirmations for `{0}iam` and `{0}iamn` commands.",
+    "Desc": "Toggles the automatic deletion of the user's message and Nadeko's confirmations for `{0}iam` and `{0}iamn` commands.",
     "Usage": [
       "{0}adsarm"
     ]
@@ -2161,8 +2162,8 @@
     ]
   },
   "wikia": {
-    "Cmd": "wikia",
-    "Desc": "Gives you back a wikia link",
+    "Cmd": "wikia fandom",
+    "Desc": "Gives you back a fandom link",
     "Usage": [
       "{0}wikia mtg Vigilance",
       "{0}wikia mlp Dashy"
@@ -2449,7 +2450,7 @@
   },
   "waifutransfer": {
     "cmd": "waifutransfer",
-    "desc": "Transfer the ownership of one of your waifus to another user. You must pay 10% of your waifu's value.",
+    "desc": "Transfer the ownership of one of your waifus to another user. You must pay 10%  of your waifu's value unless that waifu has affinity towards you, in which case you must pay 60% fee. Transferred waifu's price will be reduced by the fee amount.",
     "usage": [
       "{0}waifutransfer @ExWaifu @NewOwner"
     ]
@@ -2472,7 +2473,7 @@
   },
   "divorce": {
     "Cmd": "divorce",
-    "Desc": "Releases your claim on a specific waifu. You will get some of the money you've spent back unless that waifu has an affinity towards you. 6 hours cooldown.",
+    "Desc": "Releases your claim on a specific waifu. You will get 50% of that waifu's value back, unless that waifu has an affinity towards you, in which case they will be reimbursed instead. 6 hours cooldown.",
     "Usage": [
       "{0}divorce @CheatingSloot"
     ]
