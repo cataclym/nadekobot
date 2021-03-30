@@ -98,7 +98,7 @@ namespace NadekoBot.Modules.Searches
                 rep.Replace(embedData);
                 try
                 {
-                    await channel.EmbedAsync(embedData, sanitizeAll: !((IGuildUser)Context.User).GuildPermissions.MentionEveryone).ConfigureAwait(false);
+                    await channel.EmbedAsync(embedData).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

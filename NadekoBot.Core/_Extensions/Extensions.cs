@@ -41,13 +41,9 @@ namespace NadekoBot.Extensions
         public static Regex UrlRegex = new Regex(@"^(https?|ftp)://(?<path>[^\s/$.?#].[^\s]*)$", RegexOptions.Compiled);
 
 
-        public static Task<IUserMessage> EmbedAsync(this IMessageChannel channel, CREmbed crEmbed, bool sanitizeAll = false)
-        {
-            var plainText = sanitizeAll
-                ? crEmbed.PlainText?.SanitizeAllMentions() ?? ""
-                : crEmbed.PlainText?.SanitizeMentions() ?? "";
-            
-            return channel.EmbedAsync(crEmbed.ToEmbed(), plainText);
+        public static Task<IUserMessage> EmbedAsync(this IMessageChannel channel, CREmbed crEmbed)
+        {    
+            return channel.EmbedAsync(crEmbed.ToEmbed(), crEmbed.PlainText?.SanitizeMentions() ?? "");
         }
 
         public static List<ulong> GetGuildIds(this DiscordSocketClient client)

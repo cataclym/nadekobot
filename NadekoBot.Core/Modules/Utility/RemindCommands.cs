@@ -164,7 +164,7 @@ namespace NadekoBot.Modules.Utility
                     var perms = ((IGuildUser) ctx.User).GetPermissions((IGuildChannel) ctx.Channel);
                     if (!perms.MentionEveryone)
                     {
-                        message = message.SanitizeAllMentions();
+                        message = message.SanitizeMentions();
                     }
                 }
 

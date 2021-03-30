@@ -422,7 +422,7 @@ namespace NadekoBot.Modules.Searches.Services
             var from = langarr[0];
             var to = langarr[1];
             text = text?.Trim();
-            return (await _google.Translate(text, from, to).ConfigureAwait(false)).SanitizeMentions(true);
+            return (await _google.Translate(text, from, to).ConfigureAwait(false)).SanitizeMentions();
         }
 
         public Task<ImageCacherObject> DapiSearch(string tag, DapiSearchType type, ulong? guild, bool isExplicit = false)

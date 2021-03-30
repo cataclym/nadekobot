@@ -147,7 +147,7 @@ namespace NadekoBot.Modules.Utility
                     ChannelId = ctx.Channel.Id,
                     GuildId = ctx.Guild.Id,
                     Interval = TimeSpan.FromMinutes(realInterval),
-                    Message = ((IGuildUser) ctx.User).GuildPermissions.MentionEveryone ? opts.Message : opts.Message.SanitizeMentions(true),
+                    Message = ((IGuildUser) ctx.User).GuildPermissions.MentionEveryone ? opts.Message : opts.Message.SanitizeMentions(),
                     NoRedundant = opts.NoRedundant,
                     StartTimeOfDay = startTimeOfDay,
                 };
