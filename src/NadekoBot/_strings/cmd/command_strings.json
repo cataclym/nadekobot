@@ -2827,7 +2827,7 @@
   },
   "shopswap": {
     "Cmd": "shopswap",
-    "Desc": "switches the place of two items from the shop by their IDs.",
+    "Desc": "Switches the place of two items from the shop by their IDs.",
     "Usage": [
       "{0}shopswap 2 15"
     ]
