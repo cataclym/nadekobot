@@ -409,8 +409,9 @@ namespace NadekoBot.Modules.Music.Common
                     _log.Info("Connecting");
                     _audioClient = await VoiceChannel.ConnectAsync().ConfigureAwait(false);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _log.Warn("Error while getting audio client: {0}", ex.ToString());
                     return null;
                 }
             return _audioClient;

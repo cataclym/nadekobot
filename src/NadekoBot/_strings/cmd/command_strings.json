@@ -1,4 +1,4 @@
-{
+﻿{
   "h": {
     "Cmd": "help h",
     "Desc": "Either shows a help for a single command, or DMs you help link if no parameters are specified.",
@@ -2007,16 +2007,17 @@
       "{0}konachan yuri"
     ]
   },
-  "setmuterole": {
-    "Cmd": "setmuterole",
-    "Desc": "Sets a name of the role which will be assigned to people who should be muted. Default is nadeko-mute.",
+  "muterole": {
+    "Cmd": "muterole setmuterole",
+    "Desc": "Sets a name of the role which will be assigned to people who should be muted. Provide no arguments to see currently set mute role. Default is nadeko-mute.",
     "Usage": [
-      "{0}setmuterole Silenced"
+      "{0}muterole",
+      "{0}muterole Silenced"
     ]
   },
   "adsarm": {
     "Cmd": "adsarm",
-    "Desc": "Toggles the automatic deletion of confirmations for `{0}iam` and `{0}iamn` commands.",
+    "Desc": "Toggles the automatic deletion of the user's message and Nadeko's confirmations for `{0}iam` and `{0}iamn` commands.",
     "Usage": [
       "{0}adsarm"
     ]
@@ -2161,8 +2162,8 @@
     ]
   },
   "wikia": {
-    "Cmd": "wikia",
-    "Desc": "Gives you back a wikia link",
+    "Cmd": "wikia fandom",
+    "Desc": "Gives you back a fandom link",
     "Usage": [
       "{0}wikia mtg Vigilance",
       "{0}wikia mlp Dashy"
@@ -2449,7 +2450,7 @@
   },
   "waifutransfer": {
     "cmd": "waifutransfer",
-    "desc": "Transfer the ownership of one of your waifus to another user. You must pay 10% of your waifu's value.",
+    "desc": "Transfer the ownership of one of your waifus to another user. You must pay 10%  of your waifu's value unless that waifu has affinity towards you, in which case you must pay 60% fee. Transferred waifu's price will be reduced by the fee amount.",
     "usage": [
       "{0}waifutransfer @ExWaifu @NewOwner"
     ]
@@ -2472,7 +2473,7 @@
   },
   "divorce": {
     "Cmd": "divorce",
-    "Desc": "Releases your claim on a specific waifu. You will get some of the money you've spent back unless that waifu has an affinity towards you. 6 hours cooldown.",
+    "Desc": "Releases your claim on a specific waifu. You will get 50% of that waifu's value back, unless that waifu has an affinity towards you, in which case they will be reimbursed instead. 6 hours cooldown.",
     "Usage": [
       "{0}divorce @CheatingSloot"
     ]
@@ -2733,6 +2734,29 @@
     "Usage": [
       "{0}unban kwoth#1234",
       "{0}unban 123123123"
+    ]
+  },
+  "banmessage": {
+    "Cmd": "banmessage banmsg bantemplate bantemp",
+    "Desc": "Sets a ban message template which will be used when a user is banned from this server. You can use embed strings and ban-specific placeholders: %ban.mod%, %ban.user%, %ban.duration% and %ban.reason%. You can disable ban message with `{0}banmsg -`",
+    "Usage": [
+      "{0}banmsg %ban.user%, you've been banned from %server.name%. Reason: %ban.reason%",
+      "{0}banmsg {{ \"description\": \"%ban.user% you have been banned from %server.name% by %ban.mod%\" }}"
+    ]
+  },
+  "banmessagetest": {
+    "Cmd": "banmsgtest",
+    "Desc": "If ban message is not disabled, bot will send you the message as if you were banned by yourself. Used for testing the ban message.",
+    "Usage": [
+      "{0}banmsgtest No reason",
+      "{0}banmsgtest 1h Test 1 hour ban message"
+    ]
+  },
+  "banmsgreset": {
+    "Cmd": "banmsgreset",
+    "Desc": "Resets ban message to default. If you want to completely disable ban messages, use `{0}banmsg -`",
+    "Usage": [
+      "{0}banmsgreset"
     ]
   },
   "wait": {
