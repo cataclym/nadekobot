@@ -4,12 +4,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using NadekoBot.Common;
+using NadekoBot.Common.Replacements;
 using NadekoBot.Core.Common.TypeReaders.Models;
 using NadekoBot.Core.Services;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
+using Newtonsoft.Json;
 using NLog;
 using NLog.Fluent;
 
@@ -354,6 +358,125 @@ WHERE GuildId={guildId}
             }
 
             return (bans, missing);
+        }
+
+        public string GetBanTemplate(ulong guildId)
+        {
+            using (var uow = _db.GetDbContext())
+            {
+                var template = uow._context.BanTemplates
+                    .AsQueryable()
+                    .FirstOrDefault(x => x.GuildId == guildId);
+                return template?.Text;
+            }
+        }
+
+        public void SetBanTemplate(ulong guildId, string text)
+        {
+            using (var uow = _db.GetDbContext())
+            {
+                var template = uow._context.BanTemplates
+                    .AsQueryable()
+                    .FirstOrDefault(x => x.GuildId == guildId);
+
+                if (text == null)
+                {
+                    if (template is null)
+                        return;
+                    
+                    uow._context.Remove(template);
+                }
+                else if (template == null)
+                {
+                    uow._context.BanTemplates.Add(new BanTemplate()
+                    {
+                        GuildId = guildId,
+                        Text = text,
+                    });
+                }
+                else
+                {
+                    template.Text = text;
+                }
+
+                uow.SaveChanges();
+            }
+        }
+
+        public CREmbed GetBanUserDmEmbed(ICommandContext context, IGuildUser target, string defaultMessage,
+            string banReason, TimeSpan? duration)
+        {
+            return GetBanUserDmEmbed(
+                (DiscordSocketClient) context.Client,
+                (SocketGuild) context.Guild,
+                (IGuildUser) context.User,
+                target,
+                defaultMessage,
+                banReason,
+                duration);
+        }
+
+        public CREmbed GetBanUserDmEmbed(DiscordSocketClient client, SocketGuild guild,
+            IGuildUser moderator, IGuildUser target, string defaultMessage, string banReason, TimeSpan? duration)
+        {                
+            EmbedBuilder embed;
+            var template = GetBanTemplate(guild.Id);
+            var plainText = string.Empty;
+
+            banReason = string.IsNullOrWhiteSpace(banReason)
+                ? "-"
+                : banReason;
+
+            var replacer = new ReplacementBuilder()
+                .WithServer(client, guild)
+                .WithOverride("%ban.mod%", () => moderator.ToString())
+                .WithOverride("%ban.mod.fullname%", () => moderator.ToString())
+                .WithOverride("%ban.mod.name%", () => moderator.Username)
+                .WithOverride("%ban.mod.discrim%", () => moderator.Discriminator)
+                .WithOverride("%ban.user%", () => target.ToString())
+                .WithOverride("%ban.user.fullname%", () => target.ToString())
+                .WithOverride("%ban.user.name%", () => target.Username)
+                .WithOverride("%ban.user.discrim%", () => target.Discriminator)
+                .WithOverride("%reason%", () => banReason)
+                .WithOverride("%ban.reason%", () => banReason)
+                .WithOverride("%ban.duration%", () => duration?.ToString(@"d\.hh\:mm")?? "perma")
+                .Build();
+
+            CREmbed crEmbed = null; 
+            // if template isn't set, use the old message style
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                template = JsonConvert.SerializeObject(new
+                {
+                    color = NadekoBot.ErrorColor.RawValue,
+                    description = defaultMessage 
+                });
+                
+                CREmbed.TryParse(template, out crEmbed);
+            }
+            // if template is set to "-" do not dm the user
+            else if (template == "-")
+            {
+                return default;
+            }
+            // if template is an embed, send that embed with replacements
+            else if (CREmbed.TryParse(template, out crEmbed))
+            {
+                replacer.Replace(crEmbed);
+            }
+            // otherwise, treat template as a regular string with replacements
+            else
+            {
+                template = JsonConvert.SerializeObject(new
+                {
+                    color = NadekoBot.ErrorColor.RawValue,
+                    description = replacer.Replace(template) 
+                });
+
+                CREmbed.TryParse(template, out crEmbed);
+            }
+            
+            return crEmbed;
         }
     }
 }

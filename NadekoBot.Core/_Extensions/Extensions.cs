@@ -43,7 +43,8 @@ namespace NadekoBot.Extensions
 
         public static Task<IUserMessage> EmbedAsync(this IMessageChannel channel, CREmbed crEmbed)
         {    
-            return channel.EmbedAsync(crEmbed.ToEmbed(), crEmbed.PlainText?.SanitizeMentions() ?? "");
+            var plainText = crEmbed.PlainText?.SanitizeMentions() ?? "";
+            return channel.SendMessageAsync(plainText, embed: crEmbed.IsEmbedValid ? crEmbed.ToEmbed().Build() : null);
         }
 
         public static List<ulong> GetGuildIds(this DiscordSocketClient client)
