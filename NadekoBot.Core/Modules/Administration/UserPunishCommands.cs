@@ -26,17 +26,33 @@ namespace NadekoBot.Modules.Administration
                 _mute = mute;
             }
 
+            private async Task<bool> CheckRoleHierarchy(IGuildUser target)
+            {
+                var curUser = ((SocketGuild) ctx.Guild).CurrentUser;
+                var ownerId = Context.Guild.OwnerId;
+                var modMaxRole = ((IGuildUser) ctx.User).GetRoles().Max(r => r.Position);
+                var targetMaxRole = target.GetRoles().Max(r => r.Position);
+                var botMaxRole = curUser.GetRoles().Max(r => r.Position);
+                // bot can't punish a user who is higher in the hierarchy. Discord will return 403
+                // moderator can be owner, in which case role hierarchy doesn't matter
+                // otherwise, moderator has to have a higher role
+                if (botMaxRole <= targetMaxRole || (Context.User.Id != ownerId && targetMaxRole >= modMaxRole))
+                {
+                    //  not working properly if target is owner
+                    await ReplyErrorLocalizedAsync("hierarchy");
+                    return false;
+                }
+                
+                return true;
+            }
+
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.BanMembers)]
             public async Task Warn(IGuildUser user, [Leftover] string reason = null)
             {
-                if (ctx.User.Id != user.Guild.OwnerId
-                    && (user.GetRoles().Select(r => r.Position).Max() >= ((IGuildUser)ctx.User).GetRoles().Select(r => r.Position).Max()))
-                {
-                    await ReplyErrorLocalizedAsync("hierarchy").ConfigureAwait(false);
+                if (!await CheckRoleHierarchy(user))
                     return;
-                }
 
                 var dmFailed = false;
                 try
@@ -415,7 +431,7 @@ namespace NadekoBot.Modules.Administration
             [Priority(0)]
             public async Task Ban(ulong userId, [Leftover] string msg = null)
             {
-                var user = await ctx.Guild.GetUserAsync(userId);
+                var user = await ((DiscordSocketClient)Context.Client).Rest.GetGuildUserAsync(Context.Guild.Id, userId);
                 if (user is null)
                 {
                     await ctx.Guild.AddBanAsync(userId, 7, ctx.User.ToString() + " | " + msg);
@@ -438,11 +454,8 @@ namespace NadekoBot.Modules.Administration
             [Priority(2)]
             public async Task Ban(IGuildUser user, [Leftover] string msg = null)
             {
-                if (ctx.User.Id != user.Guild.OwnerId && (user.GetRoles().Select(r => r.Position).Max() >= ((IGuildUser)ctx.User).GetRoles().Select(r => r.Position).Max()))
-                {
-                    await ReplyErrorLocalizedAsync("hierarchy").ConfigureAwait(false);
+                if (!await CheckRoleHierarchy(user))
                     return;
-                }
 
                 var dmFailed = false;
 
@@ -606,13 +619,27 @@ namespace NadekoBot.Modules.Administration
             [UserPerm(GuildPerm.KickMembers)]
             [UserPerm(GuildPerm.ManageMessages)]
             [BotPerm(GuildPerm.BanMembers)]
-            public async Task Softban(IGuildUser user, [Leftover] string msg = null)
+            public Task Softban(IGuildUser user, [Leftover] string msg = null)
+                => SoftbanInternal(user, msg);
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [UserPerm(GuildPerm.KickMembers)]
+            [UserPerm(GuildPerm.ManageMessages)]
+            [BotPerm(GuildPerm.BanMembers)]
+            public async Task Softban(ulong userId, [Leftover] string msg = null)
             {
-                if (ctx.User.Id != user.Guild.OwnerId && user.GetRoles().Select(r => r.Position).Max() >= ((IGuildUser)ctx.User).GetRoles().Select(r => r.Position).Max())
-                {
-                    await ReplyErrorLocalizedAsync("hierarchy").ConfigureAwait(false);
+                var user = await ((DiscordSocketClient)Context.Client).Rest.GetGuildUserAsync(Context.Guild.Id, userId);
+                if (user is null)
                     return;
-                }
+
+                await SoftbanInternal(user);
+            }
+            
+            private async Task SoftbanInternal(IGuildUser user, [Leftover] string msg = null)
+            {
+                if (!await CheckRoleHierarchy(user))
+                    return;
 
                 var dmFailed = false;
 
@@ -647,13 +674,28 @@ namespace NadekoBot.Modules.Administration
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.KickMembers)]
             [BotPerm(GuildPerm.KickMembers)]
-            public async Task Kick(IGuildUser user, [Leftover] string msg = null)
+            [Priority(1)]
+            public Task Kick(IGuildUser user, [Leftover] string msg = null)
+                => KickInternal(user, msg);
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            [UserPerm(GuildPerm.KickMembers)]
+            [BotPerm(GuildPerm.KickMembers)]
+            [Priority(0)]
+            public async Task Kick(ulong userId, [Leftover] string msg = null)
             {
-                if (ctx.Message.Author.Id != user.Guild.OwnerId && user.GetRoles().Select(r => r.Position).Max() >= ((IGuildUser)ctx.User).GetRoles().Select(r => r.Position).Max())
-                {
-                    await ReplyErrorLocalizedAsync("hierarchy").ConfigureAwait(false);
+                var user = await ((DiscordSocketClient)Context.Client).Rest.GetGuildUserAsync(Context.Guild.Id, userId);
+                if (user is null)
                     return;
-                }
+                
+                await KickInternal(user, msg);
+            }
+
+            public async Task KickInternal(IGuildUser user, string msg = null)
+            {
+                if (!await CheckRoleHierarchy(user))
+                    return;
 
                 var dmFailed = false;
 

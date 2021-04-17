@@ -156,10 +156,10 @@ namespace NadekoBot.Core.Modules.Gambling.Common.Blackjack
         {
             var cu = CurrentUser;
 
-            if (cu.DiscordUser == u)
+            if (cu != null && cu.DiscordUser == u)
                 return await Stand(cu).ConfigureAwait(false);
-            else
-                return false;
+            
+            return false;
         }
 
         public async Task<bool> Stand(User u)
@@ -255,8 +255,10 @@ namespace NadekoBot.Core.Modules.Gambling.Common.Blackjack
         public async Task<bool> Double(IUser u)
         {
             var cu = CurrentUser;
-            if (CurrentUser.DiscordUser == u)
+
+            if (cu != null && cu.DiscordUser == u)
                 return await Double(cu).ConfigureAwait(false);
+            
             return false;
         }
 
@@ -306,7 +308,8 @@ namespace NadekoBot.Core.Modules.Gambling.Common.Blackjack
         public async Task<bool> Hit(IUser u)
         {
             var cu = CurrentUser;
-            if (cu.DiscordUser == u)
+
+            if (cu != null && cu.DiscordUser == u)
                 return await Hit(cu).ConfigureAwait(false);
 
             return false;

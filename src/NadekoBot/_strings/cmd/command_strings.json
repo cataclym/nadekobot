@@ -87,6 +87,30 @@
       "{0}greetdm"
     ]
   },
+  "greettest": {
+    "Cmd": "greettest",
+    "Desc": "Sends the greet message in the current channel as if you just joined the server. You can optionally specify a different user.",
+    "Usage": [
+      "{0}greettest",
+      "{0}greettest @SomeoneElse"
+    ]
+  },
+  "greetdmtest": {
+    "Cmd": "greetdmtest",
+    "Desc": "Sends the greet direct message to you as if you just joined the server. You can optionally specify a different user.",
+    "Usage": [
+      "{0}greetdmtest",
+      "{0}greetdmtest @SomeoneElse"
+    ]
+  },
+  "byetest": {
+    "Cmd": "byetest",
+    "Desc": "Sends the bye message in the current channel as if you just left the server. You can optionally specify a different user.",
+    "Usage": [
+      "{0}byetest",
+      "{0}byetest @SomeoneElse"
+    ]
+  },
   "logserver": {
     "Cmd": "logserver",
     "Desc": "Enables or Disables ALL log events. If enabled, all log events will log to this channel.",
@@ -116,6 +140,20 @@
       "{0}voicepresence"
     ]
   },
+  "repeatlist": {
+    "Cmd": "repeatlist replst replist repli",
+    "Desc": "Shows currently repeating messages and their indexes.",
+    "Usage": [
+      "{0}repeatlist"
+    ]
+  },
+  "repeatremove": {
+    "Cmd": "repeatremove reprm",
+    "Desc": "Removes a repeating message on a specified index. Use `{0}repeatlist` to see indexes.",
+    "Usage": [
+      "{0}reprm 2"
+    ]
+  },
   "repeatinvoke": {
     "Cmd": "repeatinvoke repinv",
     "Desc": "Immediately shows the repeat message on a certain index and restarts its timer.",
@@ -125,10 +163,19 @@
   },
   "repeat": {
     "Cmd": "repeat",
-    "Desc": "Repeat a message once every `-i` number of minutes in the current channel. You can instead specify time of day for the message to be repeated daily (make sure you've set your server's timezone). If you've specified time of day, you can still override the default daily interval with your own -i. For example `17:30 -i 180 -m \"hi there\"` will post at 17:30 and then every 3 hours after. You can have up to 5 repeating messages on the server in total.",
+    "Desc": "Repeat a message once every specified amount of time in the current channel. You can instead specify time of day for the message to be repeated daily (make sure you've set your server's timezone). If you've specified time of day, you can still override the default daily interval with your own interval. You can have up to 5 repeating messages on the server in total.",
     "Usage": [
-      "{0}repeat -i 5 -m \"Hello there\" -n",
-      "{0}repeat 17:30 -m \"tea time\""
+      "{0}repeat Hello there",
+      "{0}repeat 1h5m Hello @erryone",
+      "{0}repeat 10:00 Daily have a nice day! This will execute once every 24h.",
+      "{0}repeat 21:00 30m Starting at 21 and every 30 minutes after that i will send this message!"
+    ]
+  },
+  "repeatredundant": {
+    "Cmd": "repeatredun repred",
+    "Desc": "Specify repeater's index (use `{0}repli` to find it) to toggle whether that repeater's message should be reposted if the last message in the channel is the same repeater's message. This is useful if you want to remind everyone to be nice in the channel every so often, but don't want to have the bot spam the channel. This is NOT useful if you want to periodically ping someone.",
+    "Usage": [
+      "{0}repred 1"
     ]
   },
   "rotateplaying": {
@@ -154,7 +201,7 @@
     ]
   },
   "removeplaying": {
-    "Cmd": "removeplaying rmpl repl",
+    "Cmd": "removeplaying rmpl",
     "Desc": "Removes a playing string on a given number.",
     "Usage": [
       "{0}rmpl"
@@ -1704,14 +1751,14 @@
   },
   "randjoke": {
     "Cmd": "randjoke rj",
-    "Desc": "Shows a random joke from <http://tambal.azurewebsites.net/joke/random>",
+    "Desc": "Shows a random joke.",
     "Usage": [
       "{0}rj"
     ]
   },
   "chucknorris": {
     "Cmd": "chucknorris cn",
-    "Desc": "Shows a random Chuck Norris joke from <http://api.icndb.com/jokes/random/>",
+    "Desc": "Shows a random Chuck Norris joke.",
     "Usage": [
       "{0}cn"
     ]
@@ -2344,20 +2391,6 @@
     "Desc": "Shows the poll results without stopping the poll on this server.",
     "Usage": [
       "{0}pollstats"
-    ]
-  },
-  "repeatlist": {
-    "Cmd": "repeatlist replst replist repli",
-    "Desc": "Shows currently repeating messages and their indexes.",
-    "Usage": [
-      "{0}repeatlist"
-    ]
-  },
-  "repeatremove": {
-    "Cmd": "repeatremove reprm",
-    "Desc": "Removes a repeating message on a specified index. Use `{0}repeatlist` to see indexes.",
-    "Usage": [
-      "{0}reprm 2"
     ]
   },
   "antilist": {

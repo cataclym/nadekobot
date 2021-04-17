@@ -10,6 +10,7 @@ using NadekoBot.Core.Services.Database.Models;
 using NLog;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using NadekoBot.Common;
 using NadekoBot.Common.Replacements;
 using NadekoBot.Modules.Utility.Services;
 
@@ -226,6 +227,7 @@ namespace NadekoBot.Modules.Utility.Common
                     newMsg = await Channel.SendMessageAsync(toSend.SanitizeMentions()).ConfigureAwait(false);
                 }
 
+                _ = newMsg.AddReactionAsync(new Emoji("🔄"));
 
                 if (Repeater.NoRedundant)
                 {
