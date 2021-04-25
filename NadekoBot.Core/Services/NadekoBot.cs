@@ -21,6 +21,8 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Discord.Net;
+using NadekoBot.Core.Common;
 
 namespace NadekoBot
 {
@@ -151,49 +153,44 @@ namespace NadekoBot
         private void AddServices()
         {
             var startingGuildIdList = GetCurrentGuildIds();
+            var sw = Stopwatch.StartNew();
+            var _bot = Client.CurrentUser;
 
-            //this unit of work will be used for initialization of all modules too, to prevent multiple queries from running
             using (var uow = _db.GetDbContext())
             {
-                var sw = Stopwatch.StartNew();
-
-                var _bot = Client.CurrentUser;
-
                 uow.DiscordUsers.EnsureCreated(_bot.Id, _bot.Username, _bot.Discriminator, _bot.AvatarId);
-
                 AllGuildConfigs = uow.GuildConfigs.GetAllGuildConfigs(startingGuildIdList).ToImmutableArray();
-
-                IBotConfigProvider botConfigProvider = new BotConfigProvider(_db, _botConfig, Cache);
-
-                var s = new ServiceCollection()
-                    .AddSingleton<IBotCredentials>(Credentials)
-                    .AddSingleton(_db)
-                    .AddSingleton(Client)
-                    .AddSingleton(CommandService)
-                    .AddSingleton(botConfigProvider)
-                    .AddSingleton(this)
-                    .AddSingleton(uow)
-                    .AddSingleton(Cache)
-                    .AddMemoryCache();
-
-                s.AddHttpClient();
-                s.AddHttpClient("memelist").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-                {
-                    AllowAutoRedirect = false
-                });
-
-                s.LoadFrom(Assembly.GetAssembly(typeof(CommandHandler)));
-
-                //initialize Services
-                Services = s.BuildServiceProvider();
-                var commandHandler = Services.GetService<CommandHandler>();
-                //what the fluff
-                commandHandler.AddServices(s);
-                LoadTypeReaders(typeof(NadekoBot).Assembly);
-
-                sw.Stop();
-                _log.Info($"All services loaded in {sw.Elapsed.TotalSeconds:F2}s");
             }
+
+            var s = new ServiceCollection()
+                .AddSingleton<IBotCredentials>(Credentials)
+                .AddSingleton(_db)
+                .AddSingleton(Client)
+                .AddSingleton(CommandService)
+                .AddSingleton(this)
+                .AddSingleton(Cache)
+                .AddSingleton<IBotStrings, BotStrings>()
+                .AddSingleton<IBotStringsProvider, LocalBotStringsProvider>()
+                .AddSingleton<IBotConfigProvider, BotConfigProvider>()
+                .AddMemoryCache();
+
+            s.AddHttpClient();
+            s.AddHttpClient("memelist").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            });
+
+            s.LoadFrom(Assembly.GetAssembly(typeof(CommandHandler)));
+
+            //initialize Services
+            Services = s.BuildServiceProvider();
+            var commandHandler = Services.GetService<CommandHandler>();
+            //what the fluff
+            commandHandler.AddServices(s);
+            _ = LoadTypeReaders(typeof(NadekoBot).Assembly);
+
+            sw.Stop();
+            _log.Info($"All services loaded in {sw.Elapsed.TotalSeconds:F2}s");
         }
 
         private IEnumerable<object> LoadTypeReaders(Assembly assembly)
@@ -219,15 +216,7 @@ namespace NadekoBot
                 var x = (TypeReader)Activator.CreateInstance(ft, Client, CommandService);
                 var baseType = ft.BaseType;
                 var typeArgs = baseType.GetGenericArguments();
-                try
-                {
-                    CommandService.AddTypeReader(typeArgs[0], x);
-                }
-                catch (Exception ex)
-                {
-                    _log.Error(ex);
-                    throw;
-                }
+                CommandService.AddTypeReader(typeArgs[0], x);
                 toReturn.Add(x);
             }
 
@@ -264,8 +253,22 @@ namespace NadekoBot
 
             //connect
             _log.Info("Shard {0} logging in ...", Client.ShardId);
-            await Client.LoginAsync(TokenType.Bot, token).ConfigureAwait(false);
-            await Client.StartAsync().ConfigureAwait(false);
+            try
+            {
+                await Client.LoginAsync(TokenType.Bot, token).ConfigureAwait(false);
+                await Client.StartAsync().ConfigureAwait(false);
+            }
+            catch (HttpException ex)
+            {
+                LoginErrorHandler.Handle(_log, ex);
+                Helpers.ReadErrorAndExit(3);
+            }
+            catch (Exception ex)
+            {
+                LoginErrorHandler.Handle(_log, ex);
+                Helpers.ReadErrorAndExit(4);
+            }
+
             Client.Ready += SetClientReady;
             await clientReady.Task.ConfigureAwait(false);
             Client.Ready -= SetClientReady;
@@ -308,8 +311,8 @@ namespace NadekoBot
             }
             catch (Exception ex)
             {
-                _log.Error(ex);
-                throw;
+                _log.Error(ex.ToString());
+                Helpers.ReadErrorAndExit(9);
             }
 
             sw.Stop();
@@ -372,9 +375,7 @@ namespace NadekoBot
             catch
             {
                 _log.Error("You must run the application as an ADMINISTRATOR.");
-                if (!Console.IsInputRedirected)
-                    Console.ReadKey();
-                Environment.Exit(2);
+                Helpers.ReadErrorAndExit(2);
             }
         }
 
@@ -385,13 +386,11 @@ namespace NadekoBot
                 try
                 {
                     var p = Process.GetProcessById(parentProcessId);
-                    if (p == null)
-                        return;
                     p.WaitForExit();
                 }
                 finally
                 {
-                    Environment.Exit(10);
+                    Environment.Exit(7);
                 }
             })).Start();
         }

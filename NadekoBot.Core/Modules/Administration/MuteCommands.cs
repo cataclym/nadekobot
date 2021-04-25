@@ -6,6 +6,7 @@ using NadekoBot.Modules.Administration.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 using NadekoBot.Extensions;
 
 namespace NadekoBot.Modules.Administration
@@ -32,29 +33,30 @@ namespace NadekoBot.Modules.Administration
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.ManageRoles)]
-            [Priority(0)]
-            public async Task SetMuteRole([Leftover] string name)
+            public async Task MuteRole([Leftover] IRole role = null)
             {
-                name = name.Trim();
-                if (string.IsNullOrWhiteSpace(name))
+                if (role is null)
+                {
+                    var muteRole = await _service.GetMuteRole(ctx.Guild).ConfigureAwait(false);
+                    await ReplyConfirmLocalizedAsync("mute_role", Format.Code(muteRole.Name)).ConfigureAwait(false);
                     return;
-
-                await _service.SetMuteRoleAsync(ctx.Guild.Id, name).ConfigureAwait(false);
+                }
+                
+                if (Context.User.Id != Context.Guild.OwnerId &&
+                    role.Position >= ((SocketGuildUser) Context.User).Roles.Max(x => x.Position))
+                {
+                    await ReplyErrorLocalizedAsync("insuf_perms_u").ConfigureAwait(false);
+                    return;
+                }
+                
+                await _service.SetMuteRoleAsync(ctx.Guild.Id, role.Name).ConfigureAwait(false);
 
                 await ReplyConfirmLocalizedAsync("mute_role_set").ConfigureAwait(false);
             }
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
-            [UserPerm(GuildPerm.ManageRoles)]
-            [Priority(1)]
-            public Task SetMuteRole([Leftover] IRole role)
-                => SetMuteRole(role.Name);
-
-            [NadekoCommand, Usage, Description, Aliases]
-            [RequireContext(ContextType.Guild)]
-            [UserPerm(GuildPerm.ManageRoles)]
-            [UserPerm(GuildPerm.MuteMembers)]
+            [UserPerm(GuildPerm.ManageRoles | GuildPerm.MuteMembers)]
             [Priority(0)]
             public async Task Mute(IGuildUser target, [Leftover] string reason = "")
             {
@@ -75,8 +77,7 @@ namespace NadekoBot.Modules.Administration
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
-            [UserPerm(GuildPerm.ManageRoles)]
-            [UserPerm(GuildPerm.MuteMembers)]
+            [UserPerm(GuildPerm.ManageRoles | GuildPerm.MuteMembers)]
             [Priority(1)]
             public async Task Mute(StoopidTime time, IGuildUser user, [Leftover] string reason = "")
             {
@@ -99,8 +100,7 @@ namespace NadekoBot.Modules.Administration
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
-            [UserPerm(GuildPerm.ManageRoles)]
-            [UserPerm(GuildPerm.MuteMembers)]
+            [UserPerm(GuildPerm.ManageRoles | GuildPerm.MuteMembers)]
             public async Task Unmute(IGuildUser user, [Leftover] string reason = "")
             {
                 try

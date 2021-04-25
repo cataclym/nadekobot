@@ -1,8 +1,6 @@
-﻿using CommandLine;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.Caching.Memory;
 using NadekoBot.Common.Attributes;
 using NadekoBot.Core.Common;
 using NadekoBot.Core.Services;
@@ -10,10 +8,8 @@ using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
 using NadekoBot.Modules.Xp.Common;
 using NadekoBot.Modules.Xp.Services;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace NadekoBot.Modules.Xp
@@ -122,15 +118,46 @@ namespace NadekoBot.Modules.Xp
             Global = 1,
         }
 
+        private string GetNotifLocationString(XpNotificationLocation loc)
+        {
+            if (loc == XpNotificationLocation.Channel)
+            {
+                return GetText("xpn_notif_channel");
+            }
+
+            if (loc == XpNotificationLocation.Dm)
+            {
+                return GetText("xpn_notif_dm");
+            }
+
+            return GetText("xpn_notif_disabled");
+        }
+
         [NadekoCommand, Usage, Description, Aliases]
         [RequireContext(ContextType.Guild)]
-        public async Task XpNotify(NotifyPlace place = NotifyPlace.Guild, XpNotificationLocation type = XpNotificationLocation.Channel)
+        public async Task XpNotify()
+        {
+            var globalSetting = _service.GetNotificationType(ctx.User);
+            var serverSetting = _service.GetNotificationType(ctx.User.Id, ctx.Guild.Id);
+
+            var embed = new EmbedBuilder()
+                .WithOkColor()
+                .AddField(GetText("xpn_setting_global"), GetNotifLocationString(globalSetting))
+                .AddField(GetText("xpn_setting_server"), GetNotifLocationString(serverSetting));
+
+            await Context.Channel.EmbedAsync(embed);
+        }
+
+        [NadekoCommand, Usage, Description, Aliases]
+        [RequireContext(ContextType.Guild)]
+        public async Task XpNotify(NotifyPlace place, XpNotificationLocation type)
         {
             if (place == NotifyPlace.Guild)
                 await _service.ChangeNotificationType(ctx.User.Id, ctx.Guild.Id, type).ConfigureAwait(false);
             else
                 await _service.ChangeNotificationType(ctx.User, type).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("👌").ConfigureAwait(false);
+            
+            await ctx.OkAsync().ConfigureAwait(false);
         }
 
         public enum Server { Server };
@@ -178,23 +205,36 @@ namespace NadekoBot.Modules.Xp
         {
             var serverExcluded = _service.IsServerExcluded(ctx.Guild.Id);
             var roles = _service.GetExcludedRoles(ctx.Guild.Id)
-                .Select(x => ctx.Guild.GetRole(x)?.Name)
-                .Where(x => x != null);
+                .Select(x => ctx.Guild.GetRole(x))
+                .Where(x => x != null)
+                .Select(x => $"`role`   {x.Mention}")
+                .ToList();
 
             var chans = (await Task.WhenAll(_service.GetExcludedChannels(ctx.Guild.Id)
                 .Select(x => ctx.Guild.GetChannelAsync(x)))
                 .ConfigureAwait(false))
                     .Where(x => x != null)
-                    .Select(x => x.Name);
+                    .Select(x => $"`channel` <#{x.Id}>")
+                    .ToList();
 
-            var embed = new EmbedBuilder()
-                .WithTitle(GetText("exclusion_list"))
-                .WithDescription((serverExcluded ? GetText("server_is_excluded") : GetText("server_is_not_excluded")))
-                .AddField(GetText("excluded_roles"), roles.Any() ? string.Join("\n", roles) : "-", false)
-                .AddField(GetText("excluded_channels"), chans.Any() ? string.Join("\n", chans) : "-", false)
-                .WithOkColor();
+            var rolesStr = roles.Any() ? string.Join("\n", roles) + "\n" : string.Empty;
+            var chansStr = chans.Count > 0 ? string.Join("\n", chans) + "\n" : string.Empty;
+            var desc = Format.Code(serverExcluded
+                ? GetText("server_is_excluded")
+                : GetText("server_is_not_excluded"));
 
-            await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
+            desc += "\n\n" + rolesStr + chansStr;
+
+            var lines = desc.Split('\n');
+            await ctx.SendPaginatedConfirmAsync(0, curpage =>
+            {
+                var embed = new EmbedBuilder()
+                    .WithTitle(GetText("exclusion_list"))
+                    .WithDescription(string.Join('\n', lines.Skip(15 * curpage).Take(15)))
+                    .WithOkColor();
+
+                return embed;
+            }, lines.Length, 15);
         }
 
         [NadekoCommand, Usage, Description, Aliases]
@@ -268,7 +308,7 @@ namespace NadekoBot.Modules.Xp
         [RequireContext(ContextType.Guild)]
         public async Task XpGlobalLeaderboard(int page = 1)
         {
-            if (--page < 0 || page > 100)
+            if (--page < 0 || page > 99)
                 return;
             var users = _service.GetUserXps(page);
 

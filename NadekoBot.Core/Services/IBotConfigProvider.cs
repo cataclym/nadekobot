@@ -9,6 +9,6 @@ namespace NadekoBot.Core.Services
         BotConfig BotConfig { get; }
         void Reload();
         bool Edit(BotConfigEditType type, string newValue);
-        Dictionary<string, string> GetValues();
+        string GetValue(string name);
     }
 }

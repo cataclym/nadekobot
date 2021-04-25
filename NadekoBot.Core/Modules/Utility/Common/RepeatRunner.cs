@@ -8,7 +8,8 @@ using NadekoBot.Extensions;
 using NadekoBot.Core.Services.Database.Models;
 using NLog;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+using NadekoBot.Common;
+using NadekoBot.Common.Replacements;
 using NadekoBot.Modules.Utility.Services;
 
 namespace NadekoBot.Modules.Utility.Common
@@ -44,13 +45,15 @@ namespace NadekoBot.Modules.Utility.Common
         public DateTime NextDateTime { get; set; }
 
         private Timer _t;
+        private readonly DiscordSocketClient _client;
 
-        public RepeatRunner(SocketGuild guild, Repeater repeater, MessageRepeaterService mrs)
+        public RepeatRunner(DiscordSocketClient client, SocketGuild guild, Repeater repeater, MessageRepeaterService mrs)
         {
             _log = LogManager.GetCurrentClassLogger();
             Repeater = repeater;
             Guild = guild;
             _mrs = mrs;
+            _client = client;
 
             InitialInterval = Repeater.Interval;
 
@@ -160,7 +163,7 @@ namespace NadekoBot.Modules.Utility.Common
             // next execution is interval amount of time after now
             NextDateTime = DateTime.UtcNow + Repeater.Interval;
 
-            var toSend = "🔄 " + Repeater.Message;
+            var toSend = Repeater.Message;
             try
             {
                 Channel = Channel ?? Guild.GetTextChannel(Repeater.ChannelId);
@@ -199,7 +202,21 @@ namespace NadekoBot.Modules.Utility.Common
                     // ignored
                 }
 
-                var newMsg = await Channel.SendMessageAsync(toSend.SanitizeMentions()).ConfigureAwait(false);
+                var rep = new ReplacementBuilder()
+                    .WithDefault(Guild.CurrentUser, Channel, Guild, _client)
+                    .Build();
+
+                IMessage newMsg;
+                if (CREmbed.TryParse(toSend, out var crEmbed))
+                {
+                    rep.Replace(crEmbed);
+                    newMsg = await Channel.EmbedAsync(crEmbed);
+                }
+                else
+                {
+                    newMsg = await Channel.SendMessageAsync(rep.Replace(toSend));
+                }
+                _ = newMsg.AddReactionAsync(new Emoji("🔄"));
 
                 if (Repeater.NoRedundant)
                 {

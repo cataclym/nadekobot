@@ -6,7 +6,6 @@ using NadekoBot.Common;
 using NadekoBot.Common.Replacements;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
-using NadekoBot.Modules.CustomReactions.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,7 +91,7 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
         public static Task<string> ResponseWithContextAsync(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, bool containsAnywhere)
             => cr.Response.ResolveResponseStringAsync(ctx, client, cr.Trigger.ResolveTriggerString(ctx, client), containsAnywhere);
 
-        public static async Task<IUserMessage> Send(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, CustomReactionsService crs)
+        public static async Task<IUserMessage> Send(this CustomReaction cr, IUserMessage ctx, DiscordSocketClient client, bool sanitize)
         {
             var channel = cr.DmResponse ? await ctx.Author.GetOrCreateDMChannelAsync().ConfigureAwait(false) : ctx.Channel;
 
@@ -118,9 +117,9 @@ namespace NadekoBot.Modules.CustomReactions.Extensions
 
                 rep.Replace(crembed);
 
-                return await channel.EmbedAsync(crembed.ToEmbed(), crembed.PlainText?.SanitizeMentions() ?? "").ConfigureAwait(false);
+                return await channel.EmbedAsync(crembed, sanitize).ConfigureAwait(false);
             }
-            return await channel.SendMessageAsync((await cr.ResponseWithContextAsync(ctx, client, cr.ContainsAnywhere).ConfigureAwait(false)).SanitizeMentions()).ConfigureAwait(false);
+            return await channel.SendMessageAsync((await cr.ResponseWithContextAsync(ctx, client, cr.ContainsAnywhere).ConfigureAwait(false)).SanitizeMentions(sanitize)).ConfigureAwait(false);
         }
 
         public static WordPosition GetWordPosition(this string str, string word)

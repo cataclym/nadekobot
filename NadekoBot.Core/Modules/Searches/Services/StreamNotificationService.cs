@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NadekoBot.Common;
@@ -9,13 +10,13 @@ using NadekoBot.Core.Modules.Searches.Common;
 using NadekoBot.Core.Modules.Searches.Common.StreamNotifications;
 using NadekoBot.Core.Services;
 using NadekoBot.Core.Services.Database.Models;
-using NadekoBot.Core.Services.Impl;
 using NadekoBot.Extensions;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 using Discord;
 using Discord.WebSocket;
 using NadekoBot.Common.Collections;
+using NLog;
 
 #nullable enable
 namespace NadekoBot.Modules.Searches.Services
@@ -23,7 +24,7 @@ namespace NadekoBot.Modules.Searches.Services
     public class StreamNotificationService : INService
     {
         private readonly DbService _db;
-        private readonly NadekoStrings _strings;
+        private readonly IBotStrings _strings;
         private readonly Random _rng = new NadekoRandom();
         private readonly DiscordSocketClient _client;
         private readonly NotifChecker _streamTracker;
@@ -38,11 +39,14 @@ namespace NadekoBot.Modules.Searches.Services
 
         private readonly ConnectionMultiplexer _multi;
         private readonly IBotCredentials _creds;
+        private readonly Logger _log;
+        private readonly Timer _notifCleanupTimer;
 
         public StreamNotificationService(DbService db, DiscordSocketClient client,
-            NadekoStrings strings, IDataCache cache, IBotCredentials creds, IHttpClientFactory httpFactory,
+            IBotStrings strings, IDataCache cache, IBotCredentials creds, IHttpClientFactory httpFactory,
             NadekoBot bot)
         {
+            _log = LogManager.GetCurrentClassLogger();
             _db = db;
             _client = client;
             _strings = strings;
@@ -107,6 +111,46 @@ namespace NadekoBot.Modules.Searches.Services
                 _streamTracker.OnStreamsOffline += OnStreamsOffline;
                 _streamTracker.OnStreamsOnline += OnStreamsOnline;
                 _ = _streamTracker.RunAsync();
+                _notifCleanupTimer = new Timer(_ =>
+                {
+                    try
+                    {
+                        var errorLimit = TimeSpan.FromHours(12);
+                        var failingStreams = _streamTracker.GetFailingStreams(errorLimit, true)
+                            .ToList();
+
+                        if (!failingStreams.Any())
+                            return;
+
+                        var deleteGroups = failingStreams.GroupBy(x => x.Type)
+                            .ToDictionary(x => x.Key, x => x.Select(x => x.Name).ToList());
+
+                        using (var uow = _db.GetDbContext())
+                        {
+                            foreach (var kvp in deleteGroups)
+                            {
+                                _log.Info($"Deleting {kvp.Value.Count} {kvp.Key} streams because " +
+                                          $"they've been erroring for more than {errorLimit}: {string.Join(", ", kvp.Value)}");
+
+                                var toDelete = uow._context.Set<FollowedStream>()
+                                    .AsQueryable()
+                                    .Where(x => x.Type == kvp.Key && kvp.Value.Contains(x.Username))
+                                    .ToList();
+
+                                uow._context.RemoveRange(toDelete);
+                                uow.SaveChanges();
+                                
+                                foreach(var loginToDelete in kvp.Value)
+                                    _streamTracker.UntrackStreamByKey(new StreamDataKey(kvp.Key, loginToDelete));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error("Error cleaning up FollowedStreams");
+                        _log.Error(ex.ToString());
+                    }
+                }, null, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
 
                 sub.Subscribe($"{_creds.RedisKey()}_follow_stream", HandleFollowStream);
                 sub.Subscribe($"{_creds.RedisKey()}_unfollow_stream", HandleUnfollowStream);
@@ -420,11 +464,8 @@ namespace NadekoBot.Modules.Searches.Services
             return embed;
         }
 
-        private string GetText(ulong guildId, string key, params object[] replacements) =>
-            _strings.GetText(key,
-                guildId,
-                "Searches".ToLowerInvariant(),
-                replacements);
+        private string GetText(ulong guildId, string key, params object[] replacements)
+            => _strings.GetText(key, guildId, replacements);
 
         public bool ToggleStreamOffline(ulong guildId)
         {

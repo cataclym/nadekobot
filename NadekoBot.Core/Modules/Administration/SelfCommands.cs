@@ -11,6 +11,7 @@ using NadekoBot.Modules.Administration.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using NadekoBot.Core.Services;
 
 namespace NadekoBot.Modules.Administration
 {
@@ -21,11 +22,13 @@ namespace NadekoBot.Modules.Administration
         {
             private readonly DiscordSocketClient _client;
             private readonly NadekoBot _bot;
+            private readonly IBotStrings _strings;
 
-            public SelfCommands(DiscordSocketClient client, NadekoBot bot)
+            public SelfCommands(DiscordSocketClient client, NadekoBot bot, IBotStrings strings)
             {
                 _client = client;
                 _bot = bot;
+                _strings = strings;
             }
 
             [NadekoCommand, Usage, Description, Aliases]
@@ -347,6 +350,7 @@ namespace NadekoBot.Modules.Administration
 
             [NadekoCommand, Usage, Description, Aliases]
             [UserPerm(GuildPerm.ManageNicknames)]
+            [BotPerm(GuildPerm.ChangeNickname)]
             [Priority(0)]
             public async Task SetNick([Leftover] string newNick = null)
             {
@@ -364,6 +368,14 @@ namespace NadekoBot.Modules.Administration
             [Priority(1)]
             public async Task SetNick(IGuildUser gu, [Leftover] string newNick = null)
             {
+                var sg = (SocketGuild) Context.Guild;
+                if (sg.OwnerId == gu.Id ||
+                    gu.GetRoles().Max(r => r.Position) >= sg.CurrentUser.GetRoles().Max(r => r.Position))
+                {
+                    await ReplyErrorLocalizedAsync("insuf_perms_i");
+                    return;
+                }
+                
                 await gu.ModifyAsync(u => u.Nickname = newNick).ConfigureAwait(false);
 
                 await ReplyConfirmLocalizedAsync("user_nick", Format.Bold(gu.ToString()), Format.Bold(newNick) ?? "-").ConfigureAwait(false);
@@ -446,8 +458,7 @@ namespace NadekoBot.Modules.Administration
                     if (CREmbed.TryParse(msg, out var crembed))
                     {
                         rep.Replace(crembed);
-                        await ch.EmbedAsync(crembed.ToEmbed(), crembed.PlainText?.SanitizeMentions() ?? "")
-                            .ConfigureAwait(false);
+                        await ch.EmbedAsync(crembed).ConfigureAwait(false);
                         await ReplyConfirmLocalizedAsync("message_sent").ConfigureAwait(false);
                         return;
                     }
@@ -465,7 +476,7 @@ namespace NadekoBot.Modules.Administration
                     if (CREmbed.TryParse(msg, out var crembed))
                     {
                         rep.Replace(crembed);
-                        await (await user.GetOrCreateDMChannelAsync().ConfigureAwait(false)).EmbedAsync(crembed.ToEmbed(), crembed.PlainText?.SanitizeMentions() ?? "")
+                        await (await user.GetOrCreateDMChannelAsync().ConfigureAwait(false)).EmbedAsync(crembed)
                             .ConfigureAwait(false);
                         await ReplyConfirmLocalizedAsync("message_sent").ConfigureAwait(false);
                         return;
@@ -495,6 +506,15 @@ namespace NadekoBot.Modules.Administration
             {
                 _service.ReloadBotConfig();
                 await ReplyConfirmLocalizedAsync("bot_config_reloaded").ConfigureAwait(false);
+            }
+            
+            [NadekoCommand, Usage, Description, Aliases]
+            [OwnerOnly]
+            public async Task StringsReload()
+            {
+                // todo add publisher to this. something like v3 eventpusher
+                _strings.Reload();
+                await ReplyConfirmLocalizedAsync("bot_strings_reloaded").ConfigureAwait(false);
             }
 
             private static UserStatus SettableUserStatusToUserStatus(SettableUserStatus sus)

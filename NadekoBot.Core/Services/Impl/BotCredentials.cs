@@ -7,13 +7,14 @@ using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using NadekoBot.Core.Common;
 
 namespace NadekoBot.Core.Services.Impl
 {
     public class BotCredentials : IBotCredentials
     {
         private Logger _log;
-        
+
         public string GoogleApiKey { get; }
         public string MashapeKey { get; }
         public string Token { get; }
@@ -49,9 +50,18 @@ namespace NadekoBot.Core.Services.Impl
         {
             _log = LogManager.GetCurrentClassLogger();
 
-            try { File.WriteAllText("./credentials_example.json", JsonConvert.SerializeObject(new CredentialsModel(), Formatting.Indented)); } catch { }
+            try
+            {
+                File.WriteAllText("./credentials_example.json",
+                    JsonConvert.SerializeObject(new CredentialsModel(), Formatting.Indented));
+            }
+            catch
+            {
+            }
+
             if (!File.Exists(_credsFileName))
-                _log.Warn($"credentials.json is missing. Attempting to load creds from environment variables prefixed with 'NadekoBot_'. Example is in {Path.GetFullPath("./credentials_example.json")}");
+                _log.Warn(
+                    $"credentials.json is missing. Attempting to load creds from environment variables prefixed with 'NadekoBot_'. Example is in {Path.GetFullPath("./credentials_example.json")}");
             try
             {
                 var configBuilder = new ConfigurationBuilder();
@@ -63,12 +73,13 @@ namespace NadekoBot.Core.Services.Impl
                 Token = data[nameof(Token)];
                 if (string.IsNullOrWhiteSpace(Token))
                 {
-                    _log.Error("Token is missing from credentials.json or Environment varibles. Add it and restart the program.");
-                    if (!Console.IsInputRedirected)
-                        Console.ReadKey();
-                    Environment.Exit(3);
+                    _log.Error(
+                        "Token is missing from credentials.json or Environment variables. Add it and restart the program.");
+                    Helpers.ReadErrorAndExit(5);
                 }
-                OwnerIds = data.GetSection("OwnerIds").GetChildren().Select(c => ulong.Parse(c.Value)).ToImmutableArray();
+
+                OwnerIds = data.GetSection("OwnerIds").GetChildren().Select(c => ulong.Parse(c.Value))
+                    .ToImmutableArray();
                 GoogleApiKey = data[nameof(GoogleApiKey)];
                 MashapeKey = data[nameof(MashapeKey)];
                 OsuApiKey = data[nameof(OsuApiKey)];
@@ -80,10 +91,11 @@ namespace NadekoBot.Core.Services.Impl
                 LocationIqApiKey = data[nameof(LocationIqApiKey)];
                 TimezoneDbApiKey = data[nameof(TimezoneDbApiKey)];
                 CoinmarketcapApiKey = data[nameof(CoinmarketcapApiKey)];
-                if(string.IsNullOrWhiteSpace(CoinmarketcapApiKey))
+                if (string.IsNullOrWhiteSpace(CoinmarketcapApiKey))
                 {
                     CoinmarketcapApiKey = "e79ec505-0913-439d-ae07-069e296a6079";
                 }
+
                 if (!string.IsNullOrWhiteSpace(data[nameof(RedisOptions)]))
                     RedisOptions = data[nameof(RedisOptions)];
                 else
@@ -127,11 +139,11 @@ namespace NadekoBot.Core.Services.Impl
                 CarbonKey = data[nameof(CarbonKey)];
                 var dbSection = data.GetSection("db");
                 Db = new DBConfig(string.IsNullOrWhiteSpace(dbSection["Type"])
-                                ? "sqlite"
-                                : dbSection["Type"],
-                            string.IsNullOrWhiteSpace(dbSection["ConnectionString"])
-                                ? "Data Source=data/NadekoBot.db"
-                                : dbSection["ConnectionString"]);
+                        ? "sqlite"
+                        : dbSection["Type"],
+                    string.IsNullOrWhiteSpace(dbSection["ConnectionString"])
+                        ? "Data Source=data/NadekoBot.db"
+                        : dbSection["ConnectionString"]);
 
                 TwitchClientId = data[nameof(TwitchClientId)];
                 if (string.IsNullOrWhiteSpace(TwitchClientId))
@@ -141,11 +153,10 @@ namespace NadekoBot.Core.Services.Impl
             }
             catch (Exception ex)
             {
-                _log.Fatal(ex.Message);
-                _log.Fatal(ex);
-                throw;
+                _log.Error("JSON serialization has failed. Fix your credentials file and restart the bot.");
+                _log.Fatal(ex.ToString());
+                Helpers.ReadErrorAndExit(6);
             }
-
         }
 
         /// <summary>
@@ -159,6 +170,7 @@ namespace NadekoBot.Core.Services.Impl
             {
                 105635576866156544
             };
+
             public string GoogleApiKey { get; set; } = "";
             public string MashapeKey { get; set; } = "";
             public string OsuApiKey { get; set; } = "";
@@ -184,11 +196,9 @@ namespace NadekoBot.Core.Services.Impl
             public string TimezoneDbApiKey { get; set; }
             public string CoinmarketcapApiKey { get; set; }
 
-            [JsonIgnore]
-            ImmutableArray<ulong> IBotCredentials.OwnerIds => throw new NotImplementedException();
+            [JsonIgnore] ImmutableArray<ulong> IBotCredentials.OwnerIds => throw new NotImplementedException();
 
-            [JsonIgnore]
-            RestartConfig IBotCredentials.RestartCommand => throw new NotImplementedException();
+            [JsonIgnore] RestartConfig IBotCredentials.RestartCommand => throw new NotImplementedException();
 
             public bool IsOwner(IUser u)
             {

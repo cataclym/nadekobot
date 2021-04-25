@@ -11,7 +11,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -126,6 +125,7 @@ namespace NadekoBot.Core.Services
         {
             _lateBlockers = services.Where(x => x.ImplementationType?.GetInterfaces().Contains(typeof(ILateBlocker)) ?? false)
                 .Select(x => _services.GetService(x.ImplementationType) as ILateBlocker)
+                .OrderByDescending(x => x.Priority)
                 .ToArray();
 
             _lateExecutors = services.Where(x => x.ImplementationType?.GetInterfaces().Contains(typeof(ILateExecutor)) ?? false)
@@ -424,7 +424,7 @@ namespace NadekoBot.Core.Services
             var commandName = cmd.Aliases.First();
             foreach (var exec in _lateBlockers)
             {
-                if (await exec.TryBlockLate(_client, context.Message, context.Guild, context.Channel, context.User, cmd.Module.GetTopLevelModule().Name, commandName).ConfigureAwait(false))
+                if (await exec.TryBlockLate(_client, context, cmd.Module.GetTopLevelModule().Name, cmd).ConfigureAwait(false))
                 {
                     _log.Info("Late blocking User [{0}] Command: [{1}] in [{2}]", context.User, commandName, exec.GetType().Name);
                     return (false, null, cmd);

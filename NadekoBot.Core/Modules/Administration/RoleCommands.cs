@@ -17,7 +17,13 @@ namespace NadekoBot.Modules.Administration
     {
         public class RoleCommands : NadekoSubmodule<RoleCommandsService>
         {
+            private IServiceProvider _services;
             public enum Exclude { Excl }
+
+            public RoleCommands(IServiceProvider services)
+            {
+                _services = services;
+            }
 
             public async Task InternalReactionRoles(bool exclusive, params string[] input)
             {
@@ -33,29 +39,28 @@ namespace NadekoBot.Modules.Administration
                 var g = (SocketGuild)ctx.Guild;
 
                 var grp = 0;
-                var all = input
+                var results = input
                     .GroupBy(x => grp++ / 2)
-                    .Select(x =>
-                    {
-                        var inputRoleStr = x.First().ToLowerInvariant();
-                        var role = g.Roles.FirstOrDefault(y => y.Name.ToLowerInvariant() == inputRoleStr);
-                        if (role == null)
-                        {
-                            _log.Warn("Role {0} not found.", inputRoleStr);
-                            return null;
-                        }
-                        //var emote = g.Emotes.FirstOrDefault(y => y.ToString() == x.Last());
-                        //if (emote == null)
-                        //{
-                        //    _log.Warn("Emote {0} not found.", x.Last());
-                        //    return null;
-                        //}
-                        //else
-
-                        var emote = x.Last().ToIEmote();
-                        return new { role, emote };
-                    })
+                    .Select(async x =>
+                   {
+                       var inputRoleStr = x.First();
+                       var roleReader = new RoleTypeReader<SocketRole>();
+                       var roleResult = await roleReader.ReadAsync(ctx, inputRoleStr, _services);
+                       if (!roleResult.IsSuccess)
+                       {
+                           _log.Warn("Role {0} not found.", inputRoleStr);
+                           return null;
+                       }
+                       var role = (IRole)roleResult.BestMatch;
+                       if (role.Position > ((IGuildUser)ctx.User).GetRoles().Select(r => r.Position).Max()
+                           && ctx.User.Id != ctx.Guild.OwnerId)
+                           return null;
+                       var emote = x.Last().ToIEmote();
+                       return new { role, emote };
+                   })
                     .Where(x => x != null);
+
+                var all = await Task.WhenAll(results);
 
                 if (!all.Any())
                     return;
@@ -84,8 +89,7 @@ namespace NadekoBot.Modules.Administration
                     }).ToList(),
                 }))
                 {
-                    await ctx.Channel.SendConfirmAsync(":ok:")
-                        .ConfigureAwait(false);
+                    await ctx.OkAsync();
                 }
                 else
                 {
@@ -130,7 +134,11 @@ namespace NadekoBot.Modules.Administration
                     foreach (var rr in rrs)
                     {
                         var ch = g.GetTextChannel(rr.ChannelId);
-                        var msg = (await (ch?.GetMessageAsync(rr.MessageId)).ConfigureAwait(false)) as IUserMessage;
+                        IUserMessage msg = null;
+                        if (!(ch is null))
+                        {
+                            msg = await ch.GetMessageAsync(rr.MessageId).ConfigureAwait(false) as IUserMessage;
+                        }
                         var content = msg?.Content.TrimTo(30) ?? "DELETED!";
                         embed.AddField($"**{rr.Index + 1}.** {(ch?.Name ?? "DELETED!")}",
                             GetText("reaction_roles_message", rr.ReactionRoles?.Count ?? 0, content));
@@ -205,7 +213,7 @@ namespace NadekoBot.Modules.Administration
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.ManageRoles)]
             [BotPerm(GuildPerm.ManageRoles)]
-            public async Task RenameRole(IRole roleToEdit, string newname)
+            public async Task RenameRole(IRole roleToEdit, [Leftover]string newname)
             {
                 var guser = (IGuildUser)ctx.User;
                 if (ctx.User.Id != guser.Guild.OwnerId && guser.GetRoles().Max(x => x.Position) <= roleToEdit.Position)
@@ -234,7 +242,10 @@ namespace NadekoBot.Modules.Administration
             {
                 var guser = (IGuildUser)ctx.User;
 
-                var userRoles = user.GetRoles().Except(new[] { guser.Guild.EveryoneRole });
+                var userRoles = user.GetRoles()
+                    .Where(x => !x.IsManaged && x != x.Guild.EveryoneRole)
+                    .ToList();
+                
                 if (user.Id == ctx.Guild.OwnerId || (ctx.User.Id != ctx.Guild.OwnerId && guser.GetRoles().Max(x => x.Position) <= userRoles.Max(x => x.Position)))
                     return;
                 try
@@ -318,24 +329,6 @@ namespace NadekoBot.Modules.Administration
                 catch (Exception)
                 {
                     await ReplyErrorLocalizedAsync("rc_perms").ConfigureAwait(false);
-                }
-            }
-
-            [NadekoCommand, Usage, Description, Aliases]
-            [RequireContext(ContextType.Guild)]
-            [UserPerm(GuildPerm.MentionEveryone)]
-            [BotPerm(GuildPerm.ManageRoles)]
-            public async Task MentionRole([Leftover] IRole role)
-            {
-                if (!role.IsMentionable)
-                {
-                    await role.ModifyAsync(x => x.Mentionable = true).ConfigureAwait(false);
-                    await ctx.Channel.SendMessageAsync(role.Mention).ConfigureAwait(false);
-                    await role.ModifyAsync(x => x.Mentionable = false).ConfigureAwait(false);
-                }
-                else
-                {
-                    await ctx.Channel.SendMessageAsync(role.Mention).ConfigureAwait(false);
                 }
             }
         }

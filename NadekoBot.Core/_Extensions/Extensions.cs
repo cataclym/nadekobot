@@ -25,7 +25,6 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Numerics;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -39,6 +38,16 @@ namespace NadekoBot.Extensions
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
         public static Regex UrlRegex = new Regex(@"^(https?|ftp)://(?<path>[^\s/$.?#].[^\s]*)$", RegexOptions.Compiled);
+
+
+        public static Task<IUserMessage> EmbedAsync(this IMessageChannel channel, CREmbed crEmbed, bool sanitizeAll = false)
+        {
+            var plainText = sanitizeAll
+                ? crEmbed.PlainText?.SanitizeAllMentions() ?? ""
+                : crEmbed.PlainText?.SanitizeMentions() ?? "";
+            
+            return channel.SendMessageAsync(plainText, embed: crEmbed.IsEmbedValid ? crEmbed.ToEmbed().Build() : null);
+        }
 
         public static List<ulong> GetGuildIds(this DiscordSocketClient client)
             => client.Guilds.Select(x => x.Id).ToList();
@@ -148,11 +157,14 @@ namespace NadekoBot.Extensions
         public static ConcurrentDictionary<TKey, TValue> ToConcurrent<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> dict)
             => new ConcurrentDictionary<TKey, TValue>(dict);
 
-        public static bool IsAuthor(this IMessage msg, IDiscordClient client) =>
-            msg.Author?.Id == client.CurrentUser.Id;
+        public static bool IsAuthor(this IMessage msg, IDiscordClient client)
+            => msg.Author?.Id == client.CurrentUser.Id;
 
-        public static string RealSummary(this CommandInfo cmd, string prefix) => string.Format(cmd.Summary, prefix);
-        public static string RealRemarks(this CommandInfo cmd, string prefix) => string.Join(" or ", JsonConvert.DeserializeObject<string[]>(cmd.Remarks).Select(x => Format.Code(string.Format(x, prefix))));
+        public static string RealSummary(this CommandInfo cmd, string prefix)
+            => string.Format(cmd.Summary, prefix);
+        public static string RealRemarks(this CommandInfo cmd, string prefix)
+            => string.Join("\n", JsonConvert.DeserializeObject<string[]>(cmd.Remarks)
+                .Select(x => Format.Code(string.Format(x, prefix))));
 
         public static EmbedBuilder AddPaginatedFooter(this EmbedBuilder embed, int curPage, int? lastPage)
         {
