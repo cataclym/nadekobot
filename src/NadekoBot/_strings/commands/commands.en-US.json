@@ -3558,5 +3558,29 @@
     "usage": [
       "{0}economy"
     ]
+  },
+  "hug": {
+    "Cmd": "hug",
+    "Desc": "Hug a friend!",
+    "Usage": [
+      "{0}hug",
+      "{0}hug @cooler"
+    ]
+  },
+  "kiss": {
+    "Cmd": "kiss",
+    "Desc": "K-kiss someone s-special!",
+    "Usage": [
+      "{0}kiss",
+      "{0}kiss @cooler"
+    ]
+  },
+  "pat": {
+    "Cmd": "pat",
+    "Desc": "A good boy deserves pats.",
+    "Usage": [
+      "{0}pat",
+      "{0}pat @cooler"
+    ]
   }
 }
