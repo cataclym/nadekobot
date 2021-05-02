@@ -23,6 +23,12 @@ The reward multiplier for rolling 67 or higher on `.br`.
 The reward multiplier for rolling 91 or higher on `.br`.  
 **Default is 4.0**
 
+## GroupGreets
+
+Toggles whether your bot will group greet/bye messages into a single message every 5 seconds.
+1st user who joins will get greeted immediately
+If more users join within the next 5 seconds, they will be greeted in groups of 5. This will cause %user.mention% and other placeholders to be replaced with multiple users. Keep in mind this might break some of your embeds - for example if you have %user.avatar% in the thumbnail, it will become invalid, as it will resolve to a list of avatars of grouped users.
+
 ## CurrencyGenerationPassword
 
 Either `true` or `false` value on whether the currency spawned with `.gc` command will have a random password associated with it in the top left corner. This helps prevent people who lurk in the chat and just spam `.pick` to gain flowers.  
@@ -42,11 +48,6 @@ A number of seconds that the bot is guaranteed not to spawn any flowers again af
 
 Name of your currency. Mostly people aren't creative with this and just call them "Credit" or "Dollar". You can do better :^)  
 **Default is NadekoFlower**
-
-## CurrencyPluralName
-
-Plural name of your currency (if you have currency name called "dollar" then put this to "dollars". I'm not sure if this is even used anywhere in the bot anymore.  
-**Default is NadekoFlowers**
 
 ## CurrencySign
 

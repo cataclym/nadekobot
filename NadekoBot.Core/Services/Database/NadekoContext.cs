@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace NadekoBot.Core.Services.Database
 {
@@ -55,6 +56,7 @@ namespace NadekoBot.Core.Services.Database
         public DbSet<Stake> Stakes { get; set; }
         public DbSet<PlantedCurrency> PlantedCurrency { get; set; }
         public DbSet<BanTemplate> BanTemplates { get; set; }
+        public DbSet<DiscordPermOverride> DiscordPermOverrides { get; set; }
 
         public NadekoContext(DbContextOptions<NadekoContext> options) : base(options)
         {
@@ -337,7 +339,8 @@ namespace NadekoBot.Core.Services.Database
 
             #region CurrencyTransactions
             modelBuilder.Entity<CurrencyTransaction>()
-                .HasIndex(x => x.DateAdded);
+                .HasIndex(x => x.UserId)
+                .IsUnique(false);
             #endregion
 
             #region Reminders
@@ -361,6 +364,22 @@ namespace NadekoBot.Core.Services.Database
             modelBuilder.Entity<BanTemplate>()
                 .HasIndex(x => x.GuildId)
                 .IsUnique();
+
+            #endregion
+            
+            #region Perm Override
+
+            modelBuilder.Entity<DiscordPermOverride>()
+                .HasIndex(x => new {x.GuildId, x.Command})
+                .IsUnique();
+
+            #endregion
+            
+            #region BotConfigMigrations
+
+            var bcEntity = modelBuilder.Entity<BotConfig>();
+            bcEntity.Property(bc => bc.HasMigratedBotSettings)
+                .HasDefaultValue(1);
 
             #endregion
         }

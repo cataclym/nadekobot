@@ -10,7 +10,6 @@ using Discord.Net;
 using Discord.WebSocket;
 using NadekoBot.Extensions;
 using NadekoBot.Core.Services;
-using NadekoBot.Core.Services.Impl;
 using NLog;
 using NadekoBot.Core.Modules.Games.Common.Trivia;
 
@@ -21,7 +20,7 @@ namespace NadekoBot.Modules.Games.Common.Trivia
         private readonly SemaphoreSlim _guessLock = new SemaphoreSlim(1, 1);
         private readonly Logger _log;
         private readonly IDataCache _cache;
-        private readonly NadekoStrings _strings;
+        private readonly IBotStrings _strings;
         private readonly DiscordSocketClient _client;
         private readonly IBotConfigProvider _bc;
         private readonly ICurrencyService _cs;
@@ -42,10 +41,11 @@ namespace NadekoBot.Modules.Games.Common.Trivia
 
         private readonly TriviaQuestionPool _questionPool;
         private int _timeoutCount = 0;
+        private readonly string _quitCommand;
 
-        public TriviaGame(NadekoStrings strings, DiscordSocketClient client, IBotConfigProvider bc,
+        public TriviaGame(IBotStrings strings, DiscordSocketClient client, IBotConfigProvider bc,
             IDataCache cache, ICurrencyService cs, IGuild guild, ITextChannel channel,
-            TriviaOptions options)
+            TriviaOptions options, string quitCommand)
         {
             _log = LogManager.GetCurrentClassLogger();
             _cache = cache;
@@ -55,23 +55,23 @@ namespace NadekoBot.Modules.Games.Common.Trivia
             _bc = bc;
             _cs = cs;
             _options = options;
+            _quitCommand = quitCommand;
 
             Guild = guild;
             Channel = channel;
         }
 
-        private string GetText(string key, params object[] replacements) =>
-            _strings.GetText(key,
-                Channel.GuildId,
-                typeof(Games).Name.ToLowerInvariant(),
-                replacements);
+        private string GetText(string key, params object[] replacements)
+            => _strings.GetText(key, Channel.GuildId, replacements);
 
         public async Task StartGame()
         {
+            var showHowToQuit = false;
             while (!ShouldStopGame)
             {
                 // reset the cancellation source    
                 _triviaCancelSource = new CancellationTokenSource();
+                showHowToQuit = !showHowToQuit;
 
                 // load question
                 CurrentQuestion = _questionPool.GetRandomQuestion(OldQuestions, _options.IsPokemon);
@@ -90,6 +90,10 @@ namespace NadekoBot.Modules.Games.Common.Trivia
                         .WithTitle(GetText("trivia_game"))
                         .AddField(eab => eab.WithName(GetText("category")).WithValue(CurrentQuestion.Category))
                         .AddField(eab => eab.WithName(GetText("question")).WithValue(CurrentQuestion.Question));
+
+                    if (showHowToQuit)
+                        questionEmbed.WithFooter(GetText("trivia_quit", _quitCommand));
+                    
                     if (Uri.IsWellFormedUriString(CurrentQuestion.ImageUrl, UriKind.Absolute))
                         questionEmbed.WithImageUrl(CurrentQuestion.ImageUrl);
 

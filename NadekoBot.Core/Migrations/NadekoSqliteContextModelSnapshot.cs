@@ -31,6 +31,9 @@ namespace NadekoBot.Migrations
                     b.Property<int>("GuildConfigId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("PunishDuration")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Seconds")
                         .HasColumnType("INTEGER");
 
@@ -86,6 +89,9 @@ namespace NadekoBot.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MuteTime")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong?>("RoleId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -250,6 +256,14 @@ namespace NadekoBot.Migrations
 
                     b.Property<bool>("ForwardToAllOwners")
                         .HasColumnType("INTEGER");
+
+                    b.Property<bool>("GroupGreets")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("HasMigratedBotSettings")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("HelpString")
                         .HasColumnType("TEXT");
@@ -486,7 +500,7 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DateAdded");
+                    b.HasIndex("UserId");
 
                     b.ToTable("CurrencyTransactions");
                 });
@@ -558,6 +572,32 @@ namespace NadekoBot.Migrations
                     b.HasIndex("GuildConfigId");
 
                     b.ToTable("DelMsgOnCmdChannel");
+                });
+
+            modelBuilder.Entity("NadekoBot.Core.Services.Database.Models.DiscordPermOverride", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Command")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong?>("GuildId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("Perm")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "Command")
+                        .IsUnique();
+
+                    b.ToTable("DiscordPermOverrides");
                 });
 
             modelBuilder.Entity("NadekoBot.Core.Services.Database.Models.DiscordUser", b =>

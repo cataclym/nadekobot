@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord.Net;
 using NadekoBot.Core.Common;
+using NadekoBot.Core.Common.Configs;
 
 namespace NadekoBot
 {
@@ -37,20 +38,13 @@ namespace NadekoBot
         private readonly DbService _db;
         public ImmutableArray<GuildConfig> AllGuildConfigs { get; private set; }
 
-        /* I don't know how to make this not be static
-         * and keep the convenience of .WithOkColor
-         * and .WithErrorColor extensions methods.
-         * I don't want to pass botconfig every time I
-         * want to send a confirm or error message, so
-         * I'll keep this for now */
+        /* Will have to be removed soon, it's been way too long */
         public static Color OkColor { get; set; }
         public static Color ErrorColor { get; set; }
 
         public TaskCompletionSource<bool> Ready { get; private set; } = new TaskCompletionSource<bool>();
 
         public IServiceProvider Services { get; private set; }
-
-        private readonly BotConfig _botConfig;
         public IDataCache Cache { get; private set; }
 
         public int GuildCount =>
@@ -99,14 +93,6 @@ namespace NadekoBot
                 DefaultRunMode = RunMode.Sync,
             });
 
-            using (var uow = _db.GetDbContext())
-            {
-                _botConfig = uow.BotConfig.GetOrCreate();
-                OkColor = new Color(Convert.ToUInt32(_botConfig.OkColor, 16));
-                ErrorColor = new Color(Convert.ToUInt32(_botConfig.ErrorColor, 16));
-                uow.SaveChanges();
-            }
-
             SetupShard(parentProcessId);
 
 #if GLOBAL_NADEKO || DEBUG
@@ -153,49 +139,54 @@ namespace NadekoBot
         private void AddServices()
         {
             var startingGuildIdList = GetCurrentGuildIds();
+            var sw = Stopwatch.StartNew();
+            var _bot = Client.CurrentUser;
 
-            //this unit of work will be used for initialization of all modules too, to prevent multiple queries from running
             using (var uow = _db.GetDbContext())
             {
-                var sw = Stopwatch.StartNew();
-
-                var _bot = Client.CurrentUser;
-
                 uow.DiscordUsers.EnsureCreated(_bot.Id, _bot.Username, _bot.Discriminator, _bot.AvatarId);
-
                 AllGuildConfigs = uow.GuildConfigs.GetAllGuildConfigs(startingGuildIdList).ToImmutableArray();
-
-                IBotConfigProvider botConfigProvider = new BotConfigProvider(_db, _botConfig, Cache);
-
-                var s = new ServiceCollection()
-                    .AddSingleton<IBotCredentials>(Credentials)
-                    .AddSingleton(_db)
-                    .AddSingleton(Client)
-                    .AddSingleton(CommandService)
-                    .AddSingleton(botConfigProvider)
-                    .AddSingleton(this)
-                    .AddSingleton(uow)
-                    .AddSingleton(Cache)
-                    .AddMemoryCache();
-
-                s.AddHttpClient();
-                s.AddHttpClient("memelist").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-                {
-                    AllowAutoRedirect = false
-                });
-
-                s.LoadFrom(Assembly.GetAssembly(typeof(CommandHandler)));
-
-                //initialize Services
-                Services = s.BuildServiceProvider();
-                var commandHandler = Services.GetService<CommandHandler>();
-                //what the fluff
-                commandHandler.AddServices(s);
-                _ = LoadTypeReaders(typeof(NadekoBot).Assembly);
-
-                sw.Stop();
-                _log.Info($"All services loaded in {sw.Elapsed.TotalSeconds:F2}s");
             }
+
+            var s = new ServiceCollection()
+                .AddSingleton<IBotCredentials>(Credentials)
+                .AddSingleton(_db)
+                .AddSingleton(Client)
+                .AddSingleton(CommandService)
+                .AddSingleton(this)
+                .AddSingleton(Cache)
+                .AddSingleton(Cache.Redis)
+                .AddSingleton<IStringsSource, LocalFileStringsSource>()
+                .AddSingleton<IBotStringsProvider, LocalBotStringsProvider>()
+                .AddSingleton<IBotStrings, BotStrings>()
+                .AddSingleton<IBotConfigProvider, BotConfigProvider>()
+                .AddSingleton<ISeria, JsonSeria>()
+                .AddSingleton<ISettingsSeria, YamlSeria>()
+                .AddSingleton<BotSettingsService>()
+                .AddSingleton<BotSettingsMigrator>()
+                .AddSingleton<IPubSub, RedisPubSub>()
+                .AddMemoryCache();
+
+            s.AddHttpClient();
+            s.AddHttpClient("memelist").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            });
+
+            s.LoadFrom(Assembly.GetAssembly(typeof(CommandHandler)));
+
+            //initialize Services
+            Services = s.BuildServiceProvider();
+            var commandHandler = Services.GetService<CommandHandler>();
+            var bsMigrator = Services.GetService<BotSettingsMigrator>();
+            bsMigrator.EnsureMigrated();
+            
+            //what the fluff
+            commandHandler.AddServices(s);
+            _ = LoadTypeReaders(typeof(NadekoBot).Assembly);
+
+            sw.Stop();
+            _log.Info($"All services loaded in {sw.Elapsed.TotalSeconds:F2}s");
         }
 
         private IEnumerable<object> LoadTypeReaders(Assembly assembly)
@@ -290,7 +281,7 @@ namespace NadekoBot
 
         private Task Client_JoinedGuild(SocketGuild arg)
         {
-            _log.Info("Joined server: {0} [{1}]", arg?.Name, arg?.Id);
+            _log.Info($"Joined server: {0} [{1}]", arg?.Name, arg?.Id);
             var _ = Task.Run(async () =>
             {
                 GuildConfig gc;

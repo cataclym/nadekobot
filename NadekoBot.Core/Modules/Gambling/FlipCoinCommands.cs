@@ -94,7 +94,7 @@ namespace NadekoBot.Modules.Gambling
                 var removed = await _cs.RemoveAsync(ctx.User, "Betflip Gamble", amount, false, gamble: true).ConfigureAwait(false);
                 if (!removed)
                 {
-                    await ReplyErrorLocalizedAsync("not_enough", Bc.BotConfig.CurrencyPluralName).ConfigureAwait(false);
+                    await ReplyErrorLocalizedAsync("not_enough", Bc.BotConfig.CurrencySign).ConfigureAwait(false);
                     return;
                 }
                 BetFlipGuess result;
@@ -120,7 +120,7 @@ namespace NadekoBot.Modules.Gambling
                 }
                 else
                 {
-                    str = ctx.User.Mention + " " + GetText("better_luck");
+                    str = ctx.User.ToString() + " " + GetText("better_luck");
                 }
 
                 await ctx.Channel.EmbedAsync(new EmbedBuilder()

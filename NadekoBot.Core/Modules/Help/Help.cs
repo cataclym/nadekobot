@@ -14,7 +14,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Discord.WebSocket;
 
 namespace NadekoBot.Modules.Help
@@ -23,29 +26,32 @@ namespace NadekoBot.Modules.Help
     {
         public const string PatreonUrl = "https://patreon.com/nadekobot";
         public const string PaypalUrl = "https://paypal.me/Kwoth";
-        private readonly IBotCredentials _creds;
         private readonly CommandService _cmds;
+        private readonly BotSettingsService _bss;
         private readonly GlobalPermissionService _perms;
         private readonly IServiceProvider _services;
         private readonly DiscordSocketClient _client;
+        private readonly IBotStrings _strings;
 
         private readonly AsyncLazy<ulong> _lazyClientId;
 
-        public Help(IBotCredentials creds, GlobalPermissionService perms, CommandService cmds,
-            IServiceProvider services, DiscordSocketClient client)
+        public Help(GlobalPermissionService perms, CommandService cmds, BotSettingsService bss,
+            IServiceProvider services, DiscordSocketClient client, IBotStrings strings)
         {
-            _creds = creds;
             _cmds = cmds;
+            _bss = bss;
             _perms = perms;
             _services = services;
             _client = client;
-            
+            _strings = strings;
+
             _lazyClientId = new AsyncLazy<ulong>(async () => (await _client.GetApplicationInfoAsync()).Id);
         }
 
         public async Task<(string plainText, EmbedBuilder embed)> GetHelpStringEmbed()
         {
-            if (string.IsNullOrWhiteSpace(Bc.BotConfig.HelpString) || Bc.BotConfig.HelpString == "-")
+            var botSettings = _bss.Data;
+            if (string.IsNullOrWhiteSpace(botSettings.HelpText) || botSettings.HelpText == "-")
                 return default;
             
             var clientId = await _lazyClientId.Value;
@@ -57,10 +63,10 @@ namespace NadekoBot.Modules.Help
 
             var app = await _client.GetApplicationInfoAsync();
 
-            if (!CREmbed.TryParse(Bc.BotConfig.HelpString, out var embed))
+            if (!CREmbed.TryParse(botSettings.HelpText, out var embed))
             {
                 var eb = new EmbedBuilder().WithOkColor()
-                    .WithDescription(String.Format(Bc.BotConfig.HelpString, clientId, Prefix));
+                    .WithDescription(String.Format(botSettings.HelpText, clientId, Prefix));
                 return ("", eb);
             }
 
@@ -73,7 +79,7 @@ namespace NadekoBot.Modules.Help
         public async Task Modules()
         {
             var embed = new EmbedBuilder().WithOkColor()
-                .WithFooter(efb => efb.WithText("ℹ️" + GetText("modules_footer", Prefix)))
+                .WithFooter(efb => efb.WithText("ℹ️ " + GetText("modules_footer", Prefix)))
                 .WithTitle(GetText("list_of_modules"))
                 .WithDescription(string.Join("\n",
                                      _cmds.Modules.GroupBy(m => m.GetTopLevelModule())
@@ -217,42 +223,80 @@ namespace NadekoBot.Modules.Help
             var embed = _service.GetCommandHelp(com, ctx.Guild);
             await channel.EmbedAsync(embed).ConfigureAwait(false);
         }
-
+        
         [NadekoCommand, Usage, Description, Aliases]
-        [RequireContext(ContextType.Guild)]
         [OwnerOnly]
-        public async Task Hgit()
+        public async Task GenCmdList([Leftover] string path = null)
         {
-            Dictionary<string, List<object>> cmdData = new Dictionary<string, List<object>>();
-            foreach (var com in _cmds.Commands.OrderBy(com => com.Module.GetTopLevelModule().Name).GroupBy(c => c.Aliases.First()).Select(g => g.First()))
+            _ = ctx.Channel.TriggerTypingAsync();
+
+            // order commands by top level module name
+            // and make a dictionary of <ModuleName, Array<JsonCommandData>>
+            var cmdData = _cmds
+                .Commands
+                .GroupBy(x => x.Module.GetTopLevelModule().Name)
+                .OrderBy(x => x.Key)
+                .ToDictionary(
+                    x => x.Key,
+                    x => x.Distinct(x => x.Aliases.First())
+                        .Select(com =>
+                        {
+                            var module = com.Module.GetTopLevelModule();
+                            List<string> optHelpStr = null;
+                            var opt = ((NadekoOptionsAttribute)com.Attributes.FirstOrDefault(x => x is NadekoOptionsAttribute))?.OptionType;
+                            if (opt != null)
+                            {
+                                optHelpStr = HelpService.GetCommandOptionHelpList(opt);
+                            }
+                            
+                            return new CommandJsonObject
+                            {
+                                Aliases = com.Aliases.Select(alias => Prefix + alias).ToArray(),
+                                Description = com.RealSummary(_strings, Prefix),
+                                Usage = com.RealRemarksArr(_strings, Prefix),
+                                Submodule = com.Module.Name,
+                                Module = com.Module.GetTopLevelModule().Name,
+                                Options = optHelpStr,
+                                Requirements = HelpService.GetCommandRequirements(com),
+                            };
+                        })
+                        .ToList()
+                );
+
+            var readableData = JsonConvert.SerializeObject(cmdData, Formatting.Indented);
+            var uploadData = JsonConvert.SerializeObject(cmdData, Formatting.None);
+
+            // for example https://nyc.digitaloceanspaces.com (without your space name)
+            var serviceUrl = Environment.GetEnvironmentVariable("do_spaces_address");
+
+            // generate spaces access key on https://cloud.digitalocean.com/account/api/tokens
+            // you will get 2 keys, first, shorter one is id, longer one is secret
+            var accessKey = Environment.GetEnvironmentVariable("do_access_key_id");
+            var secretAcccessKey = Environment.GetEnvironmentVariable("do_access_key_secret");
+
+            // if all env vars are set, upload the unindented file (to save space) there
+            if (!(serviceUrl is null || accessKey is null || secretAcccessKey is null))
             {
-                var module = com.Module.GetTopLevelModule();
-                List<string> optHelpStr = null;
-                var opt = ((NadekoOptionsAttribute)com.Attributes.FirstOrDefault(x => x is NadekoOptionsAttribute))?.OptionType;
-                if (opt != null)
+                var config = new AmazonS3Config {ServiceURL = serviceUrl};
+                using (var client = new AmazonS3Client(accessKey, secretAcccessKey, config))
                 {
-                    optHelpStr = HelpService.GetCommandOptionHelpList(opt);
-                }
-                var obj = new
-                {
-                    Aliases = com.Aliases.Select(x => Prefix + x).ToArray(),
-                    Description = string.Format(com.Summary, Prefix),
-                    Usage = JsonConvert.DeserializeObject<string[]>(com.Remarks).Select(x => string.Format(x, Prefix)).ToArray(),
-                    Submodule = com.Module.Name,
-                    Module = com.Module.GetTopLevelModule().Name,
-                    Options = optHelpStr,
-                    Requirements = HelpService.GetCommandRequirements(com),
-                };
-                if (cmdData.TryGetValue(module.Name, out var cmds))
-                    cmds.Add(obj);
-                else
-                    cmdData.Add(module.Name, new List<object>
+                    var res = await client.PutObjectAsync(new PutObjectRequest()
                     {
-                        obj
+                        BucketName = "nadeko-pictures",
+                        ContentType = "application/json",
+                        ContentBody = uploadData,
+                        // either use a path provided in the argument or the default one for public nadeko, other/cmds.json
+                        Key = path ?? "other/cmds.json",
+                        CannedACL = S3CannedACL.PublicRead
                     });
+                }
             }
-            File.WriteAllText("../../docs/cmds_new.json", JsonConvert.SerializeObject(cmdData, Formatting.Indented));
-            await ReplyConfirmLocalizedAsync("commandlist_regen").ConfigureAwait(false);
+
+            // also send the file, but indented one, to chat
+            using (var rDataStream = new MemoryStream(Encoding.ASCII.GetBytes(readableData)))
+            {
+                await ctx.Channel.SendFileAsync(rDataStream, "cmds.json", GetText("commandlist_regen")).ConfigureAwait(false);
+            }
         }
 
         [NadekoCommand, Usage, Description, Aliases]
@@ -268,11 +312,6 @@ namespace NadekoBot.Modules.Help
         {
             await ReplyConfirmLocalizedAsync("donate", PatreonUrl, PaypalUrl).ConfigureAwait(false);
         }
-
-        private string GetRemarks(string[] arr)
-        {
-            return string.Join(" or ", arr.Select(x => Format.Code(x)));
-        }
     }
 
     public class CommandTextEqualityComparer : IEqualityComparer<CommandInfo>
@@ -283,10 +322,15 @@ namespace NadekoBot.Modules.Help
 
     }
 
-    public class JsonCommandData
+    // todo 3.3 / 3.4 add versions to the cmds.json
+    internal class CommandJsonObject
     {
         public string[] Aliases { get; set; }
         public string Description { get; set; }
-        public string Usage { get; set; }
+        public string[] Usage { get; set; }
+        public string Submodule { get; set; }
+        public string Module { get; set; }
+        public List<string> Options { get; set; }
+        public string[] Requirements { get; set; }
     }
 }

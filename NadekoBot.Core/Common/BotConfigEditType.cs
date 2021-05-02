@@ -1,5 +1,15 @@
 ﻿namespace NadekoBot.Common
 {
+    public enum BotSettingsEditType
+    {
+        DmHelpText,
+        HelpText,
+        OkColor,
+        ConsoleOutputType,
+        PendingColor,
+        ErrorColor,
+        GroupGreets
+    }
     public enum BotConfigEditType
     {
         /// <summary>
@@ -51,31 +61,11 @@
         /// </summary>
         CurrencyName,
         /// <summary>
-        /// Plural name of your currency (if you have currency name called "dollar" then put this to "dollars".
-        /// I'm not sure if this is even used anywhere in the bot anymore.
-        /// Default is NadekoFlowers
-        /// </summary>
-        CurrencyPluralName,
-        /// <summary>
         /// Emoji of your currency. You can use server emojis only if your bot is only on your own server, or 
         /// if you have nitro/partner.
         /// Default is 🌸.
         /// </summary>
         CurrencySign,
-        /// <summary>
-        /// The string which will be sent whenever someone DMs the bot. Supports embeds.
-        /// How it looks: https://puu.sh/B0BLV.png
-        /// Default is "Use `.h` for help". 
-        /// </summary>
-        DMHelpString,
-        /// <summary>
-        /// The strings which will be sent whenever someone types `.h`. Supports embeds.
-        /// You can also use {0} placeholder which will be replaced with your bot's
-        /// client id, and {1} placeholder which will be replaced with your bot's prefix.
-        /// How it looks: https://puu.sh/B0BMa.png
-        /// Default is too long to type out.
-        /// </summary>
-        HelpString,
         /// <summary>
         /// The amount of currency which will drop when `.gc` spawn is triggered. Default is 1.
         /// This will be the minimum amount of currency to be spawned if CurrencyDropAmountMax is also specified.
@@ -138,41 +128,12 @@
         /// </summary>
         MaxBet,
         /// <summary>
-        /// Hex of the color which will show on the left side of the bot's response
-        /// when a command succesfully executes. Example: https://puu.sh/B0BXd.png
-        /// Default is 00e584.
-        /// </summary>
-        ErrorColor,
-        /// <summary>
-        /// Hex of the color which will show on the left side of the bot's response
-        /// when a command either errors, or you can't perform some action. Example: https://puu.sh/B0BXs.png
-        /// Default is ee281f.
-        /// </summary>
-        OkColor,
-        /// <summary>
-        /// 2 values, either 'Simple' or 'Normal'. Normal is the default type,
-        /// and the simple one shows only basic info about the executed commands
-        /// in the console. Here is a comparison: https://puu.sh/B0Chn.png
-        /// </summary>
-        ConsoleOutputType,
-        /// <summary>
         /// The percentage of currency all users will lose every 24 hours. 
         /// The value goes between 0 and 1.0 (0 being 0% to 1.0 being 100%).
         /// This is a useful tool to control the inflation :)
         /// Default is 0.
         /// </summary>
         DailyCurrencyDecay,
-        /// <summary>
-        /// Whether the bot will see if there are updates available. The patch notes will be
-        /// sent to Bot Owner's DM. The bot checks for updates once every 8 hours.
-        /// There are 3 available values:
-        /// None: The bot will not check for updates
-        /// Commit: This is useful for linux self-hosters - the bot will check for any new commit on the NadekoBot repository.
-        /// Release: This is useful for windows self-hosters - the bot will check for any new releases published on the NadekoBot repository.
-        ///     This setting is also useful for linux self-hosters who only want to update when it's pretty safe to do so :)
-        /// Default is Release.
-        /// </summary>
-        CheckForUpdates,
         /// <summary>
         /// You need this only if you have a patreon page, and you've specified the
         /// PatreonCampaignId and PatreonAccessToken in credentials.json. This value is the amount of 

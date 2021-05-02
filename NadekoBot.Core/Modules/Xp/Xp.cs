@@ -1,8 +1,6 @@
-﻿using CommandLine;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.Caching.Memory;
 using NadekoBot.Common.Attributes;
 using NadekoBot.Core.Common;
 using NadekoBot.Core.Services;
@@ -10,10 +8,8 @@ using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
 using NadekoBot.Modules.Xp.Common;
 using NadekoBot.Modules.Xp.Services;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 
 namespace NadekoBot.Modules.Xp
@@ -122,15 +118,46 @@ namespace NadekoBot.Modules.Xp
             Global = 1,
         }
 
+        private string GetNotifLocationString(XpNotificationLocation loc)
+        {
+            if (loc == XpNotificationLocation.Channel)
+            {
+                return GetText("xpn_notif_channel");
+            }
+
+            if (loc == XpNotificationLocation.Dm)
+            {
+                return GetText("xpn_notif_dm");
+            }
+
+            return GetText("xpn_notif_disabled");
+        }
+
         [NadekoCommand, Usage, Description, Aliases]
         [RequireContext(ContextType.Guild)]
-        public async Task XpNotify(NotifyPlace place = NotifyPlace.Guild, XpNotificationLocation type = XpNotificationLocation.Channel)
+        public async Task XpNotify()
+        {
+            var globalSetting = _service.GetNotificationType(ctx.User);
+            var serverSetting = _service.GetNotificationType(ctx.User.Id, ctx.Guild.Id);
+
+            var embed = new EmbedBuilder()
+                .WithOkColor()
+                .AddField(GetText("xpn_setting_global"), GetNotifLocationString(globalSetting))
+                .AddField(GetText("xpn_setting_server"), GetNotifLocationString(serverSetting));
+
+            await Context.Channel.EmbedAsync(embed);
+        }
+
+        [NadekoCommand, Usage, Description, Aliases]
+        [RequireContext(ContextType.Guild)]
+        public async Task XpNotify(NotifyPlace place, XpNotificationLocation type)
         {
             if (place == NotifyPlace.Guild)
                 await _service.ChangeNotificationType(ctx.User.Id, ctx.Guild.Id, type).ConfigureAwait(false);
             else
                 await _service.ChangeNotificationType(ctx.User, type).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("👌").ConfigureAwait(false);
+            
+            await ctx.OkAsync().ConfigureAwait(false);
         }
 
         public enum Server { Server };
@@ -297,7 +324,7 @@ namespace NadekoBot.Modules.Xp
                 {
                     var user = users[i];
                     embed.AddField(
-                        $"#{(i + 1 + page * 9)} {(user.ToString())}",
+                        $"#{i + 1 + page * 9} {(user.ToString())}",
                         $"{GetText("level_x", new LevelStats(users[i].TotalXp).Level)} - {users[i].TotalXp}xp");
                 }
             }

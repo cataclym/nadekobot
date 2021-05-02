@@ -6,7 +6,6 @@ using NadekoBot.Common.Attributes;
 using NadekoBot.Core.Common;
 using NadekoBot.Core.Modules.Gambling.Common;
 using NadekoBot.Core.Services;
-using NadekoBot.Core.Services.Database;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
 using NadekoBot.Modules.Gambling.Services;
@@ -16,6 +15,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using NadekoBot.Core.Services.Database;
 
 namespace NadekoBot.Modules.Gambling
 {
@@ -28,9 +28,6 @@ namespace NadekoBot.Modules.Gambling
         private readonly IBotConfigProvider _bc;
         private readonly NumberFormatInfo _enUsCulture;
         private readonly DownloadTracker _tracker;
-
-        private string CurrencyName => Bc.BotConfig.CurrencyName;
-        private string CurrencyPluralName => Bc.BotConfig.CurrencyPluralName;
         private string CurrencySign => Bc.BotConfig.CurrencySign;
 
         public Gambling(DbService db, ICurrencyService currency,
@@ -196,7 +193,7 @@ namespace NadekoBot.Modules.Gambling
             var trs = new List<CurrencyTransaction>();
             using (var uow = _db.GetDbContext())
             {
-                trs = uow.CurrencyTransactions.GetPageFor(userId, page);
+                trs = uow._context.CurrencyTransactions.GetPageFor(userId, page);
             }
 
             var embed = new EmbedBuilder()
@@ -234,7 +231,7 @@ namespace NadekoBot.Modules.Gambling
             var success = await _cs.RemoveAsync((IGuildUser)ctx.User, $"Gift to {receiver.Username} ({receiver.Id}).", amount, false).ConfigureAwait(false);
             if (!success)
             {
-                await ReplyErrorLocalizedAsync("not_enough", CurrencyPluralName).ConfigureAwait(false);
+                await ReplyErrorLocalizedAsync("not_enough", CurrencySign).ConfigureAwait(false);
                 return;
             }
             await _cs.AddAsync(receiver, $"Gift from {ctx.User.Username} ({ctx.User.Id}) - {msg}.", amount, true).ConfigureAwait(false);
@@ -311,7 +308,7 @@ namespace NadekoBot.Modules.Gambling
                 gamble: (ctx.Client.CurrentUser.Id != user.Id)).ConfigureAwait(false))
                 await ReplyConfirmLocalizedAsync("take", n(amount) + CurrencySign, Format.Bold(user.ToString())).ConfigureAwait(false);
             else
-                await ReplyErrorLocalizedAsync("take_fail", n(amount) + CurrencySign, Format.Bold(user.ToString()), CurrencyPluralName).ConfigureAwait(false);
+                await ReplyErrorLocalizedAsync("take_fail", n(amount) + CurrencySign, Format.Bold(user.ToString()), CurrencySign).ConfigureAwait(false);
         }
 
 
@@ -326,7 +323,7 @@ namespace NadekoBot.Modules.Gambling
                 gamble: (ctx.Client.CurrentUser.Id != usrId)).ConfigureAwait(false))
                 await ReplyConfirmLocalizedAsync("take", amount + CurrencySign, $"<@{usrId}>").ConfigureAwait(false);
             else
-                await ReplyErrorLocalizedAsync("take_fail", amount + CurrencySign, Format.Code(usrId.ToString()), CurrencyPluralName).ConfigureAwait(false);
+                await ReplyErrorLocalizedAsync("take_fail", amount + CurrencySign, Format.Code(usrId.ToString()), CurrencySign).ConfigureAwait(false);
         }
 
         private IUserMessage rdMsg = null;
@@ -444,7 +441,7 @@ namespace NadekoBot.Modules.Gambling
 
             if (!await _cs.RemoveAsync(ctx.User, "Betroll Gamble", amount, false, gamble: true).ConfigureAwait(false))
             {
-                await ReplyErrorLocalizedAsync("not_enough", CurrencyPluralName).ConfigureAwait(false);
+                await ReplyErrorLocalizedAsync("not_enough", CurrencySign).ConfigureAwait(false);
                 return;
             }
 

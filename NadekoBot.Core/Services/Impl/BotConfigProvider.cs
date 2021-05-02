@@ -1,7 +1,5 @@
-﻿using Discord;
-using NadekoBot.Common;
+﻿using NadekoBot.Common;
 using NadekoBot.Core.Services.Database.Models;
-using System;
 using System.Reflection;
 
 namespace NadekoBot.Core.Services.Impl
@@ -13,11 +11,11 @@ namespace NadekoBot.Core.Services.Impl
 
         public BotConfig BotConfig { get; private set; }
 
-        public BotConfigProvider(DbService db, BotConfig bc, IDataCache cache)
+        public BotConfigProvider(DbService db, IDataCache cache)
         {
             _db = db;
             _cache = cache;
-            BotConfig = bc;
+            Reload();
         }
 
         public void Reload()
@@ -35,6 +33,18 @@ namespace NadekoBot.Core.Services.Impl
                 var bc = uow.BotConfig.GetOrCreate();
                 switch (type)
                 {
+                    case BotConfigEditType.CurrencyName:
+                        bc.CurrencyName = newValue ?? "-";
+                        break;
+                    case BotConfigEditType.CurrencySign:
+                        bc.CurrencySign = newValue ?? "-";
+                        break;
+                    case BotConfigEditType.DailyCurrencyDecay:
+                        if (float.TryParse(newValue, out var decay) && decay >= 0)
+                            bc.DailyCurrencyDecay = decay;
+                        else
+                            return false;
+                        break;
                     case BotConfigEditType.CurrencyGenerationChance:
                         if (float.TryParse(newValue, out var chance)
                             && chance >= 0
@@ -57,25 +67,6 @@ namespace NadekoBot.Core.Services.Impl
                             return false;
                         }
                         break;
-                    case BotConfigEditType.CurrencyName:
-                        bc.CurrencyName = newValue ?? "-";
-                        break;
-                    case BotConfigEditType.CurrencyPluralName:
-                        bc.CurrencyPluralName = newValue ?? bc.CurrencyName + "s";
-                        break;
-                    case BotConfigEditType.CurrencySign:
-                        bc.CurrencySign = newValue ?? "-";
-                        break;
-                    case BotConfigEditType.DMHelpString:
-                        bc.DMHelpString = string.IsNullOrWhiteSpace(newValue)
-                            ? "-"
-                            : newValue;
-                        break;
-                    case BotConfigEditType.HelpString:
-                        bc.HelpString = string.IsNullOrWhiteSpace(newValue)
-                            ? "-"
-                            : newValue;
-                        break;
                     case BotConfigEditType.CurrencyDropAmount:
                         if (int.TryParse(newValue, out var amount) && amount > 0)
                             bc.CurrencyDropAmount = amount;
@@ -87,6 +78,12 @@ namespace NadekoBot.Core.Services.Impl
                             bc.CurrencyDropAmountMax = null;
                         else if (int.TryParse(newValue, out var maxAmount) && maxAmount > 0)
                             bc.CurrencyDropAmountMax = maxAmount;
+                        else
+                            return false;
+                        break;
+                    case BotConfigEditType.PatreonCurrencyPerCent:
+                        if (float.TryParse(newValue, out var cents) && cents > 0)
+                            bc.PatreonCurrencyPerCent = cents;
                         else
                             return false;
                         break;
@@ -120,12 +117,6 @@ namespace NadekoBot.Core.Services.Impl
                         else
                             return false;
                         break;
-                    case BotConfigEditType.DailyCurrencyDecay:
-                        if (float.TryParse(newValue, out var decay) && decay >= 0)
-                            bc.DailyCurrencyDecay = decay;
-                        else
-                            return false;
-                        break;
                     case BotConfigEditType.XpPerMessage:
                         if (int.TryParse(newValue, out var xp) && xp > 0)
                             bc.XpPerMessage = xp;
@@ -147,12 +138,6 @@ namespace NadekoBot.Core.Services.Impl
                     case BotConfigEditType.MaxXpMinutes:
                         if (int.TryParse(newValue, out var minutes) && minutes > 0)
                             bc.MaxXpMinutes = minutes;
-                        else
-                            return false;
-                        break;
-                    case BotConfigEditType.PatreonCurrencyPerCent:
-                        if (float.TryParse(newValue, out var cents) && cents > 0)
-                            bc.PatreonCurrencyPerCent = cents;
                         else
                             return false;
                         break;
@@ -186,42 +171,6 @@ namespace NadekoBot.Core.Services.Impl
                         else
                             return false;
                         break;
-                    case BotConfigEditType.OkColor:
-                        try
-                        {
-                            newValue = newValue.Replace("#", "", StringComparison.InvariantCulture);
-                            var c = new Color(Convert.ToUInt32(newValue, 16));
-                            NadekoBot.OkColor = c;
-                            bc.OkColor = newValue;
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-                        break;
-                    case BotConfigEditType.ErrorColor:
-                        try
-                        {
-                            newValue = newValue.Replace("#", "", StringComparison.InvariantCulture);
-                            var c = new Color(Convert.ToUInt32(newValue, 16));
-                            NadekoBot.ErrorColor = c;
-                            bc.ErrorColor = newValue;
-                        }
-                        catch
-                        {
-                            return false;
-                        }
-                        break;
-                    case BotConfigEditType.ConsoleOutputType:
-                        if (!Enum.TryParse<ConsoleOutputType>(newValue, true, out var val))
-                            return false;
-                        bc.ConsoleOutputType = val;
-                        break;
-                    case BotConfigEditType.CheckForUpdates:
-                        if (!Enum.TryParse<UpdateCheckType>(newValue, true, out var up))
-                            return false;
-                        bc.CheckForUpdates = up;
-                        break;
                     case BotConfigEditType.CurrencyGenerationPassword:
                         if (!bool.TryParse(newValue, out var pw))
                             return false;
@@ -241,7 +190,7 @@ namespace NadekoBot.Core.Services.Impl
         {
             var value = typeof(BotConfig)
                 .GetProperty(name, BindingFlags.IgnoreCase| BindingFlags.Public | BindingFlags.Instance)
-                .GetValue(BotConfig);
+                ?.GetValue(BotConfig);
             return value?.ToString() ?? "-";
         }
     }
