@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using Discord;
 using NadekoBot.Core.Common;
 using NadekoBot.Core.Common.Configs;
@@ -10,8 +9,10 @@ namespace NadekoBot.Core.Services
     /// <summary>
     /// Settings service for bot-wide configuration.
     /// </summary>
-    public class BotSettingsService : SettingsServiceBase<BotSettings>
+    public sealed class BotSettingsService : SettingsServiceBase<BotSettings>
     {
+        public override string Name { get; } = "bot";
+        
         private const string FilePath = "data/bot.yml";
         private static TypedKey<BotSettings> changeKey = new TypedKey<BotSettings>("config.bot.updated");
         

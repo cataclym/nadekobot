@@ -11,10 +11,9 @@ using NadekoBot.Common.Attributes;
 using NadekoBot.Modules.Gambling.Services;
 using NadekoBot.Core.Modules.Gambling.Common;
 using NadekoBot.Core.Common;
-using NadekoBot.Core.Services.Database.Models;
-using NadekoBot.Core.Services.Impl;
-using Color = System.Drawing.Color;
-using SixLabors.Fonts;
+using NadekoBot.Core.Modules.Gambling.Services;
+using Image = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
 using SixLabors.ImageSharp.Formats;
@@ -43,7 +42,7 @@ namespace NadekoBot.Modules.Gambling
             private FontProvider _fonts;
             private readonly DbService _db;
 
-            public SlotCommands(IDataCache data, ICurrencyService cs, FontProvider fonts, DbService db)
+            public SlotCommands(IDataCache data, ICurrencyService cs, GamblingConfigService gamb) : base(gamb)
             {
                 _images = data.LocalImages;
                 _cs = cs;
@@ -115,11 +114,7 @@ namespace NadekoBot.Modules.Gambling
 
                     if (result.Error != GamblingError.None)
                     {
-                        if (result.Error == GamblingError.NotEnough)
-                        {
-                            await ReplyErrorLocalizedAsync("not_enough", Bc.BotConfig.CurrencySign);
-                        }
-
+                        await ReplyErrorLocalizedAsync("max_bet_limit", maxAmount + CurrencySign).ConfigureAwait(false);
                         return;
                     }
 
@@ -129,8 +124,8 @@ namespace NadekoBot.Modules.Gambling
                     long ownedAmount;
                     using (var uow = _db.GetDbContext())
                     {
-                        ownedAmount = uow._context.Set<DiscordUser>().FirstOrDefault(x => x.UserId == ctx.User.Id)
-                            ?.CurrencyAmount ?? 0;
+                        await ReplyErrorLocalizedAsync("not_enough", CurrencySign).ConfigureAwait(false);
+                        return;
                     }
 
                     using (var bgImage = Image.Load<Rgba32>(_images.SlotBackground, out var format))
@@ -183,9 +178,9 @@ namespace NadekoBot.Modules.Gambling
                         if (result.Multiplier > 0)
                         {
                             if (result.Multiplier == 1)
-                                msg = GetText("slot_single", Bc.BotConfig.CurrencySign, 1);
+                                msg = GetText("slot_single", CurrencySign, 1);
                             else if (result.Multiplier == 4)
-                                msg = GetText("slot_two", Bc.BotConfig.CurrencySign, 4);
+                                msg = GetText("slot_two", CurrencySign, 4);
                             else if (result.Multiplier == 10)
                                 msg = GetText("slot_three", 10);
                             else if (result.Multiplier == 30)
@@ -194,9 +189,7 @@ namespace NadekoBot.Modules.Gambling
 
                         using (var imgStream = bgImage.ToStream())
                         {
-                            await ctx.Channel.SendFileAsync(imgStream,
-                                filename: "result.png",
-                                text: Format.Bold(ctx.User.ToString()) + " " + msg).ConfigureAwait(false);
+                            await ctx.Channel.SendFileAsync(imgStream, "result.png", ctx.User.Mention + " " + msg + $"\n`{GetText("slot_bet")}:`{amount} `{GetText("won")}:` {amount * result.Multiplier}{CurrencySign}").ConfigureAwait(false);
                         }
                     }
                 }
