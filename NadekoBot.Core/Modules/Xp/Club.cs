@@ -93,7 +93,7 @@ namespace NadekoBot.Modules.Xp
             [Priority(1)]
             public async Task ClubInformation(IUser user = null)
             {
-                user ??= ctx.User;
+                user = user ?? ctx.User;
                 var club = _service.GetClubByMember(user);
                 if (club == null)
                 {
@@ -157,7 +157,10 @@ namespace NadekoBot.Modules.Xp
                                 return x.ToString() + lvlStr;
                             })), false);
 
-                    return Uri.IsWellFormedUriString(club.ImageUrl, UriKind.Absolute) ? embed.WithThumbnailUrl(club.ImageUrl) : embed;
+                    if (Uri.IsWellFormedUriString(club.ImageUrl, UriKind.Absolute))
+                        return embed.WithThumbnailUrl(club.ImageUrl);
+
+                    return embed;
                 }, club.Users.Count, 10).ConfigureAwait(false);
             }
 

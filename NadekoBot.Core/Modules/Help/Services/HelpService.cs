@@ -64,12 +64,9 @@ namespace NadekoBot.Modules.Help.Services
             var prefix = _ch.GetPrefix(guild);
 
             var str = string.Format("**`{0}`**", prefix + com.Aliases.First());
-            var aliases = com.Aliases.Skip(1);
-            if (aliases != null)
-                foreach (var alias in aliases)
-                {
-                    str += string.Format(" **/ `{0}`**", prefix + alias);
-                }
+            var alias = com.Aliases.Skip(1).FirstOrDefault();
+            if (alias != null)
+                str += string.Format(" **/ `{0}`**", prefix + alias);
             var em = new EmbedBuilder()
                 .AddField(fb => fb.WithName(str)
                     .WithValue($"{com.RealSummary(_strings, prefix)}")

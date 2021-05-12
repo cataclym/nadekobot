@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NadekoBot.Common;
+﻿using NadekoBot.Common;
 using NadekoBot.Core.Services.Database.Models;
 
 namespace NadekoBot.Core.Services
