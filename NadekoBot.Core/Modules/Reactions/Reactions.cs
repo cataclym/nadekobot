@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 
 namespace NadekoBot.Modules.Reactions
 {
-    public partial class Reactions : NadekoTopLevelModule
+    public partial class Reactions : NadekoModule
     {
         private readonly IHttpClientFactory _httpFactory;
 
