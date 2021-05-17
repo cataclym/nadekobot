@@ -381,12 +381,14 @@ namespace NadekoBot.Modules.Administration
             [UserPerm(GuildPerm.BanMembers)]
             [BotPerm(GuildPerm.BanMembers)]
             [Priority(1)]
-            public async Task Ban(StoopidTime time, IGuildUser user, [Leftover] string msg = null)
+            public async Task Ban(StoopidTime time, IUser user, [Leftover] string msg = null)
             {
                 if (time.Time > TimeSpan.FromDays(49))
                     return;
 
-                if (!await CheckRoleHierarchy(user))
+                var guildUser = await ((DiscordSocketClient)Context.Client).Rest.GetGuildUserAsync(Context.Guild.Id, userId);
+
+                if (guildUser != null && !await CheckRoleHierarchy(user))
                     return;
 
                 var dmFailed = false;
@@ -394,10 +396,10 @@ namespace NadekoBot.Modules.Administration
                 try
                 {
                     var defaultMessage = GetText("bandm", Format.Bold(ctx.Guild.Name), msg);
-                    var embed = _service.GetBanUserDmEmbed(Context, user, defaultMessage, msg, time.Time);
+                    var embed = _service.GetBanUserDmEmbed(Context, guildUser, defaultMessage, msg, time.Time);
                     if (!(embed is null))
                     {
-                        var userChannel = await user.GetOrCreateDMChannelAsync();
+                        var userChannel = await guildUser.GetOrCreateDMChannelAsync();
                         await userChannel.EmbedAsync(embed);
                     }
                 }
