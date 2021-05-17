@@ -5,14 +5,14 @@ using NadekoBot.Core.Services;
 
 namespace NadekoBot.Core.Modules.Gambling.Services
 {
-    public class GamblingConfigService : SettingsServiceBase<GamblingConfig>
+    public sealed class GamblingConfigService : ConfigServiceBase<GamblingConfig>
     {
         public override string Name { get; } = "gambling";
         private const string FilePath = "data/gambling.yml";
         private static TypedKey<GamblingConfig> changeKey = new TypedKey<GamblingConfig>("config.gambling.updated");
 
         
-        public GamblingConfigService(ISettingsSeria serializer, IPubSub pubSub)
+        public GamblingConfigService(IConfigSeria serializer, IPubSub pubSub)
             : base(FilePath, serializer, pubSub, changeKey)
         {
             AddParsedProp("currency.name", gs => gs.Currency.Name, SettingParsers.String, SettingPrinters.ToString);
