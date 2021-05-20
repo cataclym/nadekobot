@@ -1,4 +1,4 @@
-﻿{
+{
   "h": {
     "Cmd": "help h",
     "Desc": "Either shows a help for a single command, or DMs you help link if no parameters are specified.",
@@ -1921,7 +1921,7 @@
     ]
   },
   "cash": {
-    "Cmd": "$ currency $$ $$$ cash cur",
+    "Cmd": "currency $ $$ $$$ cash cur",
     "Desc": "Check how much currency a person has. (Defaults to yourself)",
     "Usage": [
       "{0}$",
