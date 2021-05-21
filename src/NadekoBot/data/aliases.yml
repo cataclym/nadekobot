@@ -732,9 +732,6 @@ placelist:
 - placelist
 place:
 - place
-togethertube:
-- togethertube
-- totube
 poll:
 - poll
 - ppoll
@@ -887,6 +884,8 @@ crreact:
 - crr
 crad:
 - crad
+crat:
+  - crat
 crdm:
 - crdm
 crca:
@@ -1010,7 +1009,6 @@ botconfigedit:
 - bce
 config:
 - config
-- c
 - conf
 configreload:
 - configreload 

@@ -386,9 +386,10 @@ whosplaying:
   args:
     - "Overwatch"
 inrole:
-  desc: "Lists every person from the specified role on this server. You can use role ID, role name."
+  desc: "Lists every person from the specified role on this server. You can specify a page before the role to jump to that page."
   args:
-    - "Some Role"
+    - "RoleName"
+    - "5 RoleName"
 checkperms:
   desc: "Checks yours or bot's user-specific permissions on this channel."
   args:
@@ -1181,10 +1182,6 @@ place:
   args:
     - "Cage"
     - "steven 500 400"
-togethertube:
-  desc: "Creates a new room on <https://togethertube.com> and shows the link in the chat."
-  args:
-    - ""
 poll:
   desc: "Creates a public poll which requires users to type a number of the voting option in the channel command is ran in."
   args:
@@ -1221,7 +1218,7 @@ hentaibomb:
   args:
     - "yuri"
 cleverbot:
-  desc: "Toggles cleverbot session. When enabled, the bot will reply to messages starting with bot mention in the server. Custom reactions starting with %mention% won't work if cleverbot is enabled."
+  desc: "Toggles cleverbot session. When enabled, the bot will reply to messages starting with bot mention in the server. Custom reactions starting with %bot.mention% won't work if cleverbot is enabled."
   args:
     - ""
 shorten:
@@ -1445,6 +1442,10 @@ crreact:
     - "59"
 crad:
   desc: "Toggles whether the message triggering the custom reaction will be automatically deleted."
+  args:
+    - "59"
+crat:
+  desc: "Toggles whether the custom reaction will allow extra input after the trigger. For example, with this feature enabled, custom reaction with trigger 'hi' will also be invoked when a user types 'hi there'. This feature is automatically enabled on custom reactions which have '%target%' in their response."
   args:
     - "59"
 crdm:

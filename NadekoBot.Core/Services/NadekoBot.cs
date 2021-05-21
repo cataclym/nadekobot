@@ -22,11 +22,11 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord.Net;
-using Microsoft.EntityFrameworkCore;
+using NadekoBot.Common.ModuleBehaviors;
 using NadekoBot.Core.Common;
 using NadekoBot.Core.Common.Configs;
 using NadekoBot.Modules.Administration.Services;
-using NLog.Fluent;
+using NadekoBot.Modules.CustomReactions.Services;
 
 namespace NadekoBot
 {
@@ -55,6 +55,8 @@ namespace NadekoBot
                 .ListRange(Credentials.RedisKey() + "_shardstats")
                 .Select(x => JsonConvert.DeserializeObject<ShardComMessage>(x))
                 .Sum(x => x.Guilds);
+
+        public string Mention { get; set; }
 
         public event Func<GuildConfig, Task> JoinedGuild = delegate { return Task.CompletedTask; };
 
@@ -123,17 +125,15 @@ namespace NadekoBot
             });
         }
 
-        private List<ulong> GetCurrentGuildIds()
+        public List<ulong> GetCurrentGuildIds()
         {
             return Client.Guilds.Select(x => x.Id).ToList();
         }
 
         public IEnumerable<GuildConfig> GetCurrentGuildConfigs()
         {
-            using (var uow = _db.GetDbContext())
-            {
-                return uow.GuildConfigs.GetAllGuildConfigs(GetCurrentGuildIds()).ToImmutableArray();
-            }
+            using var uow = _db.GetDbContext();
+            return uow.GuildConfigs.GetAllGuildConfigs(GetCurrentGuildIds()).ToImmutableArray();
         }
 
         private void AddServices()
@@ -173,6 +173,7 @@ namespace NadekoBot
             s.LoadFrom(Assembly.GetAssembly(typeof(CommandHandler)));
 
             s.AddSingleton<IReadyExecutor>(x => x.GetService<SelfService>());
+            s.AddSingleton<IReadyExecutor>(x => x.GetService<CustomReactionsService>());
             //initialize Services
             Services = s.BuildServiceProvider();
             var commandHandler = Services.GetService<CommandHandler>();
@@ -318,6 +319,7 @@ namespace NadekoBot
 
             await LoginAsync(Credentials.Token).ConfigureAwait(false);
 
+            Mention = Client.CurrentUser.Mention;
             _log.Info($"Shard {Client.ShardId} loading services...");
             try
             {
@@ -347,12 +349,13 @@ namespace NadekoBot
             StartSendingData();
             Ready.TrySetResult(true);
             _ = Task.Run(ExecuteReadySubscriptions);
+            _log.Info($"Shard {Client.ShardId} ready.");
         }
 
-        private async Task ExecuteReadySubscriptions()
+        private Task ExecuteReadySubscriptions()
         {
             var readyExecutors = Services.GetServices<IReadyExecutor>();
-            foreach (var toExec in readyExecutors)
+            var tasks = readyExecutors.Select(async toExec => 
             {
                 try
                 {
@@ -363,8 +366,9 @@ namespace NadekoBot
                     _log.Error(ex, "Failed running OnReadyAsync method on {Type} type: {Message}",
                         toExec.GetType().Name, ex.Message);
                 }
-            }
-            _log.Info($"Shard {Client.ShardId} ready.");
+            });
+
+            return Task.WhenAll(tasks);
         }
 
         private Task Client_Log(LogMessage arg)
