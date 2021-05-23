@@ -114,7 +114,7 @@ autoassignrole:
 leave:
 - leave
 slowmode:
-- slowmode 
+- slowmode
 delmsgoncmd:
 - delmsgoncmd
 - dmc
@@ -1021,7 +1021,7 @@ config:
 - config
 - conf
 configreload:
-- configreload 
+- configreload
 - creload
 - confreload
 - crel
@@ -1213,3 +1213,9 @@ nsfwtoggle:
 - nsfwtgl
 economy:
 - economy
+hug:
+  - hug
+pat:
+  - pat
+kiss:
+  - kiss

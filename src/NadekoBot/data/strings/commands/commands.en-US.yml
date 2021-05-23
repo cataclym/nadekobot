@@ -1995,3 +1995,18 @@ economy:
   desc: "Breakdown of the current state of the bot's economy. Updates every 3 minutes."
   args:
     - ""
+hug:
+  desc: "Send a hug!"
+  args:
+    - ""
+    - "@dreb"
+pat:
+  desc: "Pat a cutie <3"
+  args:
+    - ""
+    - "@dreb"
+kiss:
+  desc: "K-kiss... someone you love."
+  args:
+    - ""
+    - "@dreb"
