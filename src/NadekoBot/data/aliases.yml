@@ -525,9 +525,13 @@ streamoffline:
 - sto
 - stoff
 streammessage:
-- streammessage
+- streammsg
 - stm
 - stmsg
+streammessageall:
+- streammsgall
+- stma
+- stmsga
 streamcheck:
 - streamcheck
 - stc
@@ -1088,6 +1092,7 @@ clubbans:
 - clubbans
 clubleaderboard:
 - clublb
+- clubs
 nsfwclearcache:
 - nsfwcc
 clubadmin:
