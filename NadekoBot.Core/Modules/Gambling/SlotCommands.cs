@@ -21,6 +21,7 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using Image = SixLabors.ImageSharp.Image;
+using NadekoBot.Core.Modules.Gambling.Services;
 
 namespace NadekoBot.Modules.Gambling
 {
@@ -43,7 +44,7 @@ namespace NadekoBot.Modules.Gambling
             private FontProvider _fonts;
             private readonly DbService _db;
 
-            public SlotCommands(IDataCache data, ICurrencyService cs, FontProvider fonts, DbService db)
+            public SlotCommands(IDataCache data, ICurrencyService cs, FontProvider fonts, DbService db, GamblingConfigService gamb): base(gamb)
             {
                 _images = data.LocalImages;
                 _cs = cs;
@@ -117,7 +118,7 @@ namespace NadekoBot.Modules.Gambling
                     {
                         if (result.Error == GamblingError.NotEnough)
                         {
-                            await ReplyErrorLocalizedAsync("not_enough", Bc.BotConfig.CurrencySign);
+                            await ReplyErrorLocalizedAsync("not_enough", _config.Currency.Sign);
                         }
 
                         return;
@@ -146,7 +147,7 @@ namespace NadekoBot.Modules.Gambling
                                     VerticalAlignment = VerticalAlignment.Center,
                                     WrapTextWidth = 140,
                                 }
-                            }, result.Won.ToString(), _fonts.DottyFont.CreateFont(65), SixLabors.ImageSharp.Color.ParseHex("01A22D"),
+                            }, result.Won.ToString(), _fonts.DottyFont.CreateFont(65), SixLabors.ImageSharp.Color.ParseHex("ff9966"),
                             new PointF(227, 92)));
 
                         bgImage.Mutate(x => x.DrawText(new TextGraphicsOptions
@@ -157,7 +158,7 @@ namespace NadekoBot.Modules.Gambling
                                     VerticalAlignment = VerticalAlignment.Center,
                                     WrapTextWidth = 135,
                                 }
-                            }, amount.ToString(), _fonts.DottyFont.CreateFont(50), SixLabors.ImageSharp.Color.ParseHex("01A22D"),
+                            }, amount.ToString(), _fonts.DottyFont.CreateFont(50), SixLabors.ImageSharp.Color.ParseHex("ff9966"),
                             new PointF(129, 472)));
 
                         bgImage.Mutate(x => x.DrawText(new TextGraphicsOptions
@@ -168,7 +169,7 @@ namespace NadekoBot.Modules.Gambling
                                     VerticalAlignment = VerticalAlignment.Center,
                                     WrapTextWidth = 135,
                                 }
-                            }, ownedAmount.ToString(), _fonts.DottyFont.CreateFont(50), SixLabors.ImageSharp.Color.ParseHex("01A22D"),
+                            }, ownedAmount.ToString(), _fonts.DottyFont.CreateFont(50), SixLabors.ImageSharp.Color.ParseHex("ff9966"),
                             new PointF(325, 472)));
 
                         for (var i = 0; i < 3; i++)
