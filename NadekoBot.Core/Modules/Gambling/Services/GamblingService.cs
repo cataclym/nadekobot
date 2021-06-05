@@ -6,6 +6,7 @@ using NadekoBot.Modules.Gambling.Common.WheelOfFortune;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -115,6 +116,40 @@ WHERE CurrencyAmount > {config.Decay.MinThreshold} AND UserId!={_client.CurrentU
             public long Bot { get; set; }
         }
 
+        public async Task<SlotResponse> SlotAsync(ulong userId, long amount)
+        {
+            var takeRes = await _cs.RemoveAsync(userId, "Slot Machine", amount, true);
+            
+            if (!takeRes)
+            {
+                return new SlotResponse
+                {
+                    Error = GamblingError.NotEnough
+                };
+            }
+
+            var game = new SlotGame();
+            var result = game.Spin();
+            long won = 0;
+
+            if (result.Multiplier > 0)
+            {
+                won = (long)(result.Multiplier * amount);
+
+                await _cs.AddAsync(userId, $"Slot Machine x{result.Multiplier}", won, true);
+            }
+
+            var toReturn = new SlotResponse
+            {
+                Multiplier = result.Multiplier,
+                Won = won,
+            };
+
+            toReturn.Rolls.AddRange(result.Rolls);
+
+            return toReturn;
+        }
+
         public EconomyResult GetEconomy()
         {
             if (_cache.TryGetEconomy(out var data))
@@ -159,4 +194,19 @@ WHERE CurrencyAmount > {config.Decay.MinThreshold} AND UserId!={_client.CurrentU
             return new WheelOfFortuneGame(userId, bet, _gss.Data, _cs).SpinAsync();
         }
     }
+
+    public enum GamblingError
+    {
+        None,
+        NotEnough
+    }
+
+    public class SlotResponse
+    {
+        public float Multiplier { get; set; }
+        public long Won { get; set; }
+        public List<int> Rolls { get; set; } = new List<int>();
+        public GamblingError Error { get; set; }
+    }
+
 }
