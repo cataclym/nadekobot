@@ -165,7 +165,14 @@ addcustreact:
   args:
     - "\"hello\" Hi there %user.mention%"
 listcustreact:
-  desc: "Lists global or server custom reactions (20 commands per page). Running the command in DM will list global custom reactions, while running it in server will list that server's custom reactions. Specifying `all` parameter instead of the number will DM you a text file with a list of all custom reactions."
+  desc: |- 
+    Lists global or server custom reactions (20 commands per page).
+    Running the command in DM will list global custom reactions, while running it in a server will list server custom reactions.
+    Shows enabled settings, followed by id, followed by the trigger.
+    **Settings:** 
+    • 🗯️ Triggered if trigger matches any word (`{0}h {0}crca`)
+    • ✉️ Response will be DMed (`{0}h {0}crdm`)
+    • ❌ Trigger will be deleted (`{0}h {0}crad`)
   args:
     - "1"
     - "all"
@@ -252,7 +259,7 @@ rolecolor:
   desc: "Set a role's color using its hex value. Provide no color in order to see the hex value of the color of the specified role. The role you specify has to be lower in the role hierarchy than your highest role."
   args:
     - "Admin"
-    - "Admin ffba55"
+    - "ffba55 Admin"
 ban:
   desc: "Bans a user by ID or name with an optional message. You can specify a time string before the user name to ban the user temporarily."
   args:
@@ -387,10 +394,11 @@ whosplaying:
   args:
     - "Overwatch"
 inrole:
-  desc: "Lists every person from the specified role on this server. You can specify a page before the role to jump to that page."
+  desc: "Lists every person from the specified role on this server. You can specify a page before the role to jump to that page. Provide no role to list users who have no roles"
   args:
     - "RoleName"
     - "5 RoleName"
+    - ""
 checkperms:
   desc: "Checks yours or bot's user-specific permissions on this channel."
   args:
@@ -634,9 +642,10 @@ award:
     - "100 @person"
     - "5 Role Of Gamblers"
 take:
-  desc: "Takes a certain amount of currency from someone."
+  desc: "Takes the specified amount of currency from someone. You can specify a role instead to take the specified amount of currency from all users in the role."
   args:
     - "1 @Someone"
+    - "50 SomeRole"
 betroll:
   desc: "Bets a certain amount of currency and rolls a dice. Rolling over 66 yields x2 of your currency, over 90 - x4 and 100 x10."
   args:
@@ -1051,7 +1060,6 @@ butts:
   desc: "Real adult content."
   args:
     - ""
-    - ""
 translate:
   desc: "Translates from>to text. From the given language to the destination language."
   args:
@@ -1063,7 +1071,6 @@ translangs:
 guide:
   desc: "Sends a readme and a guide links to the channel."
   args:
-    - ""
     - ""
 calcops:
   desc: "Shows all available operations in the `{0}calc` command"
@@ -1138,16 +1145,27 @@ antispam:
     - "5 Ban"
     - "5 Ban 3h30m"
     - ""
+antialt:
+  desc: "Applies a punishment action to any user whose account is younger than the specified threshold. Specify time after the punishment to have a timed punishment (not all punishments support timers)."
+  args:
+    - "1h Ban"
+    - "3d Mute 1h"
 chatmute:
-  desc: "Prevents a mentioned user from chatting in text channels. You can optionally specify a reason."
+  desc: "Prevents a mentioned user from chatting in text channels. You can also specify time string for how long the user should be muted. You can optionally specify a reason."
   args:
     - "@Someone"
     - "@Someone stop writing"
+    - "15m @Someone"
+    - "1h30m @Someone"
+    - "1h @Someone chill"
 voicemute:
-  desc: "Prevents a mentioned user from speaking in voice channels. User has to be in a voice channel in order for the command to have an effect. You can optionally specify a reason."
+  desc: "Prevents a mentioned user from speaking in voice channels. User has to be in a voice channel in order for the command to have an effect. You can also specify time string for how long the user should be muted. You can optionally specify a reason."
   args:
     - "@Someone"
     - "@Someone stop talking"
+    - "15m @Someone"
+    - "1h30m @Someone"
+    - "1h @Someone silence"
 konachan:
   desc: "Shows a random hentai image from konachan with a given tag. Tag is optional but preferred."
   args:
@@ -1243,7 +1261,6 @@ yandere:
 magicthegathering:
   desc: "Searches for a Magic The Gathering card."
   args:
-    - "about face"
     - "about face"
 hangmanlist:
   desc: "Shows a list of hangman term types."
@@ -1466,6 +1483,14 @@ crca:
     - "44"
 crsreload:
   desc: "Reloads all custom reactions on all shards. Use this if you've made changes to the database while the bot is running, or used `{0}deleteunusedcrnq`"
+  args:
+    - ""
+crsimport:
+  desc: "Upload the file or send the raw .yml data with this command to import all custom reactions from the specified string or file into the current server (or as global custom reactions in dm)"
+  args:
+    - "<upload .yml file>"
+crsexport:
+  desc: "Exports custom reactions from the current server (or global custom reactions in DMs) into a .yml file"
   args:
     - ""
 aliaslist:
@@ -1712,6 +1737,10 @@ xpnotify:
     - "server channel"
 xplvluprewards:
   desc: "Shows currently set level up rewards."
+  args:
+    - ""
+xprewsreset:
+  desc: "Resets all currently set xp level up rewards."
   args:
     - ""
 xprolereward:
@@ -2005,6 +2034,10 @@ economy:
   desc: "Breakdown of the current state of the bot's economy. Updates every 3 minutes."
   args:
     - ""
+purgeuser:
+  desc: "Purge user from the database completely. This includes currency, xp, clubs that user owns, waifu info"
+  args:
+    - "@Oblivion"
 hug:
   desc: "Send a hug!"
   args:

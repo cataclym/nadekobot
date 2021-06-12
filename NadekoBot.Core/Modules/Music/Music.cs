@@ -462,14 +462,6 @@ namespace NadekoBot.Core.Modules.Music
          
          [NadekoCommand, Usage, Description, Aliases]
          [RequireContext(ContextType.Guild)]
-         public async Task Defvol(int val)
-         {
-             await ReplyErrorLocalizedAsync("obsolete", $"`{Prefix}vol`");
-             await Volume(val);
-         }
-         
-         [NadekoCommand, Usage, Description, Aliases]
-         [RequireContext(ContextType.Guild)]
          public async Task Stop()
          {
              var valid = await ValidateAsync();
@@ -522,7 +514,7 @@ namespace NadekoBot.Core.Modules.Music
          [RequireContext(ContextType.Guild)]
          public async Task ReptCurSong()
          {
-             await ReplyErrorLocalizedAsync("obsolete_use", $"`{Prefix}qrp song`");
+             await ReplyPendingLocalizedAsync("obsolete_use", $"`{Prefix}qrp song`");
              await QueueRepeat(InputRepeatType.Song);
          }
          

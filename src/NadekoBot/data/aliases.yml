@@ -89,20 +89,32 @@ iamnot:
 addcustreact:
 - addcustreact
 - acr
+- expradd
+- exadd
+- exa
 listcustreact:
 - listcustreact
 - lcr
+- exprli
+- exl
 listcustreactg:
 - listcustreactg
 - lcrg
+- exprlg
+- exlg
 showcustreact:
 - showcustreact
 - scr
+- exs
 delcustreact:
 - delcustreact
 - dcr
+- exprdel
+- exd
+- exd
 crclear:
 - crclear
+- exclear
 fwclear:
 - fwclear
 aliasesclear:
@@ -320,7 +332,7 @@ cmdcooldown:
 - cmdcd
 allcmdcooldowns:
 - allcmdcooldowns
-- acmdcds
+- cmdcds
 quoteadd:
 - quoteadd
 - .
@@ -458,6 +470,7 @@ nowplaying:
 volume:
 - volume
 - vol
+- defvol
 playlist:
 - playlist
 - pl
@@ -708,6 +721,8 @@ antiraid:
 - antiraid
 antispam:
 - antispam
+antialt:
+- antialt
 chatmute:
 - chatmute
 voicemute:
@@ -880,14 +895,20 @@ crreact:
 - crr
 crad:
 - crad
+- exad
 crat:
-  - crat
+- crat
+- exat
 crdm:
 - crdm
+- exdm
 crca:
 - crca
+- exca
 crsreload:
 - crsreload
+- expreload
+- exrel
 aliaslist:
 - aliaslist
 - cmdmaplist
@@ -1046,6 +1067,8 @@ xpleveluprewards:
 - xprrs
 - xprolerewards
 - xpcurrewards
+xprewsreset:
+- xprewsreset
 xprolereward:
 - xprolereward
 - xprr
@@ -1117,6 +1140,7 @@ feedlist:
 editcustreact:
 - editcustreact
 - ecr
+- exe
 say:
 - say
 sqlexec:
@@ -1207,6 +1231,14 @@ nsfwtoggle:
 - nsfwtgl
 economy:
 - economy
+purgeuser:
+- purgeuser 
+crsimport:
+  - crsimport
+  - eximport
+crsexport:
+  - crsexport
+  - exexport
 hug:
   - hug
 pat:

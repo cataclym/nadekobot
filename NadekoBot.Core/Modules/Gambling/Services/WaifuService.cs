@@ -314,6 +314,12 @@ namespace NadekoBot.Modules.Gambling.Services
             }
         }
 
+        public ulong GetWaifuUserId(ulong ownerId, string name)
+        {
+            using var uow = _db.GetDbContext();
+            return uow.Waifus.GetWaifuUserId(ownerId, name);
+        }
+
         public async Task<(WaifuInfo, DivorceResult, long, TimeSpan?)> DivorceWaifuAsync(IUser user, ulong targetId)
         {
             DivorceResult result;
@@ -414,7 +420,7 @@ namespace NadekoBot.Modules.Gambling.Services
             using (var uow = _db.GetDbContext())
             {
                 var wi = uow.Waifus.GetWaifuInfo(targetId);
-                if (wi == null)
+                if (wi is null)
                 {
                     wi = new WaifuInfoStats
                     {
@@ -422,7 +428,8 @@ namespace NadekoBot.Modules.Gambling.Services
                         AffinityName = null,
                         ClaimCount = 0,
                         ClaimerName = null,
-                        Claims30 = new List<string>(),
+                        Claims = new List<string>(),
+                        Fans = new List<string>(),
                         DivorceCount = 0,
                         FullName = null,
                         Items = new List<WaifuItem>(),

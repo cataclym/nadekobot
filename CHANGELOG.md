@@ -1,17 +1,59 @@
 # Changelog
 
-Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.com/en/1.0.0/) except date format. 
+Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.com/en/1.0.0/) except date format. a-c-f-r-o
 
-## [Unreleased]
+## [2.45.1] - 12.06.2021
 
 ### Added
 
+- Added many new aliases to custom reaction commands in the format ex + "action" to prepare for the future rename from CustomReactions to Expressions
+- You can now `.divorce` via username#discrim even if the user no longer exists
+
+### Changed
+
+- DmHelpText should now have %prefix% and %bot.prefix% placeholders available
+- Added squares which show enabled features for each cr in `.lcr`
+- Changed CustomReactions' IDs to show, and accept base 32 unambigous characters instead of the normal database IDs (this will result in much shorter cr IDs in case you have a lot of them)
+- Improved `.lcr` helptext to explain what's shown in the output
+- `.rolecolor <color> <role>` changed to take color, then the role, to make it easier to set color for roles with multiple words without mentioning the role
+- `.acmdcds` alias chanaged to `.cmdcds`
+- `.8ball` will now cache results for a day
+
+### Fixed
+
+- Fixed `.config <conf> <prop>` exceeding embed field character limit
+
+## [2.45.0] - 10.06.2021
+
+### Added
+
+- Added `.crsexport` and `.crsimport` 
+  - Allows for quick export/import of server or global custom reactions
+  - Requires admin permissions for server crs, and owner for global crs
+  - Explanation of the fields is in the comment at the top of the `.crsexport` .yml file
 - Added `.mquality` / `.musicquality` - Set encoding quality. Has 4 presets - Low, Medium, High, Highest. Default is Highest
+- Added `.xprewsreset` which resets all currently set xp level up rewards
+- Added `.purgeuser @User` which will remove the specified from the database completely. Removed settings include: Xp, clubs, waifu, currency, etc...
+- Added `.config xp txt.per_image` and xpFromImage to xp.yml - Change this config to allow xp gain from posting images. Images must be 128x128 or greater in size
+- Added `.take <amount> <role>` to complement `.award <amount> role`
+- Added **Fans** list to `.waifuinfo` which shows how many people have their affinity set to you
+- Added `.antialt` which will punish any user whose account is younger than specified threshold
 
 ### Changed
 
 - `.warne` with no args will now show current state
-- Modified music code temporarily in a way which will increase cpu usage but reduce stuttering on some cases
+- .inrole` will now lists users with no roles if no role is provided
+- Music suttering fixed on some systems
+- `.say` moved to utility module
+- Re-created GuildRepeaters table and renamed to Repeaters
+- confirmation prompts will now use pending color from bot config, instead of okcolor
+- `.mute` can now have up to 49 days mute to match .warnp
+- `.warnlog` now has proper pagination (with reactions) and checking your own warnings past page 1 works correctly now with `.warnlog 2`
+
+### Fixed
+
+- obsolete_use string fixed
+- Fixed `.crreact`
 
 ## [2.44.4] - 06.06.2021
 
