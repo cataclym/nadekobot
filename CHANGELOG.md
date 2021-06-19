@@ -2,8 +2,23 @@
 
 Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.com/en/1.0.0/) except date format. a-c-f-r-o
 
-## Unreleased
+## [2.46.0] - 17.06.2021
 
+### Added
+
+- Added some nsfw commands
+
+### Changed
+
+- `.aar` reworked. Now supports multiple roles, up to 3.
+  - Toggle roles that are added to newly joined users with `.aar RoleName`
+  - Use `.aar` to list roles which will be added
+  - Roles which are deleted are automatically cleaned up from `.aar`
+- `.inrole` now also shows user ids
+- Blacklist commands (owner only) `.ubl` `.sbl` and `.cbl` will now list blacklisted items when no argument (or a page number) is provided
+- `.cmdcd` now works with customreactions too
+- `.xprr` usage changed. It now takes add/rm parameter to add/remove a role ex. You can only take or remove a single role, adding and removing a role at the same level doesn't work (yet?)
+    - example: `.xprr 5 add Member` or `.xprr 1 rm Newbie`
 
 ## [2.45.2] - 14.06.2021
 

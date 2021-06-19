@@ -521,23 +521,37 @@ allrolemdls:
   args:
     - "[enable/disable] MyRole"
 userblacklist:
-  desc: "Either [add]s or [rem]oves a user specified by a Mention or an ID from a blacklist."
+  desc: |-
+    Either [add]s or [rem]oves a user or users specified by a Mention or an ID from a blacklist.
+    Specify no argument or a page number to list blacklisted users.
   args:
-    - "add @SomeUser"
+    - "add @SomeUser @SomeUser2 @SomeUser3"
     - "rem 12312312313"
+    - ""
+    - "4"
 channelblacklist:
-  desc: "Either [add]s or [rem]oves a channel specified by an ID from a blacklist."
+  desc: |-
+    Either [add]s or [rem]oves a channel or channels specified an ID from a blacklist.
+    Specify no argument or a page number to list blacklisted channels.
   args:
+    - "add 12312312312 66666666666"
     - "rem 12312312312"
+    - ""
+    - "3"
 serverblacklist:
-  desc: "Either [add]s or [rem]oves a server specified by a Name or an ID from a blacklist."
+  desc: |-
+    Either [add]s or [rem]oves a server, or servers specified by an ID from a blacklist.
+    Specify no argument or a page number to list blacklisted servers.
   args:
     - "add 12312321312"
-    - "rem SomeTrashServer"
+    - "rem 12312321312"
+    - ""
+    - "2"
 cmdcooldown:
-  desc: "Sets a cooldown per user for a command. Set it to 0 to remove the cooldown."
+  desc: "Sets a cooldown per user for a command or a custom reaction. Set it to 0 to remove the cooldown."
   args:
-    - "\"some cmd\" 5"
+    - ".h 5"
+    - ".pat 30"
 allcmdcooldowns:
   desc: "Shows a list of all commands and their respective cooldowns."
   args:
@@ -1052,6 +1066,10 @@ gelbooru:
   desc: "Shows a random hentai image from gelbooru with a given tag. Tag is optional but preferred. (multiple tags are appended with +)"
   args:
     - "yuri+kissing"
+sankaku:
+  desc: "Shows a random hentai image from chan.sankakucomplex.com with a given tag. Tag is optional but preferred. (multiple tags are appended with +)"
+  args:
+    - "yuri+kiss"
 rule34:
   desc: "Shows a random image from rule34.xx with a given tag. Tag is optional but preferred. (multiple tags are appended with +)"
   args:
@@ -1752,9 +1770,14 @@ xprewsreset:
   args:
     - ""
 xprolereward:
-  desc: "Sets a role reward on a specified level. Provide no role name in order to remove the role reward."
+  desc: |-
+   Add or remove a role from the user who reaches the specified level.
+   Provide no action and role name in order to remove the role reward.
   args:
-    - "3 Social"
+    - "1 rm Newbie"
+    - "3 add Social"
+    - "5 add Member"
+    - "5"
 xpcurreward:
   desc: "Sets a currency reward on a specified level. Provide no amount in order to remove the reward."
   args:
@@ -2061,3 +2084,9 @@ kiss:
   args:
     - ""
     - "@dreb"
+
+nhentai:
+  desc: "Shows basic information about a hentai with the specified id, or a valid nhentai search query."    
+  args:
+    - "273426"
+    - "cute girl"
