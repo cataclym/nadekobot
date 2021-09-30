@@ -33,9 +33,9 @@ greet:
 greetmsg:
   desc: |-
     Sets a new join announcement message which will be shown in the server's channel.
-    Type `%user.mention%` if you want to mention the new member.   
+    Type `%user.mention%` if you want to mention the new member.
     Full list of placeholders can be found here <https://nadekobot.readthedocs.io/en/latest/placeholders/>
-    Using it with no message will show the current greet message.  
+    Using it with no message will show the current greet message.
     You can use embed json from <https://eb.nadeko.bot/> instead of a regular text, if you want the message to be embedded.
   args:
     - "Welcome, %user.mention%."
@@ -44,11 +44,11 @@ bye:
   args:
     - ""
 byemsg:
-  desc: |- 
-    Sets a new leave announcement message. 
-    Type `%user.mention%` if you want to show the name the user who left. 
-    Full list of placeholders can be found here <https://nadekobot.readthedocs.io/en/latest/placeholders/>  
-    Using this command with no message will show the current bye message. 
+  desc: |-
+    Sets a new leave announcement message.
+    Type `%user.mention%` if you want to show the name the user who left.
+    Full list of placeholders can be found here <https://nadekobot.readthedocs.io/en/latest/placeholders/>
+    Using this command with no message will show the current bye message.
     You can use embed json from <https://eb.nadeko.bot/> instead of a regular text, if you want the message to be embedded.
   args:
     - "%user.mention% has left."
@@ -82,10 +82,10 @@ boost:
     - ""
 boostmsg:
   desc: |-
-    Sets a new boost announcement message. 
-    Type `%user.mention%` if you want to show the name the user who left. 
+    Sets a new boost announcement message.
+    Type `%user.mention%` if you want to show the name the user who left.
     Full list of placeholders can be found here <https://nadekobot.readthedocs.io/en/latest/placeholders/>
-    Using this command with no message will show the current boost message. 
+    Using this command with no message will show the current boost message.
     You can use embed json from <https://eb.nadeko.bot/> instead of a regular text, if you want the message to be embedded.
   args:
     - "%user.mention% has boosted the server!!!"
@@ -197,11 +197,11 @@ addcustreact:
   args:
     - "\"hello\" Hi there %user.mention%"
 listcustreact:
-  desc: |- 
+  desc: |-
     Lists global or server custom reactions (20 commands per page).
     Running the command in DM will list global custom reactions, while running it in a server will list server custom reactions.
     Shows enabled settings, followed by id, followed by the trigger.
-    **Settings:** 
+    **Settings:**
     • 🗯️ Triggered if trigger matches any word (`{0}h {0}crca`)
     • ✉️ Response will be DMed (`{0}h {0}crdm`)
     • ❌ Trigger will be deleted (`{0}h {0}crad`)
@@ -2119,13 +2119,28 @@ purgeuser:
   args:
     - "@Oblivion"
 nhentai:
-  desc: "Shows basic information about a hentai with the specified id, or a valid nhentai search query."    
+  desc: "Shows basic information about a hentai with the specified id, or a valid nhentai search query."
   args:
     - "273426"
     - "cute girl"
 imageonlychannel:
-  desc: |- 
+  desc: |-
     Toggles whether the channel only allows images.
-    Users who send more than a few non-image messages will be banned from using the channel. 
+    Users who send more than a few non-image messages will be banned from using the channel.
   args:
     - ""
+hug:
+  desc: "Send a hug!"
+  args:
+    - ""
+    - "@dreb"
+pat:
+  desc: "Pat a cutie <3"
+  args:
+    - ""
+    - "@dreb"
+kiss:
+  desc: "K-kiss... someone you love."
+  args:
+    - ""
+    - "@dreb"
