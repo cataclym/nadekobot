@@ -720,6 +720,9 @@ removeperm:
 showemojis:
 - showemojis
 - se
+emojiadd:
+- emojiadd
+- ea
 deckshuffle:
 - deckshuffle
 - dsh
@@ -1132,8 +1135,6 @@ clubbans:
 clubleaderboard:
 - clublb
 - clubs
-nsfwclearcache:
-- nsfwcc
 clubadmin:
 - clubadmin
 autoboobs:

@@ -13,7 +13,7 @@ namespace NadekoBot.Common
             OwnerIds = new List<ulong>();
             TotalShards = 1;
             GoogleApiKey = string.Empty;
-            Votes = new(string.Empty, string.Empty);
+            Votes = new(string.Empty, string.Empty, string.Empty, string.Empty);
             Patreon = new(string.Empty, string.Empty, string.Empty, string.Empty);
             BotListToken = string.Empty;
             CleverbotApiKey = string.Empty;
@@ -73,16 +73,6 @@ go to https://www.patreon.com/portal -> my clients -> create client")]
 Change only if you've changed the coordinator address or port.")]
         public string CoordinatorUrl { get; set; }
         
-        [YamlIgnore]
-        public string PatreonCampaignId => Patreon?.CampaignId;
-        [YamlIgnore]
-        public string PatreonAccessToken => Patreon?.AccessToken;
-
-        [YamlIgnore]
-        public string VotesUrl => Votes?.Url;
-        [YamlIgnore]
-        public string VotesToken => Votes.Key;
-        
         [Comment(@"Api key obtained on https://rapidapi.com (go to MyApps -> Add New App -> Enter Name -> Application key)")]
         public string RapidApiKey { get; set; }
 
@@ -126,11 +116,9 @@ Windows default
         // todo fixup patreon
         public sealed record PatreonSettings
         {
-            [Comment(@"Access token. You have to manually update this 1st of each month by refreshing the token on https://patreon.com/portal")]
+            public string ClientId { get; set; }
             public string AccessToken { get; set; }
-            [Comment(@"Unused atm")]
             public string RefreshToken { get; set; }
-            [Comment(@"Unused atm")]
             public string ClientSecret { get; set; }
 
             [Comment(@"Campaign ID of your patreon page. Go to your patreon page (make sure you're logged in) and type ""prompt('Campaign ID', window.patreon.bootstrap.creator.data.id);"" in the console. (ctrl + shift + i)")]
@@ -143,19 +131,44 @@ Windows default
                 ClientSecret = clientSecret;
                 CampaignId = campaignId;
             }
+
+            public PatreonSettings()
+            {
+                
+            }
         }
 
         public sealed record VotesSettings
         {
-            [Comment(@"")]
-            public string Url { get; set; }
-            [Comment(@"")]
-            public string Key { get; set; }
+            [Comment(@"top.gg votes service url
+This is the url of your instance of the NadekoBot.Votes api
+Example: https://votes.my.cool.bot.com")]
+            public string TopggServiceUrl { get; set; }
+            
+            [Comment(@"Authorization header value sent to the TopGG service url with each request
+This should be equivalent to the TopggKey in your NadekoBot.Votes api appsettings.json file")]
+            public string TopggKey { get; set; }
+            
+            [Comment(@"discords.com votes service url
+This is the url of your instance of the NadekoBot.Votes api
+Example: https://votes.my.cool.bot.com")]
+            public string DiscordsServiceUrl { get; set; }
+            
+            [Comment(@"Authorization header value sent to the Discords service url with each request
+This should be equivalent to the DiscordsKey in your NadekoBot.Votes api appsettings.json file")]
+            public string DiscordsKey { get; set; }
 
-            public VotesSettings(string url, string key)
+            public VotesSettings()
             {
-                Url = url;
-                Key = key;
+                
+            }
+            
+            public VotesSettings(string topggServiceUrl, string topggKey, string discordsServiceUrl, string discordsKey)
+            {
+                TopggServiceUrl = topggServiceUrl;
+                TopggKey = topggKey;
+                DiscordsServiceUrl = discordsServiceUrl;
+                DiscordsKey = discordsKey;
             }
         }
 

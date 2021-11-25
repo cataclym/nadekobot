@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,15 +26,18 @@ namespace NadekoBot.Modules.Utility
         private readonly IStatsService _stats;
         private readonly IBotCredentials _creds;
         private readonly DownloadTracker _tracker;
+        private readonly IHttpClientFactory _httpFactory;
 
         public Utility(DiscordSocketClient client, ICoordinator coord,
-            IStatsService stats, IBotCredentials creds, DownloadTracker tracker)
+            IStatsService stats, IBotCredentials creds, DownloadTracker tracker,
+            IHttpClientFactory httpFactory)
         {
             _client = client;
             _coord = coord;
             _stats = stats;
             _creds = creds;
             _tracker = tracker;
+            _httpFactory = httpFactory;
         }
 
         [NadekoCommand, Aliases]
@@ -253,7 +257,7 @@ namespace NadekoBot.Modules.Utility
                         .AddField(GetText(strs.commands_ran), _stats.CommandsRan.ToString(), true)
                         .AddField(GetText(strs.messages), $"{_stats.MessageCounter} ({_stats.MessagesPerSecond:F2}/sec)",
                             true)
-                        .AddField(GetText(strs.memory), $"{_stats.Heap} MB", true)
+                        .AddField(GetText(strs.memory), FormattableString.Invariant($"{_stats.GetPrivateMemory():F2} MB"), true)
                         .AddField(GetText(strs.owner_ids), ownerIds, true)
                         .AddField(GetText(strs.uptime), _stats.GetUptimeString("\n"), true)
                         .AddField(GetText(strs.presence), 
@@ -276,6 +280,60 @@ namespace NadekoBot.Modules.Utility
                 await ReplyErrorLocalizedAsync(strs.showemojis_none).ConfigureAwait(false);
             else
                 await ctx.Channel.SendMessageAsync(result.TrimTo(2000)).ConfigureAwait(false);
+        }
+
+        [NadekoCommand, Aliases]
+        [RequireContext(ContextType.Guild)]
+        [RequireBotPermission(GuildPermission.ManageEmojis)]
+        [RequireUserPermission(GuildPermission.ManageEmojis)]
+        [Priority(2)]
+        public Task EmojiAdd(string name, Emote emote)
+            => EmojiAdd(name, emote.Url);
+        
+        [NadekoCommand, Aliases]
+        [RequireContext(ContextType.Guild)]
+        [RequireBotPermission(GuildPermission.ManageEmojis)]
+        [RequireUserPermission(GuildPermission.ManageEmojis)]
+        [Priority(1)]
+        public Task EmojiAdd(Emote emote)
+            => EmojiAdd(emote.Name, emote.Url);
+        
+        [NadekoCommand, Aliases]
+        [RequireContext(ContextType.Guild)]
+        [RequireBotPermission(GuildPermission.ManageEmojis)]
+        [RequireUserPermission(GuildPermission.ManageEmojis)]
+        [Priority(0)]
+        public async Task EmojiAdd(string name, string url = null)
+        {
+            name = name.Trim(':');
+
+            url ??= ctx.Message.Attachments.FirstOrDefault()?.Url;
+
+            if (url is null)
+                return;
+            
+            using var http = _httpFactory.CreateClient();
+            var res = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+            if (!res.IsImage() || res.GetImageSize() is null or > 262_144)
+            {
+                await ReplyErrorLocalizedAsync(strs.invalid_emoji_link);
+                return;
+            }
+
+            await using var imgStream = await res.Content.ReadAsStreamAsync();
+            Emote em;
+            try
+            {
+                em = await ctx.Guild.CreateEmoteAsync(name, new(imgStream));
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Error adding emoji on server {GuildId}", ctx.Guild.Id);
+
+                await ReplyErrorLocalizedAsync(strs.emoji_add_error);
+                return;
+            }
+            await ConfirmLocalizedAsync(strs.emoji_added(em.ToString()));
         }
 
         [NadekoCommand, Aliases]

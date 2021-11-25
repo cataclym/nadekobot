@@ -59,6 +59,7 @@ namespace NadekoBot.Services.Database
         public DbSet<Poll> Poll { get; set; }
         public DbSet<WaifuInfo> WaifuInfo { get; set; }
         public DbSet<ImageOnlyChannel> ImageOnlyChannels { get; set; }
+        public DbSet<NsfwBlacklistedTag> NsfwBlacklistedTags { get; set; }
 
         public NadekoContext(DbContextOptions<NadekoContext> options) : base(options)
         {
@@ -195,10 +196,16 @@ namespace NadekoBot.Services.Database
             #endregion
 
             #region Warnings
-            var warn = modelBuilder.Entity<Warning>();
-            warn.HasIndex(x => x.GuildId);
-            warn.HasIndex(x => x.UserId);
-            warn.HasIndex(x => x.DateAdded);
+
+            modelBuilder.Entity<Warning>(warn =>
+            {
+                warn.HasIndex(x => x.GuildId);
+                warn.HasIndex(x => x.UserId);
+                warn.HasIndex(x => x.DateAdded);
+                warn.Property(x => x.Weight)
+                    .HasDefaultValue(1);
+            });
+
             #endregion
 
             #region PatreonRewards
@@ -357,6 +364,10 @@ namespace NadekoBot.Services.Database
             modelBuilder.Entity<ImageOnlyChannel>(ioc => ioc
                 .HasIndex(x => x.ChannelId)
                 .IsUnique());
+
+            modelBuilder.Entity<NsfwBlacklistedTag>(nbt => nbt
+                .HasIndex(x => x.GuildId)
+                .IsUnique(false));
         }
     }
 }

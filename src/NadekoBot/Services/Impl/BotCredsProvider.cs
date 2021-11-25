@@ -10,7 +10,14 @@ using Serilog;
 
 namespace NadekoBot.Services
 {
-    public sealed class BotCredsProvider
+    public interface IBotCredsProvider
+    {
+        public void Reload();
+        public IBotCredentials GetCreds();
+        public void ModifyCredsFile(Action<Creds> func);
+    }
+    
+    public sealed class BotCredsProvider : IBotCredsProvider
     {
         private readonly int? _totalShards;
         private const string _credsFileName = "creds.yml";
@@ -27,7 +34,7 @@ namespace NadekoBot.Services
         
 
         private readonly object reloadLock = new object();
-        private void Reload()
+        public void Reload()
         {
             lock (reloadLock)
             {
@@ -102,6 +109,19 @@ namespace NadekoBot.Services
             Reload();
         }
 
+        public void ModifyCredsFile(Action<Creds> func)
+        {
+            var ymlData = File.ReadAllText(_credsFileName);
+            var creds = Yaml.Deserializer.Deserialize<Creds>(ymlData);
+
+            func(creds);
+
+            ymlData = Yaml.Serializer.Serialize(creds);
+            File.WriteAllText(_credsFileName, ymlData);
+            
+            Reload();
+        }
+        
         /// <summary>
         /// Checks if there's a V2 credentials file present, loads it if it exists,
         /// converts it to new model, and saves it to YAML. Also backs up old credentials to credentials.json.bak
@@ -128,7 +148,10 @@ namespace NadekoBot.Services
                         null,
                         null,
                         oldCreds.PatreonCampaignId),
-                    Votes = new Creds.VotesSettings(oldCreds.VotesUrl, oldCreds.VotesToken),
+                    Votes = new(oldCreds.VotesUrl,
+                        oldCreds.VotesToken,
+                        string.Empty,
+                        string.Empty),
                     BotListToken = oldCreds.BotListToken,
                     RedisOptions = oldCreds.RedisOptions,
                     LocationIqApiKey = oldCreds.LocationIqApiKey,
@@ -141,8 +164,19 @@ namespace NadekoBot.Services
 
                 Log.Warning("Data from credentials.json has been moved to creds.yml\nPlease inspect your creds.yml for correctness");
             }
+
+            if (File.Exists(_credsFileName))
+            {
+                var creds = Yaml.Deserializer.Deserialize<Creds>(File.ReadAllText(_credsFileName));
+                if (creds.Version <= 1)
+                {
+                    creds.Version = 2;
+                    File.WriteAllText(_credsFileName, Yaml.Serializer.Serialize(creds));
+                }
+            }
+
         }
 
-        public Creds GetCreds() => _creds;
+        public IBotCredentials GetCreds() => _creds;
     }
 }

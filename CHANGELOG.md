@@ -4,6 +4,53 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
 
 ## Unreleased
 
+### Changed
+- `.warn` now supports weighted warnings
+- `.warnlog` will now show current amount and total amount of warnings
+
+### Removed 
+- Removed slot.numbers from `images.yml` as they're no longer used
+
+## [3.0.9] - 21.11.2021
+
+### Changed
+- `.ea` will now use an image attachments if you omit imageUrl
+
+### Added
+- Added `.emojiadd` with 3 overloads
+  - `.ea :customEmoji:` which copies another server's emoji 
+  - `.ea newName :customEmoji:` which copies emoji under a different name
+  - `.ea emojiName <imagelink.png>` which creates a new emoji from the specified image
+- Patreon Access and Refresh Tokens should now be automatically updated once a month as long as the user has provided the necessary credentials in creds.yml file:
+  - `Patreon.ClientId`
+  - `Patreon.RefreshToken` (will also get updated once a month but needs an initial value)
+  - `Patreon.ClientSecret`
+  - `Patreon.CampaignId`
+
+### Fixed
+- Fixed an error that would show up in the console when a club image couldn't be drawn in certain circumstances
+
+## [3.0.8] - 03.11.2021
+
+### Added 
+- Created VotesApi project nad re-worked vote rewards handling
+  - Updated votes entries in creds.yml with explanations on how to set up vote links
+
+### Fixed
+- Fixed adding currency to users who don't exist in the database
+- Memory used by the bot is now correct (thanks to kotz)
+- Ban/kick will no longer fail due to too long reasons
+- Fixed some fields not preserving inline after string replacements
+
+### Changed
+- `images.json` moved to `images.yml`
+  - Links will use the new cdn url
+  - Heads and Tails images will be updated if you haven't changed them already
+- `.slot` redesigned (and updated entries in `images.yml`)
+- Reduced required permissions for .qdel (thanks to tbodt)
+
+## [3.0.7] - 05.10.2021
+
 ### Added
 - `.streamsclear` re-added. It will remove all followed streams on the server.
 - `.gifts` now have 3 new ✂️ Haircut 🧻 ToiletPaper and 🥀 WiltedRose which **reduce** waifu's value
@@ -12,6 +59,9 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
   - They have a separate multiplier (`waifu.multi.negative_gift_effect` default 0.5, changeable via `.config gambling` or `data/gambling.yml`)
   - When gifted, the waifu's price will be reduced by the `price * multiplier` 
   - Negative gifts don't show up in `.waifuinfo` nor is the record of them kept in the database
+
+### Fixed 
+- Fixed `%users%` and `%shard.usercount%` placeholders not showing correct values
 
 ## [3.0.6] - 27.09.2021
 

@@ -1,10 +1,12 @@
 ﻿using System;
+using NadekoBot.Common.Yml;
 
 namespace NadekoBot.Common
 {
     public class ImageUrls
     {
-        public int Version { get; set; } = 2;
+        [Comment("DO NOT CHANGE")]
+        public int Version { get; set; } = 3;
 
         public CoinData Coins { get; set; }
         public Uri[] Currency { get; set; }
@@ -25,7 +27,6 @@ namespace NadekoBot.Common
         public class SlotData
         {
             public Uri[] Emojis { get; set; }
-            public Uri[] Numbers { get; set; }
             public Uri Bg { get; set; }
         }
 

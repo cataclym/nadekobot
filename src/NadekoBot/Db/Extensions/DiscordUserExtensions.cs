@@ -1,4 +1,5 @@
-﻿using NadekoBot.Db.Models;
+﻿using System;
+using NadekoBot.Db.Models;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Discord;
@@ -138,14 +139,15 @@ WHERE UserId={userId};");
             // just update the amount, there is no new user data
             if (!updatedUserData)
             {
-                ctx.Database.ExecuteSqlInterpolated($@"
+                var rows = ctx.Database.ExecuteSqlInterpolated($@"
 UPDATE OR IGNORE DiscordUser
 SET CurrencyAmount=CurrencyAmount+{amount}
 WHERE UserId={userId};
 
-INSERT OR IGNORE INTO DiscordUser (UserId, Username, Discriminator, AvatarId, CurrencyAmount)
-VALUES ({userId}, {name}, {discrim}, {avatarId}, {amount});
+INSERT OR IGNORE INTO DiscordUser (UserId, Username, Discriminator, AvatarId, CurrencyAmount, TotalXp)
+VALUES ({userId}, {name}, {discrim}, {avatarId}, {amount}, 0);
 ");
+                
             }
             else
             {
@@ -157,8 +159,8 @@ SET CurrencyAmount=CurrencyAmount+{amount},
     AvatarId={avatarId}
 WHERE UserId={userId};
 
-INSERT OR IGNORE INTO DiscordUser (UserId, Username, Discriminator, AvatarId, CurrencyAmount)
-VALUES ({userId}, {name}, {discrim}, {avatarId}, {amount});
+INSERT OR IGNORE INTO DiscordUser (UserId, Username, Discriminator, AvatarId, CurrencyAmount, TotalXp)
+VALUES ({userId}, {name}, {discrim}, {avatarId}, {amount}, 0);
 ");
             }
             return true;
@@ -167,7 +169,7 @@ VALUES ({userId}, {name}, {discrim}, {avatarId}, {amount});
         public static decimal GetTotalCurrency(this DbSet<DiscordUser> users)
         {
             return users
-                .Sum(x => x.CurrencyAmount);
+                .Sum((Func<DiscordUser, decimal>)(x => x.CurrencyAmount));
         }
 
         public static decimal GetTopOnePercentCurrency(this DbSet<DiscordUser> users, ulong botId)

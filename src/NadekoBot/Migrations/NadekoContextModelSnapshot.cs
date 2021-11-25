@@ -1062,7 +1062,7 @@ namespace NadekoBot.Migrations
                     b.ToTable("MutedUserId");
                 });
 
-            modelBuilder.Entity("NadekoBot.Services.Database.Models.NsfwBlacklitedTag", b =>
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.NsfwBlacklistedTag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1071,7 +1071,7 @@ namespace NadekoBot.Migrations
                     b.Property<DateTime?>("DateAdded")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("GuildConfigId")
+                    b.Property<ulong>("GuildId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Tag")
@@ -1079,9 +1079,9 @@ namespace NadekoBot.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GuildConfigId");
+                    b.HasIndex("GuildId");
 
-                    b.ToTable("NsfwBlacklitedTag");
+                    b.ToTable("NsfwBlacklistedTags");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Permissionv2", b =>
@@ -1967,6 +1967,11 @@ namespace NadekoBot.Migrations
                     b.Property<ulong>("UserId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("DateAdded");
@@ -2300,13 +2305,6 @@ namespace NadekoBot.Migrations
                         .HasForeignKey("GuildConfigId");
                 });
 
-            modelBuilder.Entity("NadekoBot.Services.Database.Models.NsfwBlacklitedTag", b =>
-                {
-                    b.HasOne("NadekoBot.Services.Database.Models.GuildConfig", null)
-                        .WithMany("NsfwBlacklistedTags")
-                        .HasForeignKey("GuildConfigId");
-                });
-
             modelBuilder.Entity("NadekoBot.Services.Database.Models.Permissionv2", b =>
                 {
                     b.HasOne("NadekoBot.Services.Database.Models.GuildConfig", null)
@@ -2572,8 +2570,6 @@ namespace NadekoBot.Migrations
                     b.Navigation("GenerateCurrencyChannelIds");
 
                     b.Navigation("MutedUsers");
-
-                    b.Navigation("NsfwBlacklistedTags");
 
                     b.Navigation("Permissions");
 

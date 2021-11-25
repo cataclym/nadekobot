@@ -115,9 +115,7 @@ namespace NadekoBot.Modules.Utility
                     .WithOkColor()
                     .WithTitle(GetText(strs.quote_id($"#{data.Id}")))
                     .AddField(GetText(strs.trigger), data.Keyword)
-                    .AddField(GetText(strs.response), data.Text.Length > 1000
-                        ? GetText(strs.redacted_too_long)
-                        : Format.Sanitize(data.Text))
+                    .AddField(GetText(strs.response), Format.Sanitize(data.Text).Replace("](", "]\\("))
                     .WithFooter(GetText(strs.created_by($"{data.AuthorName} ({data.AuthorId})")))
                 ).ConfigureAwait(false);
             }
@@ -205,7 +203,7 @@ namespace NadekoBot.Modules.Utility
             [RequireContext(ContextType.Guild)]
             public async Task QuoteDelete(int id)
             {
-                var isAdmin = ((IGuildUser)ctx.Message.Author).GuildPermissions.Administrator;
+                var isAdmin = ((IGuildUser)ctx.Message.Author).GuildPermissions.ManageMessages;
 
                 var success = false;
                 string response;
@@ -233,7 +231,7 @@ namespace NadekoBot.Modules.Utility
 
             [NadekoCommand, Aliases]
             [RequireContext(ContextType.Guild)]
-            [UserPerm(GuildPerm.Administrator)]
+            [UserPerm(GuildPerm.ManageMessages)]
             public async Task DelAllQuotes([Leftover] string keyword)
             {
                 if (string.IsNullOrWhiteSpace(keyword))

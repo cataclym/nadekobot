@@ -66,11 +66,11 @@ namespace NadekoBot.Modules.Gambling
             }
             var embed = _eb.Create()
                 .WithTitle(GetText(strs.economy_state))
-                .AddField(GetText(strs.currency_owned), ((BigInteger)(ec.Cash - ec.Bot)) + CurrencySign)
+                .AddField(GetText(strs.currency_owned), ((BigInteger)(ec.Cash - ec.Bot)).ToString("N", _enUsCulture) + CurrencySign)
                 .AddField(GetText(strs.currency_one_percent), (onePercent * 100).ToString("F2") + "%")
                 .AddField(GetText(strs.currency_planted), ((BigInteger)ec.Planted) + CurrencySign)
                 .AddField(GetText(strs.owned_waifus_total), ((BigInteger)ec.Waifus) + CurrencySign)
-                .AddField(GetText(strs.bot_currency), ec.Bot + CurrencySign)
+                .AddField(GetText(strs.bot_currency), ec.Bot.ToString("N", _enUsCulture) + CurrencySign)
                 .AddField(GetText(strs.total), ((BigInteger)(ec.Cash + ec.Planted + ec.Waifus)).ToString("N", _enUsCulture) + CurrencySign)
                 .WithOkColor();
                 // ec.Cash already contains ec.Bot as it's the total of all values in the CurrencyAmount column of the DiscordUser table
@@ -247,20 +247,20 @@ namespace NadekoBot.Modules.Gambling
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
         [Priority(0)]
-        public Task Award(ShmartNumber amount, IGuildUser usr, [Leftover] string msg) =>
+        public Task Award(long amount, IGuildUser usr, [Leftover] string msg) =>
             Award(amount, usr.Id, msg);
 
         [NadekoCommand, Aliases]
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
         [Priority(1)]
-        public Task Award(ShmartNumber amount, [Leftover] IGuildUser usr) =>
+        public Task Award(long amount, [Leftover] IGuildUser usr) =>
             Award(amount, usr.Id);
 
         [NadekoCommand, Aliases]
         [OwnerOnly]
         [Priority(2)]
-        public async Task Award(ShmartNumber amount, ulong usrId, [Leftover] string msg = null)
+        public async Task Award(long amount, ulong usrId, [Leftover] string msg = null)
         {
             if (amount <= 0)
                 return;
@@ -276,7 +276,7 @@ namespace NadekoBot.Modules.Gambling
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
         [Priority(2)]
-        public async Task Award(ShmartNumber amount, [Leftover] IRole role)
+        public async Task Award(long amount, [Leftover] IRole role)
         {
             var users = (await ctx.Guild.GetUsersAsync().ConfigureAwait(false))
                                .Where(u => u.GetRoles().Contains(role))
@@ -284,7 +284,7 @@ namespace NadekoBot.Modules.Gambling
 
             await _cs.AddBulkAsync(users.Select(x => x.Id),
                 users.Select(x => $"Awarded by bot owner to **{role.Name}** role. ({ctx.User.Username}/{ctx.User.Id})"),
-                users.Select(x => amount.Value),
+                users.Select(x => amount),
                 gamble: true)
                 .ConfigureAwait(false);
 
@@ -298,13 +298,13 @@ namespace NadekoBot.Modules.Gambling
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
         [Priority(0)]
-        public async Task Take(ShmartNumber amount, [Leftover] IRole role)
+        public async Task Take(long amount, [Leftover] IRole role)
         {
             var users = (await role.GetMembersAsync()).ToList();
 
             await _cs.RemoveBulkAsync(users.Select(x => x.Id),
                     users.Select(x => $"Taken by bot owner from **{role.Name}** role. ({ctx.User.Username}/{ctx.User.Id})"),
-                    users.Select(x => amount.Value),
+                    users.Select(x => amount),
                     gamble: true)
                 .ConfigureAwait(false);
 
@@ -318,7 +318,7 @@ namespace NadekoBot.Modules.Gambling
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
         [Priority(1)]
-        public async Task Take(ShmartNumber amount, [Leftover] IGuildUser user)
+        public async Task Take(long amount, [Leftover] IGuildUser user)
         {
             if (amount <= 0)
                 return;
@@ -333,7 +333,7 @@ namespace NadekoBot.Modules.Gambling
 
         [NadekoCommand, Aliases]
         [OwnerOnly]
-        public async Task Take(ShmartNumber amount, [Leftover] ulong usrId)
+        public async Task Take(long amount, [Leftover] ulong usrId)
         {
             if (amount <= 0)
                 return;
