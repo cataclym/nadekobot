@@ -277,12 +277,12 @@ namespace NadekoBot.Modules.Gambling
         {
             if (amount <= 0)
                 return;
-                
+
             await _cs.AddAsync(usr,
                 $"Awarded by bot owner. ({ctx.User.Username}/{ctx.User.Id}) {(msg ?? "")}",
                 amount,
                 gamble: (ctx.Client.CurrentUser.Id != usr.Id)).ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync(strs.awarded(n(amount) + CurrencySign, $"<@{usr.Id}>"));
+            await ReplyConfirmLocalizedAsync(strs.awarded(n(amount) + CurrencySign, Format.Bold(usr.ToString())));
         }
 
         [NadekoCommand, Aliases]
