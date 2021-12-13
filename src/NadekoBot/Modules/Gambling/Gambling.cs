@@ -248,23 +248,20 @@ namespace NadekoBot.Modules.Gambling
         [OwnerOnly]
         [Priority(0)]
         public Task Award(long amount, IGuildUser usr, [Leftover] string msg) =>
-            Award(amount, usr.Id, msg);
+            AwardInternal(amount, usr, msg);
 
         [NadekoCommand, Aliases]
         [RequireContext(ContextType.Guild)]
         [OwnerOnly]
         [Priority(1)]
         public Task Award(long amount, [Leftover] IGuildUser usr) =>
-            Award(amount, usr.Id);
+            AwardInternal(amount, usr);
 
         [NadekoCommand, Aliases]
         [OwnerOnly]
         [Priority(2)]
         public async Task Award(long amount, ulong usrId, [Leftover] string msg = null)
         {
-            if (amount <= 0)
-                return;
-
             var usr = await ((DiscordSocketClient)Context.Client).Rest.GetUserAsync(usrId);
 
             if(usr is null)
@@ -273,11 +270,19 @@ namespace NadekoBot.Modules.Gambling
                 return;
             }
 
+            await AwardInternal(amount, usr, msg).ConfigureAwait(false);
+        }
+
+        public async Task AwardInternal(long amount, IUser usr, string msg = null)
+        {
+            if (amount <= 0)
+                return;
+                
             await _cs.AddAsync(usr,
                 $"Awarded by bot owner. ({ctx.User.Username}/{ctx.User.Id}) {(msg ?? "")}",
                 amount,
-                gamble: (ctx.Client.CurrentUser.Id != usrId)).ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync(strs.awarded(n(amount) + CurrencySign, $"<@{usrId}>"));
+                gamble: (ctx.Client.CurrentUser.Id != usr.Id)).ConfigureAwait(false);
+            await ReplyConfirmLocalizedAsync(strs.awarded(n(amount) + CurrencySign, $"<@{usr.Id}>"));
         }
 
         [NadekoCommand, Aliases]
