@@ -36,7 +36,7 @@ namespace NadekoBot.Services
             return true;
         }
 
-        public void Die()
+        public void Die(bool graceful = false)
         {
             Environment.Exit(5);
         }
@@ -63,6 +63,11 @@ namespace NadekoBot.Services
         public int GetGuildCount()
         {
             return _client.Guilds.Count;
+        }
+
+        public Task Reload()
+        {
+            return Task.CompletedTask;
         }
     }
 }

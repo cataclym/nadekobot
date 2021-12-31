@@ -4,9 +4,39 @@ Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.
 
 ## Unreleased
 
+-
+
+## [3.0.11] - 17.12.2021
+
+### Added
+- `.remindl` and `.remindrm` commands now supports optional 'server' parameter for Administrators which allows them to delete any reminder created on the server
+- Added slots.currencyFontColor to gambling.yml
+- Added `.qexport` and `.qimport` commands which allow you to export and import quotes just like `.crsexport`
+- Added `.showembed <msgid>` and `.showembed #channel <msgid>` which will show you embed json from the specified message
+
+### Changed
+- `.at` and `.atl` commands reworked
+  - Persist restarts
+  - Will now only translate non-commands
+  - You can switch between `.at del` and `.at` without clearing the user language registrations
+  - Disabling `.at` will clear all user language registrations on that channel
+  - Users can't register languages if the `.at` is not enabled
+  - Looks much nicer
+    - Bot will now reply to user messages with a translation if `del` is disabled
+    - Bot will make an embed with original and translated text with user avatar and name if `del` is enabled
+  - If the bot is unable to delete messages while having `del` enabled, it will reset back to the no-del behavior for the current session  
+
+### Fixed
+- `.crypto` now supports top 5000 coins
+
+## [3.0.10] - 01.12.2021
+
 ### Changed
 - `.warn` now supports weighted warnings
 - `.warnlog` will now show current amount and total amount of warnings
+
+### Fixed
+- `.xprewsreset` now has correct permissions
 
 ### Removed 
 - Removed slot.numbers from `images.yml` as they're no longer used

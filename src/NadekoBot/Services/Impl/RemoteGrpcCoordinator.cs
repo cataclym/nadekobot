@@ -39,11 +39,11 @@ namespace NadekoBot.Services
             return true;
         }
 
-        public void Die()
+        public void Die(bool graceful)
         {
             _coordClient.Die(new DieRequest()
             {
-                Graceful = false
+                Graceful = graceful
             });
         }
 
@@ -77,6 +77,11 @@ namespace NadekoBot.Services
             var res = _coordClient.GetAllStatuses(new GetAllStatusesRequest());
 
             return res.Statuses.Sum(x => x.GuildCount);
+        }
+
+        public async Task Reload()
+        {
+            await _coordClient.ReloadAsync(new());
         }
 
         public Task OnReadyAsync()

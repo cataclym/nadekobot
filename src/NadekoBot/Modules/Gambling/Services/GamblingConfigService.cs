@@ -68,7 +68,16 @@ namespace NadekoBot.Modules.Gambling.Services
             {
                 ModifyConfig(c =>
                 {
+                    c.Version = 3;
                     c.VoteReward = 100;
+                });
+            }
+
+            if (_data.Version < 4)
+            {
+                ModifyConfig(c =>
+                {
+                    c.Version = 4;
                 });
             }
         }

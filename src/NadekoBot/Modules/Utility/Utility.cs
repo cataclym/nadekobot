@@ -11,11 +11,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using NadekoBot.Common.Replacements;
 using NadekoBot.Services;
 using Serilog;
+using SystemTextJsonSamples;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace NadekoBot.Modules.Utility
 {
@@ -105,7 +108,11 @@ namespace NadekoBot.Modules.Utility
             await ctx.Channel.TriggerTypingAsync().ConfigureAwait(false);
             await _tracker.EnsureUsersDownloadedAsync(ctx.Guild).ConfigureAwait(false);
 
-            var users = await ctx.Guild.GetUsersAsync();
+            var users = await ctx.Guild.GetUsersAsync(
+                #if GLOBAL_NADEKO
+                    CacheMode.CacheOnly
+                #endif
+            );
             var roleUsers = users
                 .Where(u => role is null ? u.RoleIds.Count == 1 : u.RoleIds.Contains(role.Id))
                 .Select(u => $"`{u.Id, 18}` {u}")
@@ -119,9 +126,9 @@ namespace NadekoBot.Modules.Utility
 
                 if (pageUsers.Count == 0)
                     return _eb.Create().WithOkColor().WithDescription(GetText(strs.no_user_on_this_page));
-                    
+
                 return _eb.Create().WithOkColor()
-                    .WithTitle(GetText(strs.inrole_list(Format.Bold(role?.Name ?? "No Role") + $" - {roleUsers.Length}")))
+                    .WithTitle(GetText(strs.inrole_list(Format.Bold(role?.Name ?? "No Role"), roleUsers.Length)))
                     .WithDescription(string.Join("\n", pageUsers));
             }, roleUsers.Length, 20).ConfigureAwait(false);
         }
@@ -284,24 +291,24 @@ namespace NadekoBot.Modules.Utility
 
         [NadekoCommand, Aliases]
         [RequireContext(ContextType.Guild)]
-        [RequireBotPermission(GuildPermission.ManageEmojis)]
-        [RequireUserPermission(GuildPermission.ManageEmojis)]
+        [BotPerm(GuildPerm.ManageEmojis)]
+        [UserPerm(GuildPerm.ManageEmojis)]
         [Priority(2)]
         public Task EmojiAdd(string name, Emote emote)
             => EmojiAdd(name, emote.Url);
         
         [NadekoCommand, Aliases]
         [RequireContext(ContextType.Guild)]
-        [RequireBotPermission(GuildPermission.ManageEmojis)]
-        [RequireUserPermission(GuildPermission.ManageEmojis)]
+        [BotPerm(GuildPerm.ManageEmojis)]
+        [UserPerm(GuildPerm.ManageEmojis)]
         [Priority(1)]
         public Task EmojiAdd(Emote emote)
             => EmojiAdd(emote.Name, emote.Url);
         
         [NadekoCommand, Aliases]
         [RequireContext(ContextType.Guild)]
-        [RequireBotPermission(GuildPermission.ManageEmojis)]
-        [RequireUserPermission(GuildPermission.ManageEmojis)]
+        [BotPerm(GuildPerm.ManageEmojis)]
+        [UserPerm(GuildPerm.ManageEmojis)]
         [Priority(0)]
         public async Task EmojiAdd(string name, string url = null)
         {
@@ -362,7 +369,48 @@ namespace NadekoBot.Modules.Utility
 
             await ctx.Channel.EmbedAsync(embed);
         }
+        
+        [NadekoCommand, Aliases]
+        [RequireContext(ContextType.Guild)]
+        public Task ShowEmbed(ulong messageId)
+            => ShowEmbed((ITextChannel)ctx.Channel, messageId);
 
+        private static readonly JsonSerializerOptions _showEmbedSerializerOptions = new JsonSerializerOptions()
+        {
+            WriteIndented = true,
+            IgnoreNullValues = true,
+            PropertyNamingPolicy = LowerCaseNamingPolicy.Default
+        };
+            
+        [NadekoCommand, Aliases]
+        [RequireContext(ContextType.Guild)]
+        public async Task ShowEmbed(ITextChannel ch, ulong messageId)
+        {
+            var user = (IGuildUser)ctx.User;
+            var perms = user.GetPermissions(ch);
+            if (!perms.ReadMessageHistory || !perms.ViewChannel)
+            {
+                await ReplyErrorLocalizedAsync(strs.insuf_perms_u);
+                return;
+            }
+
+            var msg = await ch.GetMessageAsync(messageId);
+            if (msg is null)
+            {
+                await ReplyErrorLocalizedAsync(strs.msg_not_found);
+                return;
+            }
+
+            var embed = msg.Embeds.FirstOrDefault();
+            if (embed is null)
+            {
+                await ReplyErrorLocalizedAsync(strs.not_found);
+                return;
+            }
+
+            var json = SmartEmbedText.FromEmbed(embed, msg.Content).ToJson(_showEmbedSerializerOptions);
+            await SendConfirmAsync(Format.Sanitize(json).Replace("](", "]\\("));
+        }
 
         [NadekoCommand, Aliases]
         [RequireContext(ContextType.Guild)]
@@ -432,6 +480,8 @@ namespace NadekoBot.Modules.Utility
             Any,
             New
         }
+        
+        
         
         // [NadekoCommand, Usage, Description, Aliases]
         // [RequireContext(ContextType.Guild)]

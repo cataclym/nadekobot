@@ -19,6 +19,7 @@ using NadekoBot.Common.ModuleBehaviors;
 using NadekoBot.Common.Configs;
 using NadekoBot.Db;
 using NadekoBot.Modules.Administration.Services;
+using NadekoBot.Modules.Searches;
 using Serilog;
 
 namespace NadekoBot
@@ -105,7 +106,7 @@ namespace NadekoBot
                 .AddSingleton<ISeria, JsonSeria>()
                 .AddSingleton<IPubSub, RedisPubSub>()
                 .AddSingleton<IConfigSeria, YamlSeria>()
-                .AddBotStringsServices()
+                .AddBotStringsServices(_creds.TotalShards)
                 .AddConfigServices()
                 .AddConfigMigrators()
                 .AddMemoryCache()

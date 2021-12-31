@@ -1263,6 +1263,16 @@ imageonlychannel:
   - imageonlychannel
   - imageonly
   - imagesonly
+coordreload:
+  - coordreload
+quotesexport:
+  - quotesexport
+  - qexport
+quotesimport:
+  - quotesimport
+  - qimport
+showembed:
+  - showembed
 hug:
   - hug
 pat:

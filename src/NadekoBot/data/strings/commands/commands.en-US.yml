@@ -406,13 +406,15 @@ remind:
     - "me 1d5h Do something"
     - "#general 1m Start now!"
 reminddelete:
-  desc: "Deletes a reminder on the specified index."
+  desc: "Deletes a reminder on the specified index. You can specify 'server' option if you're an Administrator, and you want to delete a reminder on this server created by someone else. "
   args:
     - "3"
+    - "server 2"
 remindlist:
-  desc: "Lists all reminders you created. Paginated."
+  desc: "Lists all reminders you created. You can specify 'server' option if you're an Administrator to list all reminders created on this server. Paginated."
   args:
     - "1"
+    - "server 2"
 serverinfo:
   desc: "Shows info about the server the bot is on. If no server is supplied, it defaults to current one."
   args:
@@ -609,7 +611,7 @@ quoteid:
   args:
     - "123456"
 quotedelete:
-  desc: "Deletes a quote with the specified ID. You have to be either server Administrator or the creator of the quote to delete it."
+  desc: "Deletes a quote with the specified ID. You have to either have the Manage Messages permission or be the creator of the quote to delete it."
   args:
     - "123456"
 draw:
@@ -1141,9 +1143,9 @@ butts:
   args:
     - ""
 translate:
-  desc: "Translates from>to text. From the given language to the destination language."
+  desc: "Translates text from the given language to the destination language."
   args:
-    - "en>fr Hello"
+    - "en fr Hello"
 translangs:
   desc: "Lists the valid languages for translation."
   args:
@@ -1304,7 +1306,7 @@ poll:
 autotranslang:
   desc: "Sets your source and target language to be used with `{0}at`. Specify no parameters to remove previously set value."
   args:
-    - "en>fr"
+    - "en fr"
 autotranslate:
   desc: "Starts automatic translation of all messages by users who set their `{0}atl` in this channel. You can set \"del\" parameter to automatically delete all translated user messages."
   args:
@@ -1574,6 +1576,14 @@ crsimport:
     - "<upload .yml file>"
 crsexport:
   desc: "Exports custom reactions from the current server (or global custom reactions in DMs) into a .yml file"
+  args:
+    - ""
+quotesimport:
+  desc: "Upload the file or send the raw .yml data with this command to import all quotes from the specified string or file into the current server."
+  args:
+    - "<upload .yml file>"
+quotesexport:
+  desc: "Exports quotes from the current server into a .yml file"
   args:
     - ""
 aliaslist:
@@ -2066,7 +2076,7 @@ rollduel:
     - "50 @Someone"
     - "@Challenger"
 reactionroles:
-  desc: "Specify role names and server emojis with which they're represented, the bot will then add those emojis to the previous message in the channel, and users will be able to get the roles by clicking on the emoji. You can set 'excl' as the parameter before the reactions and roles to make them exclusive. You can have up to 5 of these enabled on one server at a time. Optionally you can specify target message if you don't want it to be the previous one."
+  desc: "Specify role names and server emojis with which they're represented, the bot will then add those emojis to the previous message in the channel, and users will be able to get the roles by clicking on the emoji. You can set 'excl' as the parameter before the reactions and roles to make them exclusive. You can have up to 10 of these enabled on one server at a time. Optionally you can specify target message if you don't want it to be the previous one."
   args:
     - "Gamer :SomeServerEmoji: Streamer :Other: Watcher :Other2:"
     - "excl Horde :Horde: Alliance :Alliance:"
@@ -2144,6 +2154,15 @@ imageonlychannel:
     Users who send more than a few non-image messages will be banned from using the channel.
   args:
     - ""
+coordreload:
+  desc: "Reloads coordinator config"
+  args:
+    - "" 
+showembed:
+  desc: "Prints the json equivalent of the embed of the message specified by its Id."
+  args:
+    - "820022733172121600"
+    - "#some-channel 820022733172121600"
 hug:
   desc: "Send a hug!"
   args:

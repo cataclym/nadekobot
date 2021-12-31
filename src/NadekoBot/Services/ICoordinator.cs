@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace NadekoBot.Services
 {
     public interface ICoordinator
     {
         bool RestartBot();
-        void Die();
+        void Die(bool graceful);
         bool RestartShard(int shardId);
         IList<ShardStatus> GetAllShardStatuses();
         int GetGuildCount();
+        Task Reload();
     }
     
     public class ShardStatus
