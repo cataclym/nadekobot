@@ -6,6 +6,7 @@ using System.Linq;
 using NadekoBot.Extensions;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using NadekoBot.Services;
 using NadekoBot.Db;
 
@@ -368,6 +369,12 @@ namespace NadekoBot.Modules.Xp.Services
 
             using var uow = _db.GetDbContext();
             return uow.Clubs.GetClubLeaderboardPage(page);
+        }
+
+        public int GetClubRank(ClubInfo club)
+        {
+            using var uow = _db.GetDbContext();
+            return uow.Clubs.Count(x => x.Xp > club.Xp) + 1;
         }
     }
 }

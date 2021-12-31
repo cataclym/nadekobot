@@ -118,6 +118,7 @@ namespace NadekoBot.Modules.Xp
                     return;
                 }
 
+                var rank = _service.GetClubRank(club);
                 var lvl = new LevelStats(club.Xp);
                 var users = club.Users
                     .OrderByDescending(x =>
@@ -141,6 +142,7 @@ namespace NadekoBot.Modules.Xp
                             false)
                         .AddField(GetText(strs.owner), club.Owner.ToString(), true)
                         .AddField(GetText(strs.level_req), club.MinimumLevelReq.ToString(), true)
+                        .AddField(GetText(strs.club_rank), rank, true)
                         .AddField(GetText(strs.members), string.Join("\n", users
                             .Skip(page * 10)
                             .Take(10)
