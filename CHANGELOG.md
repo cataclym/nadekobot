@@ -2,9 +2,23 @@
 
 Experimental changelog. Mostly based on [keepachangelog](https://keepachangelog.com/en/1.0.0/) except date format. a-c-f-r-o
 
-## Unreleased
+## [3.0.13] - 14.04.2021
 
--
+### Fixed
+
+- Fixed `.greetdm` causing ratelimits during raids 
+- Fixed `.gelbooru`
+
+## [3.0.12] - 06.01.2021
+
+### Fixed
+- `.smch` Fixed
+- `.trans` command will now work properly with capitilized language names
+- Ban message color with plain text fixed
+- Fixed some grpc coordinator bugs
+- Fixed a string in `.xpex`
+- Google version of .img will now have safe search enabled
+- Fixed a small bug in `.hangman`
 
 ## [3.0.11] - 17.12.2021
 
