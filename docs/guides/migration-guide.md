@@ -16,7 +16,7 @@
 ## Linux
 
 1. In order to migrate a bot hosted on **Linux**, first **BACKUP** then update your current version to the latest **2.x** version using the **2.x** installer, run the bot, and make sure it works. Then:
-    - Run the **old** installer with `cd ~ && wget -N https://gitlab.com/hokutochen/pi-nadeko-bash-installer-arm/raw/V2/linuxAIO.sh && bash linuxAIO.sh`
+    - Run the **old** installer with `cd ~ && wget -N https://gitlab.com/hokutochen/becausekwoth/-/raw/main/linuxAIO.sh && bash linuxAIO.sh`
     - Run option **2**
     - You **MUST** Run the bot now to ensure database is ready for migration
     - Type `.stats` and ensure the version is `2.46.5` or later
