@@ -1374,6 +1374,13 @@ banktake:
   - seize
 bankaward:
   - award
+# Todo
+todoadd:
+  - todoadd
+todolist:
+  - todolist
+todoremove:
+  - todoremove
 # Patron
 patron:
   - patron
