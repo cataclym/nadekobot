@@ -2346,3 +2346,16 @@ autopublish:
   desc: "Make the bot automatically publish all messages posted in the news channel this command was executed in."
   args:
     - ""
+todoadd:
+  desc: "Adds a todo item."
+  args:
+    - "Make the bed"
+    - "Clean the room" 
+todolist:
+  desc: "Lists all active todo items."
+  args:
+    - ""
+todoremove:
+  desc: "Removes a todo item."
+  args:
+    - "1"
