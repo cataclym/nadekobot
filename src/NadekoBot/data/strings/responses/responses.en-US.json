@@ -1051,5 +1051,9 @@
   "patron_insuff_tier": "Your Patron Tier insufficient to perform this action.",
   "xpshop_already_owned": "You already own this item.",
   "xpshop_item_not_found": "An item with that key doesn't exist.",
-  "xpshop_website": "You can see the list of all Xp Shop items here: <https://xpshop.nadeko.bot>"
+  "xpshop_website": "You can see the list of all Xp Shop items here: <https://xpshop.nadeko.bot>",
+  "todo_removed": "Todo item {0} has been removed.",
+  "todo_index_out_of_range": "There is no todo item on index {0}",
+  "todo_none": "You don't have any TODOs.",
+  "todo_list": "Todo List"
 }

@@ -480,6 +480,14 @@ public abstract class NadekoContext : DbContext
             .IsUnique());
 
         #endregion
+        
+        #region Todo
+
+        modelBuilder.Entity<TodoItem>(x => x
+            .HasIndex(p => p.UserId)
+            .IsUnique(false));
+
+        #endregion
     }
 
 #if DEBUG

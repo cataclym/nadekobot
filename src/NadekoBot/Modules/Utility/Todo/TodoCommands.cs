@@ -1,39 +1,7 @@
+using NadekoBot.Db.Models;
+
 namespace NadekoBot.Modules.Utility.Todo;
 
-public interface ITodoService
-{
-    Task AddTodoItemAsync(ulong userId, string task);
-    Task<bool> RemoveTodoItemAsync(ulong userId, int index);
-    Task GetTodoItemsAsync(ulong userId, int page);
-}
-
-public sealed class TodoService : ITodoService
-{
-    private readonly DbService _db;
-
-    public TodoService(DbService db)
-    {
-        _db = db;
-    }
-
-    public async Task AddTodoItemAsync(ulong userId, string task)
-    {
-        await using var ctx = _db.GetDbContext();
-    }
-
-    public async Task<bool> RemoveTodoItemAsync(ulong userId, int index)
-    {
-        await using var ctx = _db.GetDbContext();
-    }
-
-    public async Task GetTodoItemsAsync(ulong userId, int page)
-    {
-        if (page < 0)
-            throw new ArgumentOutOfRangeException(nameof(page));
-
-        await using var ctx = _db.GetDbContext();
-    }
-}
 
 public partial class Utility
 {
@@ -47,34 +15,38 @@ public partial class Utility
         {
             _service = service;
         }
-
+        
+        [Cmd]
         public async Task TodoAdd([Leftover] string task)
         {
-            var result = await _service.AddTodoItemAsync(ctx.User.Id, task);
-
-            // todo disallow duplicate items
+            await _service.AddTodoItemAsync(ctx.User.Id, task);
 
             // todo max count?
 
-            //todo show todos button
+            // todo show todos button
             await ctx.OkAsync();
         }
 
+        [Cmd]
         public async Task TodoRemove(int index)
         {
+            if (--index < 0)
+                return;
+            
             var ok = await _service.RemoveTodoItemAsync(ctx.User.Id, index);
             if (ok)
-                await ReplyConfirmLocalizedAsync(strs.todo_removed);
+                await ReplyConfirmLocalizedAsync(strs.todo_removed(index + 1));
             else
-                await ReplyConfirmLocalizedAsync(strs.todo_remove_fail);
+                await ReplyConfirmLocalizedAsync(strs.todo_index_out_of_range(index + 1));
         }
 
-        public async Task TodoList(int page = 1)
+        [Cmd]
+        public async Task TodoList(string group = "", int page = 1)
         {
             if (--page < 0)
                 return;
 
-            var items = await _service.GetTodoItemsAsync(ctx.User.Id, page);
+            var items = await _service.GetTodoItemsAsync(ctx.User.Id);
             if (items.Count == 0)
             {
                 await ReplyPendingLocalizedAsync(strs.todo_none);
@@ -84,10 +56,33 @@ public partial class Utility
             await ctx.SendPaginatedConfirmAsync(page, (curPage) =>
             {
                 var eb = _eb.Create(ctx)
-                    .WithOkColor();
+                    .WithOkColor()
+                    .WithTitle(GetText(strs.todo_list));
 
-                items.Skip(9 * curPage).Take(9);
+                var desc = items
+                    .Skip(9 * curPage)
+                    .Take(9)
+                    .Select((x, index) => $"`{index:N2}.`[{GetIcon(x)}] {x.Text}")
+                    .Join('\n');
+
+                eb.WithDescription(desc);
+
+                return eb;
             }, items.Count, 9);
+        }
+
+        private string GetIcon(TodoItem item)
+        {
+            if (item.State == TodoState.Completed)
+                return "✅";
+
+            if (item.State == TodoState.Expired)
+                return "⌛";
+
+            if (item.State == TodoState.InProgress)
+                return " ";
+
+            return "?";
         }
     }
 }
