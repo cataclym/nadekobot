@@ -1052,8 +1052,11 @@
   "xpshop_already_owned": "You already own this item.",
   "xpshop_item_not_found": "An item with that key doesn't exist.",
   "xpshop_website": "You can see the list of all Xp Shop items here: <https://xpshop.nadeko.bot>",
+  "todo_completed": "Todo Completed",
+  "todo_already_completed": "Todo item #{0} is already completed.",
+  "todo_limit": "You've reached maximum number of todos.",
   "todo_removed": "Todo item {0} has been removed.",
   "todo_index_out_of_range": "There is no todo item on index {0}",
-  "todo_none": "You don't have any TODOs.",
+  "todo_none": "You don't have any todos.",
   "todo_list": "Todo List"
 }

@@ -2,7 +2,6 @@ using NadekoBot.Db.Models;
 
 namespace NadekoBot.Modules.Utility.Todo;
 
-
 public partial class Utility
 {
     [Group("Todo")]
@@ -19,12 +18,36 @@ public partial class Utility
         [Cmd]
         public async Task TodoAdd([Leftover] string task)
         {
-            await _service.AddTodoItemAsync(ctx.User.Id, task);
+            var res = await _service.AddTodoItemAsync(ctx.User.Id, task);
 
-            // todo max count?
+            if (!res)
+            {
+                await ReplyErrorLocalizedAsync(strs.todo_limit);
+                return;
+            }
 
-            // todo show todos button
             await ctx.OkAsync();
+        }
+
+        [Cmd]
+        public async Task TodoDone([Leftover] int index)
+        {
+            if (--index < 0)
+                return;
+            
+            var (res, todo) = await _service.CompleteTodoAsync(ctx.User.Id, index);
+            if (res == TodoCompleteResult.Success)
+            {
+                await SendConfirmAsync(GetText(strs.completed), todo.Text, footer: $"#{index}");
+            }
+            else if (res == TodoCompleteResult.AlreadyCompleted)
+            {
+                await ReplyPendingLocalizedAsync(strs.todo_already_completed(index + 1));
+            }
+            else if (res == TodoCompleteResult.OutOfRange)
+            {
+                await ReplyErrorLocalizedAsync(strs.todo_index_out_of_range(index + 1));
+            }
         }
 
         [Cmd]

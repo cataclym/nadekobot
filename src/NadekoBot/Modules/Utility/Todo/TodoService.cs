@@ -13,9 +13,17 @@ public sealed class TodoService : ITodoService
         _db = db;
     }
 
-    public async Task AddTodoItemAsync(ulong userId, string task)
+    public async Task<bool> AddTodoItemAsync(ulong userId, string task)
     {
         await using var ctx = _db.GetDbContext();
+
+        var count = await ctx.GetTable<TodoItem>()
+            .Where(x => x.UserId == userId)
+            .CountAsyncLinqToDB();
+
+        if (count >= 100)
+            return false;
+        
         await ctx.GetTable<TodoItem>()
             .InsertAsync(() => new()
             {
@@ -23,6 +31,8 @@ public sealed class TodoService : ITodoService
                 DateAdded = DateTime.UtcNow,
                 UserId = userId
             });
+        
+        return true;
     }
 
     public async Task<bool> RemoveTodoItemAsync(ulong userId, int index)
