@@ -223,6 +223,25 @@ namespace NadekoBot.Modules.Gambling
         {
             await ReplyConfirmLocalizedAsync("has", Format.Code(userId.ToString()), $"{GetCurrency(userId)} {CurrencySign}").ConfigureAwait(false);
         }
+        
+        [NadekoCommand, Usage, Description, Aliases]
+        [RequireContext(ContextType.Guild)]
+        public async Task Nom(long amount)
+        {
+            if (amount <= 0)
+                return;
+            
+            var success = await _cs.RemoveAsync((IGuildUser)ctx.User, $"Nommed.", amount, false).ConfigureAwait(false);
+            if (success)
+            {
+                await ReplyConfirmLocalizedAsync("user_nommed", ctx.User.Mention, amount, Bc.BotConfig.CurrencySign);
+            }
+            else
+            {
+                await ReplyErrorLocalizedAsync("not_enough", Bc.BotConfig.CurrencySign);
+            }
+            
+        }
 
         [NadekoCommand, Usage, Description, Aliases]
         [RequireContext(ContextType.Guild)]

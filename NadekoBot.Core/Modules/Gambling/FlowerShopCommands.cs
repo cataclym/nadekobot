@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using NadekoBot.Common;
 using NadekoBot.Common.Attributes;
 using NadekoBot.Common.Collections;
+using NadekoBot.Core.Modules.Gambling.Common;
 using NadekoBot.Core.Services;
 using NadekoBot.Core.Services.Database.Models;
 using NadekoBot.Extensions;
@@ -52,29 +53,108 @@ namespace NadekoBot.Modules.Gambling
                 {
                     entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
                         set => set.Include(x => x.ShopEntries)
-                                  .ThenInclude(x => x.Items)).ShopEntries);
+                            .ThenInclude(x => x.Items)).ShopEntries);
                 }
 
-                await ctx.SendPaginatedConfirmAsync(page, (curPage) =>
-                {
-                    var theseEntries = entries.Skip(curPage * 9).Take(9).ToArray();
-
-                    if (!theseEntries.Any())
-                        return new EmbedBuilder().WithErrorColor()
-                            .WithDescription(GetText("shop_none"));
-                    var embed = new EmbedBuilder().WithOkColor()
-                        .WithTitle(GetText("shop", Bc.BotConfig.CurrencySign));
-
-                    for (int i = 0; i < theseEntries.Length; i++)
+                await ctx.SendPaginatedConfirmAsync(page,
+                    (curPage) =>
                     {
-                        var entry = theseEntries[i];
-                        embed.AddField(efb => efb
-                            .WithName($"#{curPage * 9 + i + 1} · {entry.Price}{Bc.BotConfig.CurrencySign} · {entry.Name}")
-                            .WithValue(EntryToString(entry))
-                            .WithIsInline(false));
+                        var theseEntries = entries.Skip(curPage * 9).Take(9).ToArray();
+
+                        if (!theseEntries.Any())
+                            return new EmbedBuilder().WithErrorColor()
+                                .WithDescription(GetText("shop_none"));
+                        var embed = new EmbedBuilder().WithOkColor()
+                            .WithTitle(GetText("shop", Bc.BotConfig.CurrencySign));
+
+                        for (int i = 0; i < theseEntries.Length; i++)
+                        {
+                            var entry = theseEntries[i];
+                            embed.AddField(efb => efb
+                                .WithName(
+                                    $"#{curPage * 9 + i + 1} · {entry.Price}{Bc.BotConfig.CurrencySign} · {entry.Name}")
+                                .WithValue(EntryToString(entry))
+                                .WithIsInline(false));
+                        }
+
+                        return embed;
+                    },
+                    entries.Count,
+                    9,
+                    true).ConfigureAwait(false);
+            }
+
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            public async Task Sell(int index)
+            {
+                index--;
+
+                if (index < 0)
+                    return;
+
+                var entry = GetShopItemByIndex(index);
+
+                if (entry is null)
+                {
+                    await ReplyErrorLocalizedAsync("shop_item_not_found");
+                    return;
+                }
+
+                if (entry.Type != ShopEntryType.Role)
+                {
+                    await ReplyErrorLocalizedAsync("shop_item_non_refund");
+                    return;
+                }
+
+                var role = ctx.Guild.GetRole(entry.RoleId);
+
+                if (role is null)
+                {
+                    await ReplyErrorLocalizedAsync("shop_role_not_found");
+                    return;
+                }
+
+                var guser = (IGuildUser)ctx.User;
+
+                if (guser.RoleIds.Contains(role.Id))
+                {
+                    try
+                    {
+                        await guser.RemoveRoleAsync(role);
                     }
-                    return embed;
-                }, entries.Count, 9, true).ConfigureAwait(false);
+                    catch
+                    {
+                        await ReplyErrorLocalizedAsync("shop_role_purchase_error");
+                        return;
+                    }
+
+                    var conf = Conf.GetConfig();
+                    var refundAmount = (long)(entry.Price * conf.ShopRefundPercent);
+                    await _cs.AddAsync(ctx.User, $"Shop Refund - {entry.Type} {entry.Name}", refundAmount);
+                    await ReplyConfirmLocalizedAsync("shop_item_refunded", refundAmount, Bc.BotConfig.CurrencySign);
+                }
+                else
+                {
+                    await ReplyErrorLocalizedAsync("shop_item_not_owned");
+                }
+            }
+
+            private ShopEntry GetShopItemByIndex(int index)
+            {
+                ShopEntry entry;
+                using (var uow = _db.GetDbContext())
+                {
+                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id,
+                        set => set
+                            .Include(x => x.ShopEntries)
+                            .ThenInclude(x => x.Items));
+                    var entries = new IndexedCollection<ShopEntry>(config.ShopEntries);
+                    entry = entries.ElementAtOrDefault(index);
+                    uow.SaveChanges();
+                }
+
+                return entry;
             }
 
             [NadekoCommand, Usage, Description, Aliases]
@@ -84,17 +164,8 @@ namespace NadekoBot.Modules.Gambling
                 index -= 1;
                 if (index < 0)
                     return;
-                ShopEntry entry;
-                using (var uow = _db.GetDbContext())
-                {
-                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id, set => set
-                        .Include(x => x.ShopEntries)
-                        .ThenInclude(x => x.Items));
-                    var entries = new IndexedCollection<ShopEntry>(config.ShopEntries);
-                    entry = entries.ElementAtOrDefault(index);
-                    uow.SaveChanges();
-                }
 
+                var entry = GetShopItemByIndex(index);
                 if (entry == null)
                 {
                     await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
@@ -112,7 +183,8 @@ namespace NadekoBot.Modules.Gambling
                         return;
                     }
 
-                    if (await _cs.RemoveAsync(ctx.User.Id, $"Shop purchase - {entry.Type}", entry.Price).ConfigureAwait(false))
+                    if (await _cs.RemoveAsync(ctx.User.Id, $"Shop purchase - {entry.Type}", entry.Price)
+                            .ConfigureAwait(false))
                     {
                         try
                         {
@@ -125,10 +197,14 @@ namespace NadekoBot.Modules.Gambling
                             await ReplyErrorLocalizedAsync("shop_role_purchase_error").ConfigureAwait(false);
                             return;
                         }
+
                         var profit = GetProfitAmount(entry.Price);
-                        await _cs.AddAsync(entry.AuthorId, $"Shop sell item - {entry.Type}", profit).ConfigureAwait(false);
-                        await _cs.AddAsync(ctx.Client.CurrentUser.Id, $"Shop sell item - cut", entry.Price - profit).ConfigureAwait(false);
-                        await ReplyConfirmLocalizedAsync("shop_role_purchase", Format.Bold(role.Name)).ConfigureAwait(false);
+                        await _cs.AddAsync(entry.AuthorId, $"Shop sell item - {entry.Type}", profit)
+                            .ConfigureAwait(false);
+                        await _cs.AddAsync(ctx.Client.CurrentUser.Id, $"Shop sell item - cut", entry.Price - profit)
+                            .ConfigureAwait(false);
+                        await ReplyConfirmLocalizedAsync("shop_role_purchase", Format.Bold(role.Name))
+                            .ConfigureAwait(false);
                         return;
                     }
                     else
@@ -147,26 +223,32 @@ namespace NadekoBot.Modules.Gambling
 
                     var item = entry.Items.ToArray()[new NadekoRandom().Next(0, entry.Items.Count)];
 
-                    if (await _cs.RemoveAsync(ctx.User.Id, $"Shop purchase - {entry.Type}", entry.Price).ConfigureAwait(false))
+                    if (await _cs.RemoveAsync(ctx.User.Id, $"Shop purchase - {entry.Type}", entry.Price)
+                            .ConfigureAwait(false))
                     {
                         using (var uow = _db.GetDbContext())
                         {
                             var x = uow._context.Set<ShopEntryItem>().Remove(item);
                             uow.SaveChanges();
                         }
+
                         try
                         {
                             await (await ctx.User.GetOrCreateDMChannelAsync().ConfigureAwait(false))
                                 .EmbedAsync(new EmbedBuilder().WithOkColor()
-                                .WithTitle(GetText("shop_purchase", ctx.Guild.Name))
-                                .AddField(efb => efb.WithName(GetText("item")).WithValue(item.Text).WithIsInline(false))
-                                .AddField(efb => efb.WithName(GetText("price")).WithValue(entry.Price.ToString()).WithIsInline(true))
-                                .AddField(efb => efb.WithName(GetText("name")).WithValue(entry.Name).WithIsInline(true)))
+                                    .WithTitle(GetText("shop_purchase", ctx.Guild.Name))
+                                    .AddField(efb
+                                        => efb.WithName(GetText("item")).WithValue(item.Text).WithIsInline(false))
+                                    .AddField(efb
+                                        => efb.WithName(GetText("price")).WithValue(entry.Price.ToString())
+                                            .WithIsInline(true))
+                                    .AddField(efb
+                                        => efb.WithName(GetText("name")).WithValue(entry.Name).WithIsInline(true)))
                                 .ConfigureAwait(false);
 
                             await _cs.AddAsync(entry.AuthorId,
-                                    $"Shop sell item - {entry.Name}",
-                                    GetProfitAmount(entry.Price)).ConfigureAwait(false);
+                                $"Shop sell item - {entry.Name}",
+                                GetProfitAmount(entry.Price)).ConfigureAwait(false);
                         }
                         catch
                         {
@@ -177,7 +259,7 @@ namespace NadekoBot.Modules.Gambling
                             {
                                 var entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
                                     set => set.Include(x => x.ShopEntries)
-                                              .ThenInclude(x => x.Items)).ShopEntries);
+                                        .ThenInclude(x => x.Items)).ShopEntries);
                                 entry = entries.ElementAtOrDefault(index);
                                 if (entry != null)
                                 {
@@ -187,9 +269,11 @@ namespace NadekoBot.Modules.Gambling
                                     }
                                 }
                             }
+
                             await ReplyErrorLocalizedAsync("shop_buy_error").ConfigureAwait(false);
                             return;
                         }
+
                         await ReplyConfirmLocalizedAsync("shop_item_purchase").ConfigureAwait(false);
                     }
                     else
@@ -198,11 +282,10 @@ namespace NadekoBot.Modules.Gambling
                         return;
                     }
                 }
-
             }
 
-            private static long GetProfitAmount(int price) =>
-                (int)(Math.Ceiling(0.90 * price));
+            private static long GetProfitAmount(int price)
+                => (int)(Math.Ceiling(0.90 * price));
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
@@ -223,13 +306,14 @@ namespace NadekoBot.Modules.Gambling
                 {
                     var entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
                         set => set.Include(x => x.ShopEntries)
-                                  .ThenInclude(x => x.Items)).ShopEntries)
+                            .ThenInclude(x => x.Items)).ShopEntries)
                     {
                         entry
                     };
                     uow.GuildConfigs.ForId(ctx.Guild.Id, set => set).ShopEntries = entries;
                     uow.SaveChanges();
                 }
+
                 await ctx.Channel.EmbedAsync(EntryToEmbed(entry)
                     .WithTitle(GetText("shop_item_add"))).ConfigureAwait(false);
             }
@@ -237,7 +321,7 @@ namespace NadekoBot.Modules.Gambling
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
             [UserPerm(GuildPerm.Administrator)]
-            public async Task ShopAdd(List _, int price, [Leftover]string description)
+            public async Task ShopAdd(List _, int price, [Leftover] string description)
             {
                 var entry = new ShopEntry()
                 {
@@ -251,13 +335,14 @@ namespace NadekoBot.Modules.Gambling
                 {
                     var entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
                         set => set.Include(x => x.ShopEntries)
-                                  .ThenInclude(x => x.Items)).ShopEntries)
+                            .ThenInclude(x => x.Items)).ShopEntries)
                     {
                         entry
                     };
                     uow.GuildConfigs.ForId(ctx.Guild.Id, set => set).ShopEntries = entries;
                     uow.SaveChanges();
                 }
+
                 await ctx.Channel.EmbedAsync(EntryToEmbed(entry)
                     .WithTitle(GetText("shop_item_add"))).ConfigureAwait(false);
             }
@@ -281,7 +366,7 @@ namespace NadekoBot.Modules.Gambling
                 {
                     var entries = new IndexedCollection<ShopEntry>(uow.GuildConfigs.ForId(ctx.Guild.Id,
                         set => set.Include(x => x.ShopEntries)
-                                  .ThenInclude(x => x.Items)).ShopEntries);
+                            .ThenInclude(x => x.Items)).ShopEntries);
                     entry = entries.ElementAtOrDefault(index);
                     if (entry != null && (rightType = (entry.Type == ShopEntryType.List)))
                     {
@@ -291,6 +376,7 @@ namespace NadekoBot.Modules.Gambling
                         }
                     }
                 }
+
                 if (entry == null)
                     await ReplyErrorLocalizedAsync("shop_item_not_found").ConfigureAwait(false);
                 else if (!rightType)
@@ -312,9 +398,10 @@ namespace NadekoBot.Modules.Gambling
                 ShopEntry removed;
                 using (var uow = _db.GetDbContext())
                 {
-                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id, set => set
-                        .Include(x => x.ShopEntries)
-                        .ThenInclude(x => x.Items));
+                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id,
+                        set => set
+                            .Include(x => x.ShopEntries)
+                            .ThenInclude(x => x.Items));
 
                     var entries = new IndexedCollection<ShopEntry>(config.ShopEntries);
                     removed = entries.ElementAtOrDefault(index);
@@ -343,9 +430,10 @@ namespace NadekoBot.Modules.Gambling
                 ShopEntry existing;
                 using (var uow = _db.GetDbContext())
                 {
-                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id, set => set
-                        .Include(x => x.ShopEntries)
-                        .ThenInclude(x => x.Items));
+                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id,
+                        set => set
+                            .Include(x => x.ShopEntries)
+                            .ThenInclude(x => x.Items));
 
                     var entries = new IndexedCollection<ShopEntry>(config.ShopEntries);
                     existing = entries.ElementAtOrDefault(index);
@@ -375,9 +463,10 @@ namespace NadekoBot.Modules.Gambling
                 ShopEntry existing;
                 using (var uow = _db.GetDbContext())
                 {
-                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id, set => set
-                        .Include(x => x.ShopEntries)
-                        .ThenInclude(x => x.Items));
+                    var config = uow.GuildConfigs.ForId(ctx.Guild.Id,
+                        set => set
+                            .Include(x => x.ShopEntries)
+                            .ThenInclude(x => x.Items));
 
                     var entries = new IndexedCollection<ShopEntry>(config.ShopEntries);
                     existing = entries.ElementAtOrDefault(index);
@@ -402,21 +491,29 @@ namespace NadekoBot.Modules.Gambling
                 {
                     return embed
                         .AddField(efb => efb.WithName(GetText("name")).WithValue(entry.Name ?? "-").WithIsInline(false))
-                        .AddField(efb => efb.WithName(GetText("desc")).WithValue(entry.Description ?? "-").WithIsInline(false))
-                        .AddField(efb => efb.WithName(GetText("price")).WithValue(entry.Price.ToString()).WithIsInline(false))
-                        .AddField(efb => efb.WithName(GetText("type")).WithValue(entry.Type.ToString()).WithIsInline(false));
+                        .AddField(efb
+                            => efb.WithName(GetText("desc")).WithValue(entry.Description ?? "-").WithIsInline(false))
+                        .AddField(efb
+                            => efb.WithName(GetText("price")).WithValue(entry.Price.ToString()).WithIsInline(false))
+                        .AddField(efb
+                            => efb.WithName(GetText("type")).WithValue(entry.Type.ToString()).WithIsInline(false));
                 }
                 else if (entry.Type == ShopEntryType.List)
                     return embed
                         .AddField(efb => efb.WithName(GetText("name")).WithValue(entry.Name ?? "-").WithIsInline(false))
-                        .AddField(efb => efb.WithName(GetText("desc")).WithValue(entry.Description ?? "-").WithIsInline(false))
-                        .AddField(efb => efb.WithName(GetText("price")).WithValue(entry.Price.ToString()).WithIsInline(false))
-                        .AddField(efb => efb.WithName(GetText("type")).WithValue(GetText("random_unique_item")).WithIsInline(false));
+                        .AddField(efb
+                            => efb.WithName(GetText("desc")).WithValue(entry.Description ?? "-").WithIsInline(false))
+                        .AddField(efb
+                            => efb.WithName(GetText("price")).WithValue(entry.Price.ToString()).WithIsInline(false))
+                        .AddField(efb
+                            => efb.WithName(GetText("type")).WithValue(GetText("random_unique_item"))
+                                .WithIsInline(false));
                 //else if (entry.Type == ShopEntryType.Infinite_List)
                 //    return embed.AddField(efb => efb.WithName(GetText("name")).WithValue(GetText("shop_role", Format.Bold(entry.RoleName))).WithIsInline(true))
                 //            .AddField(efb => efb.WithName(GetText("price")).WithValue(entry.Price.ToString()).WithIsInline(true))
                 //            .AddField(efb => efb.WithName(GetText("type")).WithValue(entry.Type.ToString()).WithIsInline(true));
-                else return null;
+                else
+                    return null;
             }
 
             public string EntryToString(ShopEntry entry)
@@ -427,7 +524,8 @@ namespace NadekoBot.Modules.Gambling
                 }
                 else if (entry.Type == ShopEntryType.List)
                 {
-                    return GetText("unique_items_left", entry.Items.Count) + "\n" + entry.Name + "\n\n" + entry.Description;
+                    return GetText("unique_items_left", entry.Items.Count) + "\n" + entry.Name + "\n\n" +
+                           entry.Description;
                 }
                 //else if (entry.Type == ShopEntryType.Infinite_List)
                 //{

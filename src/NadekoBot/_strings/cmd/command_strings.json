@@ -1158,6 +1158,13 @@
       "{0}plant 10 meow"
     ]
   },
+  "nom": {
+    "Cmd": "nom",
+    "Desc": "Nom your cookies. This action is irreversible.",
+    "Usage": [
+      "{0}nom 100"
+    ]
+  },
   "gencurrency": {
     "Cmd": "gencurrency gc",
     "Desc": "Toggles currency generation on this channel. Every posted message will have chance to spawn currency. Chance is specified by the Bot Owner. (default is 2%)",
@@ -2839,6 +2846,13 @@
     "Desc": "Buys an item from the shop on a given index. If buying items, make sure that the bot can DM you.",
     "Usage": [
       "{0}buy 2"
+    ]
+  },
+  "sell": {
+    "Cmd": "sell",
+    "Desc": "Sells your role back to the shop by specifying the shop index of the role.",
+    "Usage": [
+      "{}sell 3"
     ]
   },
   "gamevoicechannel": {

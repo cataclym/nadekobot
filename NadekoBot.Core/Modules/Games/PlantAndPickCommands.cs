@@ -37,6 +37,16 @@ namespace NadekoBot.Modules.Games
                     try { await ctx.Message.DeleteAsync().ConfigureAwait(false); } catch { }
                 }
             }
+            
+            [NadekoCommand, Usage, Description, Aliases]
+            [RequireContext(ContextType.Guild)]
+            public async Task Nom(long amount)
+            {
+                if (((SocketGuild)ctx.Guild).CurrentUser.GuildPermissions.ManageMessages)
+                {
+                    try { await ctx.Message.DeleteAsync().ConfigureAwait(false); } catch { }
+                }
+            }
 
             [NadekoCommand, Usage, Description, Aliases]
             [RequireContext(ContextType.Guild)]
