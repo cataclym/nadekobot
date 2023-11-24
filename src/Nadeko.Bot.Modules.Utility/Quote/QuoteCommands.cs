@@ -132,7 +132,7 @@ public partial class Utility
             => await ctx.Channel.EmbedAsync(_eb.Create(ctx)
                 .WithOkColor()
                 .WithTitle($"{GetText(strs.quote_id($"#{data.Id}"))} | {GetText(strs.response)}:")
-                .WithDescription($"{Format.Sanitize(data.Text).Replace("](", "]\\(")}")
+                .WithDescription(Format.Sanitize(data.Text).Replace("](", "]\\("))
                 .AddField(GetText(strs.trigger), data.Keyword)
                 .WithFooter(
                     GetText(strs.created_by($"{data.AuthorName} ({data.AuthorId})"))));
