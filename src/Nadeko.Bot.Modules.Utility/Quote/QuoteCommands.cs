@@ -131,10 +131,9 @@ public partial class Utility
         private async Task ShowQuoteData(Quote data)
             => await ctx.Channel.EmbedAsync(_eb.Create(ctx)
                 .WithOkColor()
-                .WithTitle(GetText(strs.quote_id($"#{data.Id}")))
+                .WithTitle($"{GetText(strs.quote_id($"#{data.Id}"))} | {GetText(strs.response)}:")
+                .WithDescription($"{Format.Sanitize(data.Text).Replace("](", "]\\(")}")
                 .AddField(GetText(strs.trigger), data.Keyword)
-                .AddField(GetText(strs.response),
-                    Format.Sanitize(data.Text).Replace("](", "]\\("))
                 .WithFooter(
                     GetText(strs.created_by($"{data.AuthorName} ({data.AuthorId})"))));
 
