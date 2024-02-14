@@ -647,10 +647,6 @@ chucknorris:
 magicitem:
   - magicitem
   - mi
-revav:
-  - revav
-revimg:
-  - revimg
 safebooru:
   - safebooru
 wiki:
@@ -1390,4 +1386,6 @@ autopublish:
   - autopublish
 doas:
   - doas
-  - execas 
+  - execas
+cacheusers:
+  - cacheusers
