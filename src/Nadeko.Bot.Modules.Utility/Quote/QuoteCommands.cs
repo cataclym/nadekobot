@@ -1,4 +1,4 @@
-﻿#nullable disable warnings
+#nullable disable warnings
 using NadekoBot.Common.Yml;
 using NadekoBot.Db;
 using Nadeko.Bot.Db.Models;
@@ -131,13 +131,13 @@ public partial class Utility
         private async Task ShowQuoteData(Quote data)
         {
             var eb = _eb.Create(ctx)
-                .WithOkColor()
-                .WithTitle($"{GetText(strs.quote_id($"#{data.Id}"))} | {GetText(strs.response)}:")
-                .WithDescription(Format.Sanitize(data.Text).Replace("](", "]\\(").TrimTo(4096))
-                .AddField(GetText(strs.trigger), data.Keyword)
-                .WithFooter(
-                    GetText(strs.created_by($"{data.AuthorName} ({data.AuthorId})")))
-                .Build();
+                          .WithOkColor()
+                          .WithTitle($"{GetText(strs.quote_id($"#{data.Id}"))} | {GetText(strs.response)}:")
+                          .WithDescription(Format.Sanitize(data.Text).Replace("](", "]\\(").TrimTo(4096))
+                          .AddField(GetText(strs.trigger), data.Keyword)
+                          .WithFooter(
+                              GetText(strs.created_by($"{data.AuthorName} ({data.AuthorId})")))
+                          .Build();
 
             if (!(data.Text.Length > 4096))
             {
@@ -149,7 +149,7 @@ public partial class Utility
                 attachment: new FileAttachment(await data.Text.ToStream(), "quote.txt"),
                 embed: eb);
         }
-
+            
         private async Task QuoteSearchinternalAsync(string? keyword, string textOrAuthor)
         {
             if (string.IsNullOrWhiteSpace(textOrAuthor))
