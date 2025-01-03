@@ -8,7 +8,7 @@ namespace NadekoBot.Modules.Gambling;
 public partial class Gambling
 {
     [Group]
-    public partial class PlantPickCommands : GamblingSubmodule<PlantPickService>
+    public partial class PlantPickCommands : GamblingModule<PlantPickService>
     {
         private readonly ILogCommandService _logService;
 
@@ -59,7 +59,7 @@ public partial class Gambling
             }
 
             var success = await _service.PlantAsync(ctx.Guild.Id,
-                ctx.Channel,
+                (ITextChannel)ctx.Channel,
                 ctx.User.Id,
                 ctx.User.ToString(),
                 amount,
@@ -103,9 +103,9 @@ public partial class Gambling
                    .Page((items, _) =>
                    {
                        if (!items.Any())
-                           return _sender.CreateEmbed().WithErrorColor().WithDescription("-");
+                           return CreateEmbed().WithErrorColor().WithDescription("-");
 
-                       return items.Aggregate(_sender.CreateEmbed().WithOkColor(),
+                       return items.Aggregate(CreateEmbed().WithOkColor(),
                            (eb, i) => eb.AddField(i.GuildId.ToString(), i.ChannelId));
                    })
                    .SendAsync();

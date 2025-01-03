@@ -13,6 +13,7 @@ using SixLabors.ImageSharp.Processing;
 using System.Threading.Channels;
 using LinqToDB.EntityFrameworkCore;
 using LinqToDB.Tools;
+using NadekoBot.Modules.Administration;
 using NadekoBot.Modules.Patronage;
 using Color = SixLabors.ImageSharp.Color;
 using Exception = System.Exception;
@@ -47,6 +48,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
     private readonly QueueRunner _levelUpQueue = new QueueRunner(0, 50);
     private readonly Channel<UserXpGainData> _xpGainQueue = Channel.CreateUnbounded<UserXpGainData>();
     private readonly IMessageSenderService _sender;
+    private readonly INotifySubscriber _notifySub;
 
     public XpService(
         DiscordSocketClient client,
@@ -62,7 +64,8 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         XpConfigService xpConfig,
         IPubSub pubSub,
         IPatronageService ps,
-        IMessageSenderService sender)
+        IMessageSenderService sender,
+        INotifySubscriber notifySub)
     {
         _db = db;
         _images = images;
@@ -74,6 +77,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         _xpConfig = xpConfig;
         _pubSub = pubSub;
         _sender = sender;
+        _notifySub = notifySub;
         _excludedServers = new();
         _excludedChannels = new();
         _client = client;
@@ -134,14 +138,6 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         }
     }
 
-    public sealed class MiniGuildXpStats
-    {
-        public long Xp { get; set; }
-        public XpNotificationLocation NotifyOnLevelUp { get; set; }
-        public ulong GuildId { get; set; }
-        public ulong UserId { get; set; }
-    }
-
     private async Task UpdateXp()
     {
         try
@@ -172,9 +168,9 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
 
             var dus = new List<DiscordUser>(globalToAdd.Count);
             var gxps = new List<UserXpStats>(globalToAdd.Count);
+            var conf = _xpConfig.Data;
             await using (var ctx = _db.GetDbContext())
             {
-                var conf = _xpConfig.Data;
                 if (conf.CurrencyPerXp > 0)
                 {
                     foreach (var user in globalToAdd)
@@ -236,8 +232,6 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                                           GuildId = guildId,
                                           Xp = group.Key,
                                           DateAdded = DateTime.UtcNow,
-                                          AwardedXp = 0,
-                                          NotifyOnLevelUp = XpNotificationLocation.None
                                       },
                                       _ => new()
                                       {
@@ -275,8 +269,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                             du.UserId,
                             false,
                             oldLevel.Level,
-                            newLevel.Level,
-                            du.NotifyOnLevelUp));
+                            newLevel.Level));
                 }
             }
 
@@ -285,8 +278,8 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                 if (guildToAdd.TryGetValue(du.GuildId, out var users)
                     && users.TryGetValue(du.UserId, out var xpGainData))
                 {
-                    var oldLevel = new LevelStats(du.Xp - xpGainData.XpAmount + du.AwardedXp);
-                    var newLevel = new LevelStats(du.Xp + du.AwardedXp);
+                    var oldLevel = new LevelStats(du.Xp - xpGainData.XpAmount);
+                    var newLevel = new LevelStats(du.Xp);
 
                     if (oldLevel.Level < newLevel.Level)
                     {
@@ -296,8 +289,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                                 du.UserId,
                                 true,
                                 oldLevel.Level,
-                                newLevel.Level,
-                                du.NotifyOnLevelUp));
+                                newLevel.Level));
                     }
                 }
             }
@@ -314,8 +306,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         ulong userId,
         bool isServer,
         long oldLevel,
-        long newLevel,
-        XpNotificationLocation notifyLoc)
+        long newLevel)
         => async () =>
         {
             if (isServer)
@@ -323,7 +314,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                 await HandleRewardsInternalAsync(guildId, userId, oldLevel, newLevel);
             }
 
-            await HandleNotifyInternalAsync(guildId, channelId, userId, isServer, newLevel, notifyLoc);
+            await HandleNotifyInternalAsync(guildId, channelId, userId, isServer, newLevel);
         };
 
     private async Task HandleRewardsInternalAsync(
@@ -353,9 +344,45 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                 if (role is not null && user is not null)
                 {
                     if (rrew.Remove)
-                        _ = user.RemoveRoleAsync(role);
+                    {
+                        try
+                        {
+                            await user.RemoveRoleAsync(role);
+                            await _notifySub.NotifyAsync(new RemoveRoleRewardNotifyModel(guild.Id,
+                                    role.Id,
+                                    user.Id,
+                                    newLevel),
+                                isShardLocal: true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex,
+                                "Unable to remove role {RoleId} from user {UserId}: {Message}",
+                                role.Id,
+                                user.Id,
+                                ex.Message);
+                        }
+                    }
                     else
-                        _ = user.AddRoleAsync(role);
+                    {
+                        try
+                        {
+                            await user.AddRoleAsync(role);
+                            await _notifySub.NotifyAsync(new AddRoleRewardNotifyModel(guild.Id,
+                                    role.Id,
+                                    user.Id,
+                                    newLevel),
+                                isShardLocal: true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex,
+                                "Unable to add role {RoleId} to user {UserId}: {Message}",
+                                role.Id,
+                                user.Id,
+                                ex.Message);
+                        }
+                    }
                 }
             }
 
@@ -374,59 +401,25 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         ulong channelId,
         ulong userId,
         bool isServer,
-        long newLevel,
-        XpNotificationLocation notifyLoc)
+        long newLevel)
     {
-        if (notifyLoc == XpNotificationLocation.None)
-            return;
-
         var guild = _client.GetGuild(guildId);
         var user = guild?.GetUser(userId);
-        var ch = guild?.GetTextChannel(channelId);
 
         if (guild is null || user is null)
             return;
 
         if (isServer)
         {
-            if (notifyLoc == XpNotificationLocation.Dm)
+            var model = new LevelUpNotifyModel()
             {
-                await _sender.Response(user)
-                             .Confirm(_strings.GetText(strs.level_up_dm(user.Mention,
-                                     Format.Bold(newLevel.ToString()),
-                                     Format.Bold(guild.ToString() ?? "-")),
-                                 guild.Id))
-                             .SendAsync();
-            }
-            else // channel
-            {
-                if (ch is not null)
-                {
-                    await _sender.Response(ch)
-                                 .Confirm(_strings.GetText(strs.level_up_channel(user.Mention,
-                                         Format.Bold(newLevel.ToString())),
-                                     guild.Id))
-                                 .SendAsync();
-                }
-            }
-        }
-        else // global level
-        {
-            var chan = notifyLoc switch
-            {
-                XpNotificationLocation.Dm => (IMessageChannel)await user.CreateDMChannelAsync(),
-                XpNotificationLocation.Channel => ch,
-                _ => null
+                GuildId = guildId,
+                UserId = userId,
+                ChannelId = channelId,
+                Level = newLevel
             };
-
-            if (chan is null)
-                return;
-
-            await _sender.Response(chan)
-                         .Confirm(_strings.GetText(strs.level_up_global(user.Mention,
-                                 Format.Bold(newLevel.ToString())),
-                             guild.Id))
-                         .SendAsync();
+            await _notifySub.NotifyAsync(model, true);
+            return;
         }
     }
 
@@ -570,7 +563,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         return await uow
                      .UserXpStats
                      .Where(x => x.GuildId == guildId)
-                     .OrderByDescending(x => x.Xp + x.AwardedXp)
+                     .OrderByDescending(x => x.Xp)
                      .Skip(page * 10)
                      .Take(10)
                      .ToArrayAsyncLinqToDB();
@@ -581,7 +574,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         await using var uow = _db.GetDbContext();
         return await uow.Set<UserXpStats>()
                         .Where(x => x.GuildId == guildId && x.UserId.In(users))
-                        .OrderByDescending(x => x.Xp + x.AwardedXp)
+                        .OrderByDescending(x => x.Xp)
                         .Skip(page * 10)
                         .Take(10)
                         .ToArrayAsyncLinqToDB();
@@ -608,35 +601,6 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                         .Skip(page * 10)
                         .Take(10)
                         .ToArrayAsyncLinqToDB();
-    }
-
-    public async Task ChangeNotificationType(ulong userId, ulong guildId, XpNotificationLocation type)
-    {
-        await using var uow = _db.GetDbContext();
-        var user = uow.GetOrCreateUserXpStats(guildId, userId);
-        user.NotifyOnLevelUp = type;
-        await uow.SaveChangesAsync();
-    }
-
-    public XpNotificationLocation GetNotificationType(ulong userId, ulong guildId)
-    {
-        using var uow = _db.GetDbContext();
-        var user = uow.GetOrCreateUserXpStats(guildId, userId);
-        return user.NotifyOnLevelUp;
-    }
-
-    public XpNotificationLocation GetNotificationType(IUser user)
-    {
-        using var uow = _db.GetDbContext();
-        return uow.GetOrCreateUser(user).NotifyOnLevelUp;
-    }
-
-    public async Task ChangeNotificationType(IUser user, XpNotificationLocation type)
-    {
-        await using var uow = _db.GetDbContext();
-        var du = uow.GetOrCreateUser(user);
-        du.NotifyOnLevelUp = type;
-        await uow.SaveChangesAsync();
     }
 
     private Task Client_OnGuildAvailable(SocketGuild guild)
@@ -878,7 +842,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         using var uow = _db.GetDbContext();
         var usr = uow.GetOrCreateUserXpStats(guildId, userId);
 
-        usr.AwardedXp += amount;
+        usr.Xp += amount;
 
         uow.SaveChanges();
     }
@@ -908,7 +872,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
     private async Task<bool> SetUserRewardedAsync(ulong userId)
         => await _c.AddAsync(GetUserRewKey(userId),
             true,
-            expiry: TimeSpan.FromMinutes(_xpConfig.Data.MessageXpCooldown),
+            expiry: TimeSpan.FromSeconds(_xpConfig.Data.MessageXpCooldown),
             overwrite: false);
 
     public async Task<FullUserStats> GetUserStatsAsync(IGuildUser user)
@@ -924,7 +888,7 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         return new(du,
             stats,
             new(totalXp),
-            new(stats.Xp + stats.AwardedXp),
+            new(stats.Xp),
             globalRank,
             guildRank);
     }
@@ -1165,19 +1129,6 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
                     $"{guild.LevelXp}/{guild.RequiredXp}",
                     Brushes.Solid(template.User.Xp.Guild.Color),
                     outlinePen));
-            }
-
-            if (stats.FullGuildStats.AwardedXp != 0 && template.User.Xp.Awarded.Show)
-            {
-                var sign = stats.FullGuildStats.AwardedXp > 0 ? "+ " : "";
-                var awX = template.User.Xp.Awarded.Pos.X
-                          - (Math.Max(0, stats.FullGuildStats.AwardedXp.ToString().Length - 2) * 5);
-                var awY = template.User.Xp.Awarded.Pos.Y;
-                img.Mutate(x => x.DrawText($"({sign}{stats.FullGuildStats.AwardedXp})",
-                    _fonts.NotoSans.CreateFont(template.User.Xp.Awarded.FontSize, FontStyle.Bold),
-                    Brushes.Solid(template.User.Xp.Awarded.Color),
-                    outlinePen,
-                    new(awX, awY)));
             }
 
             var rankPen = new SolidPen(Color.White, 1);
@@ -1437,11 +1388,11 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
         }
     }
 
-    public void XpReset(ulong guildId, ulong userId)
+    public async Task XpReset(ulong guildId, ulong userId)
     {
-        using var uow = _db.GetDbContext();
-        uow.Set<UserXpStats>().ResetGuildUserXp(userId, guildId);
-        uow.SaveChanges();
+        await using var uow = _db.GetDbContext();
+        await uow.GetTable<UserXpStats>()
+                 .DeleteAsync(x => x.UserId == userId && x.GuildId == guildId);
     }
 
     public void XpReset(ulong guildId)
@@ -1637,14 +1588,36 @@ public class XpService : INService, IReadyExecutor, IExecNoCommand
 
     public bool IsShopEnabled()
         => _xpConfig.Data.Shop.IsEnabled;
-}
 
-public enum BuyResult
-{
-    Success,
-    XpShopDisabled,
-    AlreadyOwned,
-    InsufficientFunds,
-    UnknownItem,
-    InsufficientPatronTier,
+    public async Task<int> GetTotalGuildUsers(ulong requestGuildId, List<ulong>? guildUsers = null)
+    {
+        await using var ctx = _db.GetDbContext();
+        return await ctx.GetTable<UserXpStats>()
+                        .Where(x => x.GuildId == requestGuildId
+                                    && (guildUsers == null || guildUsers.Contains(x.UserId)))
+                        .CountAsyncLinqToDB();
+    }
+
+    public async Task SetLevelAsync(ulong guildId, ulong userId, int level)
+    {
+        var lvlStats = LevelStats.CreateForLevel(level);
+        await using var ctx = _db.GetDbContext();
+        await ctx.GetTable<UserXpStats>()
+                 .InsertOrUpdateAsync(() => new()
+                     {
+                         GuildId = guildId,
+                         UserId = userId,
+                         Xp = lvlStats.TotalXp,
+                         DateAdded = DateTime.UtcNow
+                     },
+                     (old) => new()
+                     {
+                         Xp = lvlStats.TotalXp
+                     },
+                     () => new()
+                     {
+                         GuildId = guildId,
+                         UserId = userId
+                     });
+    }
 }

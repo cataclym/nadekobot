@@ -81,17 +81,43 @@ vcrole:
   - vcrole
 vcrolerm:
   - vcrolerm
-asar:
+saradd:
+  - add
+  - a
   - asar
-rsar:
+sarremove:
+  - remove
+  - rm
+  - rem
   - rsar
-lsar:
+sarlist:
+  - list
+  - l
+  - ls
   - lsar
-sargn:
+sarautodelete:
+  - ad
+  - autodel
+  - adsarm
+sargroupname:
+  - groupname
+  - gn
   - sargn
-togglexclsar:
-  - togglexclsar
+sargrouprolereq:
+  - grouprolereq
+  - grr
+sargroupdelete:
+  - groupdelete
+  - gd
+  - gdel
+sarexclusive:
+  - exclusive
+  - ex
+  - excl
   - tesar
+sarrolelevelreq:
+  - rolelvlreq
+  - rlr
 iam:
   - iam
 iamnot:
@@ -689,6 +715,8 @@ color:
 avatar:
   - avatar
   - av
+banner:
+  - banner
 translate:
   - translate
   - trans
@@ -772,8 +800,6 @@ voicemute:
 muterole:
   - muterole
   - setmuterole
-adsarm:
-  - adsarm
 setstream:
   - setstream
 chatunmute:
@@ -848,6 +874,10 @@ eventstart:
   - eventstart
 betstats:
   - betstats
+  - bs
+gamblestats:
+  - gamblestats
+  - gs
 bettest:
   - bettest
 slot:
@@ -859,6 +889,11 @@ affinity:
 waifuclaim:
   - waifuclaim
   - claim
+  - wc
+waifuclaims:
+  - waifuclaims
+  - claims
+  - wcs
 waifureset:
   - waifureset
 waifutransfer:
@@ -1006,6 +1041,12 @@ gamevoicechannel:
   - gvc
 shoplistadd:
   - shoplistadd
+dmcommand:
+  - dmcommand
+  - dmcmd
+dmmodule:
+  - dmmodule
+  - dmmod
 globalcommand:
   - globalcommand
   - gcmd
@@ -1056,9 +1097,6 @@ xpexclusionlist:
 xpexclude:
   - xpexclude
   - xpex
-xpnotify:
-  - xpnotify
-  - xpn
 xpleveluprewards:
   - xplvluprewards
   - xprews
@@ -1088,6 +1126,8 @@ xpshopbuy:
   - xpshopbuy
 xpshopuse:
   - xpshopuse
+xplevelset:
+  - xplevelset
 clubcreate:
   - clubcreate
 clubtransfer:
@@ -1175,9 +1215,6 @@ timelyreset:
 crypto:
   - crypto
   - c
-rolelevelreq:
-  - rolelevelreq
-  - rlr
 massban:
   - massban
 masskill:
@@ -1386,6 +1423,10 @@ todocomplete:
   - complete
   - done
   - finish
+todouncomplete:
+  - uncomplete
+  - undone
+  - unfinish
 todoarchiveadd:
   - add
   - create
@@ -1425,3 +1466,97 @@ keep:
   - keep
 leaveunkeptservers:
   - leaveunkeptservers
+ncanvas:
+  - ncanvas
+  - nc
+  - ncanv
+ncsetimg:
+  - ncsetimg
+  - ncsi
+ncsetpixel:
+  - ncsetpixel
+  - ncsp
+  - ncs
+nczoom:
+  - nczoom
+  - ncz
+ncpixel:
+  - ncpixel
+  - ncp
+  - ncgp
+ncreset:
+  - ncreset
+translateflags:
+  - translateflags
+  - trfl
+  - fltr
+  - transflags
+rakeback:
+  - rakeback
+  - rb
+betstatsreset:
+  - betstatsreset
+  - bsr
+  - bsreset
+gamblestatsreset:
+  - gamblestatsreset
+  - gsr
+  - gsreset
+snipe:
+  - snipe
+  - sn
+btnroleadd:
+  - add 
+  - a
+btnroleremove:
+  - rem 
+  - r
+  - rm 
+btnroleremoveall:
+  - removeall 
+  - rma
+btnrolelist:
+  - list
+  - l
+  - ls
+btnroleexclusive:
+  - excl
+  - e
+wrongsong:
+  - wrongsong
+  - wrongtrack
+servercolorsshow:
+  - show
+  - list
+  - l
+servercolorok:
+  - ok
+  - success
+servercolorerror:
+  - error
+  - fail
+  - err
+servercolorpending:
+  - pending
+  - warn
+  - warning
+  - pend
+minesweeper:
+  - minesweeper
+  - mw
+temprole:
+  - temprole
+notify:
+  - notify
+  - nfy
+notifylist:
+  - notifylist
+  - notifyl
+notifyclear:
+  - notifyclear
+  - notifyremove
+  - notifyrm
+  - notifclr
+winlb:
+  - winlb
+  - wins

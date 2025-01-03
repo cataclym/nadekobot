@@ -11,7 +11,7 @@ namespace NadekoBot.Modules.Gambling.Common;
 public sealed partial class GamblingConfig : ICloneable<GamblingConfig>
 {
     [Comment("""DO NOT CHANGE""")]
-    public int Version { get; set; } = 8;
+    public int Version { get; set; } = 12;
 
     [Comment("""Currency settings""")]
     public CurrencyConfig Currency { get; set; }
@@ -67,6 +67,11 @@ public sealed partial class GamblingConfig : ICloneable<GamblingConfig>
     [Comment("""Slot config""")]
     public SlotsConfig Slots { get; set; }
 
+    [Comment("""
+             Bonus config for server boosts
+             """)]
+    public BoostBonusConfig BoostBonus { get; set; }
+
     public GamblingConfig()
     {
         BetRoll = new();
@@ -79,6 +84,7 @@ public sealed partial class GamblingConfig : ICloneable<GamblingConfig>
         Slots = new();
         LuckyLadder = new();
         BotCuts = new();
+        BoostBonus = new();
     }
 }
 
@@ -104,13 +110,26 @@ public partial class TimelyConfig
              How much currency will the users get every time they run .timely command
              setting to 0 or less will disable this feature
              """)]
-    public int Amount { get; set; } = 0;
+    public long Amount { get; set; } = 0;
 
     [Comment("""
              How often (in hours) can users claim currency with .timely command
              setting to 0 or less will disable this feature
              """)]
     public int Cooldown { get; set; } = 24;
+
+    [Comment("""
+             How will timely be protected?
+             None, Button (users have to click the button) or Captcha (users have to type the captcha from an image)
+             """)]
+    public TimelyProt ProtType { get; set; } = TimelyProt.Button;
+}
+
+public enum TimelyProt
+{
+    None,
+    Button,
+    Captcha
 }
 
 [Cloneable]
@@ -145,7 +164,7 @@ public partial class BetRollConfig
             },
             new()
             {
-                WhenAbove = 66,
+                WhenAbove = 65,
                 MultiplyBy = 2
             }
         ];
@@ -207,7 +226,7 @@ public partial class LuckyLadderSettings
     public decimal[] Multipliers { get; set; }
 
     public LuckyLadderSettings()
-        => Multipliers = [2.4M, 1.7M, 1.5M, 1.2M, 0.5M, 0.3M, 0.2M, 0.1M];
+        => Multipliers = [2.4M, 1.7M, 1.5M, 1.1M, 0.5M, 0.3M, 0.2M, 0.1M];
 }
 
 [Cloneable]
@@ -408,4 +427,15 @@ public sealed partial class BotCutConfig
              Default 0.1 (10%).
              """)]
     public decimal ShopSaleCut { get; set; } = 0.1m;
+}
+
+[Cloneable]
+public sealed partial class BoostBonusConfig
+{
+    [Comment("Users will receive a bonus if they boost any of these servers")]
+    public List<ulong> GuildIds { get; set; } = new();
+
+    [Comment("This bonus will be added before any other multiplier is applied to the .timely command")]
+
+    public long BaseTimelyBonus { get; set; } = 50;
 }

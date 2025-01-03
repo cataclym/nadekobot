@@ -44,11 +44,9 @@ public sealed class TranslateService : ITranslateService, IExecNoCommand, IReady
         foreach (var c in cs)
         {
             _atcs[c.ChannelId] = c.AutoDelete;
-            _users[c.ChannelId] =
-                new(c.Users.ToDictionary(x => x.UserId, x => (x.Source.ToLower(), x.Target.ToLower())));
+            _users[c.ChannelId] = new(c.Users.ToDictionary(x => x.UserId, x => (x.Source.ToLower(), x.Target.ToLower())));
         }
     }
-
 
     public async Task ExecOnNoCommandAsync(IGuild guild, IUserMessage msg)
     {
@@ -69,7 +67,7 @@ public sealed class TranslateService : ITranslateService, IExecNoCommand, IReady
                 || msg.Content.Equals(output, StringComparison.InvariantCultureIgnoreCase))
                 return;
 
-            var embed = _sender.CreateEmbed().WithOkColor();
+            var embed = _sender.CreateEmbed(guild?.Id).WithOkColor();
 
             if (autoDelete)
             {
@@ -95,7 +93,7 @@ public sealed class TranslateService : ITranslateService, IExecNoCommand, IReady
         }
     }
 
-    public async Task<string> Translate(string source, string target, string text = null)
+    public async Task<string> Translate(string source, string target, string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             throw new ArgumentException("Text is empty or null", nameof(text));

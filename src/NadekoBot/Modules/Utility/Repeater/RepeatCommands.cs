@@ -64,7 +64,7 @@ public partial class Utility
             }
 
             var description = GetRepeaterInfoString(removed);
-            await Response().Embed(_sender.CreateEmbed()
+            await Response().Embed(CreateEmbed()
                 .WithOkColor()
                 .WithTitle(GetText(strs.repeater_removed(index + 1)))
                 .WithDescription(description)).SendAsync();
@@ -110,14 +110,14 @@ public partial class Utility
         [RequireContext(ContextType.Guild)]
         [UserPerm(GuildPerm.ManageMessages)]
         [Priority(0)]
-        public Task Repeat(StoopidTime interval, [Leftover] string message)
+        public Task Repeat(ParsedTimespan interval, [Leftover] string message)
             => Repeat(ctx.Channel, null, interval, message);
 
         [Cmd]
         [RequireContext(ContextType.Guild)]
         [UserPerm(GuildPerm.ManageMessages)]
         [Priority(0)]
-        public Task Repeat(ITextChannel channel, StoopidTime interval, [Leftover] string message)
+        public Task Repeat(ITextChannel channel, ParsedTimespan interval, [Leftover] string message)
             => Repeat(channel, null, interval, message);
 
         [Cmd]
@@ -138,14 +138,14 @@ public partial class Utility
         [RequireContext(ContextType.Guild)]
         [UserPerm(GuildPerm.ManageMessages)]
         [Priority(2)]
-        public Task Repeat(GuildDateTime? timeOfDay, StoopidTime? interval, [Leftover] string message)
+        public Task Repeat(GuildDateTime? timeOfDay, ParsedTimespan? interval, [Leftover] string message)
             => Repeat(ctx.Channel, timeOfDay, interval, message);
 
         [Cmd]
         [RequireContext(ContextType.Guild)]
         [UserPerm(GuildPerm.ManageMessages)]
         [Priority(3)]
-        public async Task Repeat(IMessageChannel channel, GuildDateTime? timeOfDay, StoopidTime? interval,
+        public async Task Repeat(IMessageChannel channel, GuildDateTime? timeOfDay, ParsedTimespan? interval,
             [Leftover] string message)
         {
             if (channel is not ITextChannel txtCh || txtCh.GuildId != ctx.Guild.Id)
@@ -187,7 +187,7 @@ public partial class Utility
             }
 
             var description = GetRepeaterInfoString(runner);
-            await Response().Embed(_sender.CreateEmbed()
+            await Response().Embed(CreateEmbed()
                 .WithOkColor()
                 .WithTitle(GetText(strs.repeater_created))
                 .WithDescription(description)).SendAsync();
@@ -205,7 +205,7 @@ public partial class Utility
                 return;
             }
 
-            var embed = _sender.CreateEmbed().WithTitle(GetText(strs.list_of_repeaters)).WithOkColor();
+            var embed = CreateEmbed().WithTitle(GetText(strs.list_of_repeaters)).WithOkColor();
 
             var i = 0;
             foreach (var runner in repeaters.OrderBy(r => r.Repeater.Id))

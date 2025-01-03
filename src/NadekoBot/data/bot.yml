@@ -1,5 +1,5 @@
 # DO NOT CHANGE
-version: 8
+version: 9
 # Most commands, when executed, have a small colored line
 # next to the response. The color depends whether the command
 # is completed, errored or in progress (pending)
@@ -15,7 +15,7 @@ color:
   pending: faa61a
 # Default bot language. It has to be in the list of supported languages (.langli)
 defaultLocale: en-US
-# Style in which executed commands will show up in the console.
+# Style in which executed commands will show up in the logs.
 # Allowed values: Simple, Normal, None
 consoleOutputType: Normal
 # Whether the bot will check for new releases every hour
@@ -76,6 +76,10 @@ helpText: |-
   }
 # List of modules and commands completely blocked on the bot
 blocked:
+  commands: []
+  modules: []
+# List of modules and commands blocked from usage in DMs on the bot
+dmBlocked:
   commands: []
   modules: []
 # Which string will be used to recognize the commands

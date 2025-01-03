@@ -323,7 +323,7 @@ vcrolerm:
   params:
     - vcId:
         desc: "The voice channel ID to remove the vcrole from."
-asar:
+saradd:
   desc: Adds a role to the list of self-assignable roles. You can also specify a group. If 'Exclusive self-assignable roles' feature is enabled (`{0}tesar`), users will be able to pick one role per group.
   ex:
     - Gamer
@@ -336,7 +336,7 @@ asar:
         desc: "The ID of a group that the designated role should belong to."
       role:
         desc: "The role that can be assigned by the user."
-rsar:
+sarremove:
   desc: Removes a specified role from the list of self-assignable roles.
   ex:
     - Gamer
@@ -345,7 +345,7 @@ rsar:
   params:
     - role:
         desc: "The role to remove from the list of self-assignable roles."
-lsar:
+sarlist:
   desc: Lists self-assignable roles. Shows 20 roles per page.
   ex:
     - ''
@@ -353,22 +353,56 @@ lsar:
   params:
     - page:
         desc: "The page number to show."
-sargn:
+sarautodelete:
+  desc: Toggles the automatic deletion of the user's message and Nadeko's confirmations for `{0}iam` and `{0}iamn` commands.
+  ex:
+    - ''
+  params:
+    - { }
+sargroupname:
   desc: Sets a self assignable role group name. Provide no name to remove.
   ex:
     - 1 Faction
     - 2
   params:
     - group:
-        desc: "The ID of the group to name."
+        desc: "The group number"
       name:
-        desc: "The name to assign."
-togglexclsar:
-  desc: Toggles whether self-assigned roles are exclusive. While enabled, users can only have one self-assignable role per group.
+        desc: "The optional name to assign, clears the name if no name is provided."
+sargroupdelete:
+  desc: "Deletes a self-assignable role group"
   ex:
-    - ''
+    - 0
   params:
-    - { }
+    - group:
+        desc: "The number of the group to delete."
+sarexclusive:
+  desc: |-
+    Toggles the sar group as exclusive.
+    While enabled, users can only have one self-assignable role from that group.
+  ex:
+    - '1'
+  params:
+    - group:
+        desc: "The number of the group to set exclusive."
+sarrolelevelreq:
+  desc: Set a level requirement on a self-assignable role.
+  ex:
+    - 5 SomeRole
+  params:
+    - level:
+        desc: "The minimum level required for the role."
+      role:
+        desc: "The role that must be assigned before the user can assign this one."
+sargrouprolereq:
+  desc: Set a role that users have to have in order to assign a self-assignable role from the specified group.
+  ex:
+    - 1 SomeRole
+  params:
+    - group:
+        desc: "The group number."
+      role:
+        desc: "The role that is required."
 iam:
   desc: Adds a role to you that you choose. Role must be on the list of self-assignable roles.
   ex:
@@ -1517,7 +1551,7 @@ take:
 betroll:
   desc: |-
     Bets the specified amount of currency and rolls a dice.
-    Rolling over 66 yields x2 of your currency, over 90 - x4 and 100 x10.
+    Rolling over 65 yields x2 of your currency, over 90 - x4 and 100 x10.
     You can specify 'all', 'half' or 'X%' instead of the amount to bet that part of your current balance.
   ex:
     - 5
@@ -2139,6 +2173,13 @@ avatar:
   params:
     - usr:
         desc: "The user whose avatar is being displayed."
+banner:
+  desc: Shows a mentioned person's banner.
+  ex:
+    - '@Someone'
+  params:
+    - usr:
+        desc: "The user whose banner is being displayed."
 translate:
   desc: Translates text from the given language to the destination language.
   ex:
@@ -2464,12 +2505,6 @@ muterole:
   params:
     - role:
         desc: "The role that determines whether users are muted or not."
-adsarm:
-  desc: Toggles the automatic deletion of the user's message and Nadeko's confirmations for `{0}iam` and `{0}iamn` commands.
-  ex:
-    - ''
-  params:
-    - { }
 setstream:
   desc: Sets the bots stream. First parameter is the twitch link, second parameter is stream name.
   ex:
@@ -2703,10 +2738,17 @@ eventstart:
         desc: "The type of event being started."
       options:
         desc: "The optional option flags for the event."
-betstats:
+gamblestats:
   desc: |-
     Shows the total stats of several gambling features.
     Updates once an hour.
+  ex:
+    - ''
+  params:
+    - { }
+gamblestatsreset:
+  desc: |-
+    Resets the gamble stats.
   ex:
     - ''
   params:
@@ -2738,6 +2780,12 @@ waifuclaim:
         desc: "The cost of claiming the waifu."
       target:
         desc: "The user to whom the claim is being made, allowing the waifu to be claimed from their collection."
+waifuclaims:
+  desc: Shows all of your currently claimed waifus.
+  ex:
+    - ''
+  params:
+    - { }
 waifureset:
   desc: Resets your waifu stats, except current waifus.
   ex:
@@ -3339,14 +3387,28 @@ globalcommand:
     - '{0}stats'
   params:
     - cmd:
-        desc: "The type of command or expression being toggled."
+        desc: "The command or expression being toggled."
 globalmodule:
   desc: Toggles whether a module can be used on any server.
   ex:
-    - 'Gambling' 
+    - 'Gambling'
   params:
     - module:
-        desc: "The type of module or configuration information being toggled."
+        desc: "The module being toggled."
+dmcommand:
+  desc: Toggles whether a command can be used in DMs.
+  ex:
+    - '{0}stats'
+  params:
+    - cmd:
+        desc: "The command or expression being toggled."
+dmmodule:
+  desc: Toggles whether a module can be used in DMs.
+  ex:
+    - 'Gambling'
+  params:
+    - module:
+        desc: "The module being toggled."
 globalpermlist:
   desc: Lists global permissions set by the bot owner.
   ex:
@@ -3477,17 +3539,6 @@ xpexclude:
         desc: "The ID of the channel to exclude from XP tracking."
       channel:
         desc: "The ID of the channel to exclude from XP tracking."
-xpnotify:
-  desc: Sets how the bot should notify you when you get a `server` or `global` level. This is a personal setting and affects only how you receive Global or Server level-up notifications. You can set `dm` (for the bot to send you a direct message), `channel` (to get notified in the channel you sent the last message in) or `none` to disable.
-  ex:
-    - global dm
-    - server channel
-  params:
-    - { }
-    - place:
-        desc: "The location where notifications should be sent, such as a specific channel or DM."
-      type:
-        desc: "The location where notifications for server and global level-ups should be sent."
 xpleveluprewards:
   desc: Shows currently set level up rewards.
   ex:
@@ -3906,15 +3957,6 @@ stock:
   params:
     - query:
         desc: "The ticker symbol or company name used to retrieve the stock's information."
-rolelevelreq:
-  desc: Set a level requirement on a self-assignable role.
-  ex:
-    - 5 SomeRole
-  params:
-    - level:
-        desc: "The minimum level required for the role."
-      role:
-        desc: "The role that must be assigned before the user can assign this one."
 massban:
   desc: Bans multiple users at once. Specify a space separated list of IDs of users who you wish to ban.
   ex:
@@ -4455,6 +4497,13 @@ todocomplete:
   params:
     - todoId:
         desc: "The id of the todo item being marked as completed."
+todouncomplete:
+  desc: Marks a todo with the specified ID as not done.
+  ex:
+    - 4a
+  params:
+    - todoId:
+        desc: "The id of the todo item being marked as not completed."
 tododelete:
   desc: Deletes a todo with the specified ID.
   ex:
@@ -4568,3 +4617,291 @@ leaveunkeptservers:
         desc: "Shard id from which to start leaving unkept servers."
     - delay:
         desc: "Delay in miliseconds between leaves"
+ncanvas:
+  desc: |-
+    Shows the current nCanvas.
+    The canvas allows users to set each pixel's color and text using currency.
+  ex:
+    - ''
+  params:
+    - { }
+nczoom:
+  desc: |-
+    Zooms in on the nCanvas.
+    Bot will show the 10x10 grid with the position of each cell for use with `ncset`.
+    You can either use alphanumeric position (ex. s4u) or pixel x and y (ex. 123 123)
+  ex:
+    - 'sgu'
+    - '123 123'
+  params:
+    - position:
+        desc: "The position of the pixel to set in alphanumeric format."
+    - position:
+        desc: "The position of the pixel to set in pixel x and y format."
+ncsetpixel:
+  desc: |-
+    Sets a pixel's color and text on the nCanvas.
+    You must specify the position of the pixel to set in alphanumeric format.
+    You can obtain alphanumeric position of the pixel by using `nczoom` or `ncp <x> <y>`
+  ex:
+    - 'sgu #ff0000 Some text'
+  params:
+    - position:
+        desc: "The position of the pixel to set in alphanumeric format."
+    - color:
+        desc: "The color of the pixel to set in HEX."
+    - text:
+        desc: "The optional text to set on the pixel."
+ncsetimg:
+  desc: |-
+    Attach the image to the message sending the command to overwrite the nCanvas with it.
+    All prices and colors will be reset.
+    The image must be equal to the size of the nCanvas (default is 500x350)
+    This command is dangerous and irreversible.
+  ex:
+    - ''
+  params:
+    - { }
+ncpixel:
+  desc: |-
+    Shows the pixel at the specified position.
+    You can get pixel positions by using `nczoom`
+  ex:
+    - 'sgu'
+    - '123 123'
+  params:
+    - position:
+        desc: "The position of the pixel to retrieve in alphanumeric format."
+    - position:
+        desc: "The position of the pixel to retrieve in pixel x and y format."
+ncreset:
+  desc: |-
+    Clears the nCanvas.
+    All prices and colors will be reset.
+    This command is dangerous and irreversible.
+  ex:
+    - ''
+  params:
+    - { }
+translateflags:
+  desc: |-
+    Toggles translate flags on the current channel.
+    Reacting with a country flag will translate the message to that country's language.
+  ex:
+    - ''
+  params:
+    - { }
+betstatsreset:
+  desc: |-
+    Reset all of your Bet Stats for a fee.
+    You can alternatively reset Bet Stats for the specified game.
+  ex:
+    - ''
+    - 'game'
+  params:
+    - game:
+        desc: 'The game to reset betstats for. Omit to reset all games'
+betstats:
+  desc: |-
+    Shows the current bet stats for yourself, or the targetted user.
+    You may optionally specify the game to show stats for.
+    Supported games right now are: bf, br, bd, lula, slot, race
+  ex:
+    - ''
+    - '@someone'
+    - '@someone lula'
+    - 'bd'
+  params:
+    - { }
+    - user:
+        desc: 'The user for who to show the betstats for.'
+    - user:
+        desc: 'The user for who to show the betstats for.'
+      game:
+        desc: 'The game to show betstats for. Omit to show betstats for all games combined'
+    - game:
+        desc: 'The game to show betstats for. Omit to show betstats for all games combined'
+rakeback:
+  desc: |-
+    Try to claim any rakeback that you have available.
+    Rakeback is accumulated by betting (not by winning or losing).
+    Default rakeback is 0.05 * house edge
+    House edge is defined per game
+  ex:
+    - ''
+  params:
+    - { }
+snipe:
+  desc: |-
+    Snipe the message you replied to with this command.
+    Otherwise, if you don't reply to a message, it will snipe the last message sent in the channel (out of the last few messages) which has text or an image.
+  ex:
+    - ''
+  params:
+    - { }
+btnroleadd:
+  desc: |-
+    Adds a button role to the specified message (link or id).
+    Specify a message followed by an emote, followed by a role.
+    If the role already exists on that message, the button will be updated instead.
+    Users clicking on the button will receive the role.
+  ex:
+    - '<msglink> :thumbsup: Good Guy'
+  params:
+    - message:
+        desc: "A message link or id of the message (if id is specified, it has to be a message in this channel)"
+    - emote:
+        desc: "An emoji, custom or unicode"
+    - role:
+        desc: "The role to add once a user clicks the button"
+btnroleremove:
+  desc: |-
+    Removes a button role from the message specified by link or id.
+    Provide a message followed by a role you wish to remove.
+  ex:
+    - '<msglink> Good Guy'
+  params:
+    - message:
+        desc: "A message link or id of the message"
+    - role:
+        desc: "A role to remove"
+btnroleremoveall:
+  desc: |-
+    Removes all button roles from the message specified by link or id.
+  ex:
+    - '<msglink>'
+    - '123123123123'
+  params:
+    - message:
+        desc: "A message link or id of the message"
+btnrolelist:
+  desc: |-
+    Lists all button roles on this server.
+    One message per page.
+  ex:
+    - ''
+  params:
+    - { }
+btnroleexclusive:
+  desc: |-
+    Toggles whether button roles are exclusive or not.
+    If enabled, users can only pick one role from the buttons per message.
+    If disabled, users can pick any number of roles.
+  ex:
+    - '123123123 enable'
+    - '123123123 disable'
+  params:
+    - message:
+        desc: "A message link or id of the message"
+      enable:
+        desc: "Whether to enable or disable exclusive button roles"
+wrongsong:
+  desc: |-
+    Removes the last queued song.
+    If the queue was shuffled or fairly re-ordered the song will not be removed.
+  ex:
+    - ''
+  params:
+    - { }
+servercolorsshow:
+  desc: |-
+    Shows current Ok, Error and Pending colors for this server.
+  ex:
+    - ''
+  params:
+    - { }
+servercolorok:
+  desc: |-
+    Sets the Ok color for this server.
+  ex:
+    - '#00ff00'
+  params:
+    - color:
+        desc: "The hex of the color to set"
+servercolorerror:
+  desc: |-
+    Sets the Error color for this server.
+  ex:
+    - '#ff0000'
+  params:
+    - color:
+        desc: "The hex of the color to set"
+servercolorpending:
+  desc: |-
+    Sets the Pending/Warning color for this server.
+  ex:
+    - '#ffff00'
+  params:
+    - color:
+        desc: "The hex of the color to set"
+xplevelset:
+  desc: |-
+    Sets the level of the user you specify.
+  ex:
+    - '10 @User'
+  params:
+    - level:
+        desc: "The level to set the user to."
+    - user:
+        desc: "The user to set the level of."
+temprole:
+  desc: |-
+    Grants a user a temporary role for the specified number of time.
+    The role must exist and be lower in the role hierarchy than your highest role.
+  ex:
+    - '15m @User Jail'
+    - '7d @Newbie Trial Member'
+  params:
+    - days:
+        desc: "The time after which the role is automatically removed."
+    - user:
+        desc: "The user to give the role to."
+    - role:
+        desc: "The role to give to the user."
+minesweeper:
+  desc: |-
+    Creates a spoiler-based minesweeper mini game.
+    You may specify the number of mines.
+  ex:
+    - '15'
+  params:
+    - mines:
+        desc: "The number of mines to create."
+notify:
+  desc: |-
+    Sends a message to the current channel once the specified event occurs.
+    Provide no parameters to see all available events.
+  ex:
+    - 'levelup Congratulations to user %user.name% for reaching level %event.level%'
+  params:
+    - { }
+    - event:
+        desc: "The event to notify on."
+    - event:
+        desc: "The event to notify on."
+      message:
+        desc: "The message to send."
+notifylist:
+  desc: |-
+    Lists all active notifications in this server.
+  ex:
+    - ''
+  params:
+    - { }
+notifyclear:
+  desc: |-
+    Removes the specified notify event.
+  ex:
+    - 'levelup'
+  params:
+    - event:
+        desc: "The notify event to clear."
+winlb:
+  desc: |-
+    Shows the biggest wins leaderboard
+  ex:
+    - ''
+    - '5'
+  params:
+    - page:
+        desc: "The optional page to display."

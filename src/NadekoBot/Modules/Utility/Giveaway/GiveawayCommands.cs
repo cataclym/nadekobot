@@ -17,7 +17,7 @@ public partial class Utility
                 return;
             }
 
-            var eb = _sender.CreateEmbed()
+            var eb = CreateEmbed()
                 .WithPendingColor()
                 .WithTitle(GetText(strs.giveaway_starting))
                 .WithDescription(message);
@@ -38,6 +38,8 @@ public partial class Utility
             eb
                 .WithOkColor()
                 .WithTitle(GetText(strs.giveaway_started))
+                .AddField(GetText(strs.lasts_until), TimestampTag.FromDateTime(DateTime.UtcNow.Add(duration)), true)
+                // .AddField(GetText(strs.winners_count), "1", true)
                 .WithFooter($"id:  {new kwum(id).ToString()}");
 
             await startingMsg.AddReactionAsync(new Emoji(GiveawayService.GiveawayEmoji));
@@ -103,7 +105,7 @@ public partial class Utility
                 return;
             }
 
-            var eb = _sender.CreateEmbed()
+            var eb = CreateEmbed()
                 .WithTitle(GetText(strs.giveaway_list))
                 .WithOkColor();
 

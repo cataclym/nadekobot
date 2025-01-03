@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NadekoBot.Db.Models;
+using NadekoBot.Modules.Administration.Services;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
@@ -14,7 +15,6 @@ public abstract class NadekoContext : DbContext
 
     public DbSet<Quote> Quotes { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
-    public DbSet<SelfAssignedRole> SelfAssignableRoles { get; set; }
     public DbSet<MusicPlaylist> MusicPlaylists { get; set; }
     public DbSet<NadekoExpression> Expressions { get; set; }
     public DbSet<CurrencyTransaction> CurrencyTransactions { get; set; }
@@ -62,6 +62,7 @@ public abstract class NadekoContext : DbContext
     public DbSet<ArchivedTodoListModel> TodosArchive { get; set; }
     public DbSet<HoneypotChannel> HoneyPotChannels { get; set; }
 
+
     // public DbSet<GuildColors> GuildColors { get; set; }
 
 
@@ -73,6 +74,133 @@ public abstract class NadekoContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        #region Notify
+
+        modelBuilder.Entity<Notify>(e =>
+        {
+            e.HasAlternateKey(x => new
+            {
+                x.GuildId,
+                Event = x.Type
+            });
+        });
+
+        #endregion
+
+        #region TempRoles
+
+        modelBuilder.Entity<TempRole>(e =>
+        {
+            e.HasAlternateKey(x => new
+            {
+                x.GuildId,
+                x.UserId,
+                x.RoleId
+            });
+
+            e.HasIndex(x => x.ExpiresAt);
+        });
+
+        #endregion
+
+        #region GuildColors
+
+        modelBuilder.Entity<GuildColors>()
+                    .HasIndex(x => x.GuildId)
+                    .IsUnique(true);
+
+        #endregion
+
+        #region Button Roles
+
+        modelBuilder.Entity<ButtonRole>(br =>
+        {
+            br.HasIndex(x => x.GuildId)
+              .IsUnique(false);
+
+            br.HasAlternateKey(x => new
+            {
+                x.RoleId,
+                x.MessageId,
+            });
+        });
+
+        #endregion
+
+        #region New Sar
+
+        modelBuilder.Entity<SarGroup>(sg =>
+        {
+            sg.HasAlternateKey(x => new
+            {
+                x.GuildId,
+                x.GroupNumber
+            });
+
+            sg.HasMany(x => x.Roles)
+              .WithOne()
+              .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Sar>()
+                    .HasAlternateKey(x => new
+                    {
+                        x.GuildId,
+                        x.RoleId
+                    });
+
+        modelBuilder.Entity<SarAutoDelete>()
+                    .HasIndex(x => x.GuildId)
+                    .IsUnique();
+
+        #endregion
+
+        #region Rakeback
+
+        modelBuilder.Entity<Rakeback>()
+                    .HasKey(x => x.UserId);
+
+        #endregion
+
+        #region UserBetStats
+
+        modelBuilder.Entity<UserBetStats>(ubs =>
+        {
+            ubs.HasIndex(x => new
+               {
+                   x.UserId,
+                   x.Game
+               })
+               .IsUnique();
+
+            ubs.HasIndex(x => x.MaxWin)
+               .IsUnique(false);
+        });
+
+        #endregion
+
+        #region Flag Translate
+
+        modelBuilder.Entity<FlagTranslateChannel>()
+                    .HasIndex(x => new
+                    {
+                        x.GuildId,
+                        x.ChannelId
+                    })
+                    .IsUnique();
+
+        #endregion
+
+        #region NCanvas
+
+        modelBuilder.Entity<NCPixel>()
+                    .HasAlternateKey(x => x.Position);
+
+        modelBuilder.Entity<NCPixel>()
+                    .HasIndex(x => x.OwnerId);
+
+        #endregion
+
         #region QUOTES
 
         var quoteEntity = modelBuilder.Entity<Quote>();
@@ -195,11 +323,6 @@ public abstract class NadekoContext : DbContext
                     .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<GuildConfig>()
-                    .HasMany(x => x.WarnPunishments)
-                    .WithOne()
-                    .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<GuildConfig>()
                     .HasMany(x => x.SlowmodeIgnoredRoles)
                     .WithOne()
                     .OnDelete(DeleteBehavior.Cascade);
@@ -256,11 +379,6 @@ public abstract class NadekoContext : DbContext
                     .HasForeignKey(x => x.GuildConfigId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<GuildConfig>()
-                    .HasMany(x => x.SelfAssignableRoleGroupNames)
-                    .WithOne()
-                    .OnDelete(DeleteBehavior.Cascade);
-
         modelBuilder.Entity<FeedSub>()
                     .HasAlternateKey(x => new
                     {
@@ -276,19 +394,16 @@ public abstract class NadekoContext : DbContext
 
         #endregion
 
+        #region WarningPunishments
 
-        #region Self Assignable Roles
-
-        var selfassignableRolesEntity = modelBuilder.Entity<SelfAssignedRole>();
-
-        selfassignableRolesEntity.HasIndex(s => new
-                                 {
-                                     s.GuildId,
-                                     s.RoleId
-                                 })
-                                 .IsUnique();
-
-        selfassignableRolesEntity.Property(x => x.Group).HasDefaultValue(0);
+        var warnpunishmentEntity = modelBuilder.Entity<WarningPunishment>(b =>
+        {
+            b.HasAlternateKey(x => new
+            {
+                x.GuildId,
+                x.Count
+            });
+        });
 
         #endregion
 
@@ -338,6 +453,7 @@ public abstract class NadekoContext : DbContext
             du.HasIndex(x => x.TotalXp);
             du.HasIndex(x => x.CurrencyAmount);
             du.HasIndex(x => x.UserId);
+            du.HasIndex(x => x.Username);
         });
 
         #endregion
@@ -367,7 +483,6 @@ public abstract class NadekoContext : DbContext
         xps.HasIndex(x => x.UserId);
         xps.HasIndex(x => x.GuildId);
         xps.HasIndex(x => x.Xp);
-        xps.HasIndex(x => x.AwardedXp);
 
         #endregion
 
@@ -470,23 +585,6 @@ public abstract class NadekoContext : DbContext
         #region Reminders
 
         modelBuilder.Entity<Reminder>().HasIndex(x => x.When);
-
-        #endregion
-
-        #region GroupName
-
-        modelBuilder.Entity<GroupName>()
-                    .HasIndex(x => new
-                    {
-                        x.GuildConfigId,
-                        x.Number
-                    })
-                    .IsUnique();
-
-        modelBuilder.Entity<GroupName>()
-                    .HasOne(x => x.GuildConfig)
-                    .WithMany(x => x.SelfAssignableRoleGroupNames)
-                    .IsRequired();
 
         #endregion
 
@@ -694,7 +792,7 @@ public abstract class NadekoContext : DbContext
             gs
                 .Property(x => x.IsEnabled)
                 .HasDefaultValue(false);
-            
+
             gs
                 .Property(x => x.AutoDeleteTimer)
                 .HasDefaultValue(0);

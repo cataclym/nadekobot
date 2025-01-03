@@ -53,33 +53,6 @@ public partial class Xp : NadekoModule<XpService>
 
     [Cmd]
     [RequireContext(ContextType.Guild)]
-    public async Task XpNotify()
-    {
-        var globalSetting = _service.GetNotificationType(ctx.User);
-        var serverSetting = _service.GetNotificationType(ctx.User.Id, ctx.Guild.Id);
-
-        var embed = _sender.CreateEmbed()
-                           .WithOkColor()
-                           .AddField(GetText(strs.xpn_setting_global), GetNotifLocationString(globalSetting))
-                           .AddField(GetText(strs.xpn_setting_server), GetNotifLocationString(serverSetting));
-
-        await Response().Embed(embed).SendAsync();
-    }
-
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
-    public async Task XpNotify(NotifyPlace place, XpNotificationLocation type)
-    {
-        if (place == NotifyPlace.Guild)
-            await _service.ChangeNotificationType(ctx.User.Id, ctx.Guild.Id, type);
-        else
-            await _service.ChangeNotificationType(ctx.User, type);
-
-        await ctx.OkAsync();
-    }
-
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
     [UserPerm(GuildPerm.Administrator)]
     public async Task XpExclude(Server _)
     {
@@ -153,10 +126,10 @@ public partial class Xp : NadekoModule<XpService>
               .CurrentPage(0)
               .Page((items, _) =>
               {
-                  var embed = _sender.CreateEmbed()
-                                     .WithTitle(GetText(strs.exclusion_list))
-                                     .WithDescription(string.Join('\n', items))
-                                     .WithOkColor();
+                  var embed = CreateEmbed()
+                              .WithTitle(GetText(strs.exclusion_list))
+                              .WithDescription(string.Join('\n', items))
+                              .WithOkColor();
 
                   return embed;
               })
@@ -207,25 +180,21 @@ public partial class Xp : NadekoModule<XpService>
               .CurrentPage(page)
               .Page((users, curPage) =>
               {
-                  var embed = _sender.CreateEmbed().WithTitle(GetText(strs.server_leaderboard)).WithOkColor();
+                  var embed = CreateEmbed().WithTitle(GetText(strs.server_leaderboard)).WithOkColor();
 
                   if (!users.Any())
                       return embed.WithDescription("-");
 
                   for (var i = 0; i < users.Count; i++)
                   {
-                      var levelStats = new LevelStats(users[i].Xp + users[i].AwardedXp);
+                      var levelStats = new LevelStats(users[i].Xp);
                       var user = ((SocketGuild)ctx.Guild).GetUser(users[i].UserId);
 
                       var userXpData = users[i];
 
                       var awardStr = string.Empty;
-                      if (userXpData.AwardedXp > 0)
-                          awardStr = $"(+{userXpData.AwardedXp})";
-                      else if (userXpData.AwardedXp < 0)
-                          awardStr = $"({userXpData.AwardedXp})";
 
-                      embed.AddField($"#{i + 1 + (curPage * 9)} {user?.ToString() ?? users[i].UserId.ToString()}",
+                      embed.AddField($"#{i + 1 + (curPage * 10)} {user?.ToString() ?? users[i].UserId.ToString()}",
                           $"{GetText(strs.level_x(levelStats.Level))} - {levelStats.TotalXp}xp {awardStr}");
                   }
 
@@ -265,9 +234,9 @@ public partial class Xp : NadekoModule<XpService>
               .PageSize(10)
               .Page((users, curPage) =>
               {
-                  var embed = _sender.CreateEmbed()
-                                     .WithOkColor()
-                                     .WithTitle(GetText(strs.global_leaderboard));
+                  var embed = CreateEmbed()
+                              .WithOkColor()
+                              .WithTitle(GetText(strs.global_leaderboard));
 
                   if (!users.Any())
                   {
@@ -278,12 +247,34 @@ public partial class Xp : NadekoModule<XpService>
                   for (var i = 0; i < users.Count; i++)
                   {
                       var user = users[i];
-                      embed.AddField($"#{i + 1 + (curPage * 9)} {user}",
+                      embed.AddField($"#{i + 1 + (curPage * 10)} {user}",
                           $"{GetText(strs.level_x(new LevelStats(users[i].TotalXp).Level))} - {users[i].TotalXp}xp");
                   }
 
                   return embed;
               })
+              .SendAsync();
+    }
+
+    [Cmd]
+    [RequireContext(ContextType.Guild)]
+    [UserPerm(GuildPerm.Administrator)]
+    [Priority(1)]
+    public Task XpLevelSet(int level, IGuildUser user)
+        => XpLevelSet(level, user.Id);
+
+    [Cmd]
+    [RequireContext(ContextType.Guild)]
+    [UserPerm(GuildPerm.Administrator)]
+    [Priority(0)]
+    public async Task XpLevelSet(int level, ulong userId)
+    {
+        if (level < 0)
+            return;
+
+        await _service.SetLevelAsync(ctx.Guild.Id, userId, level);
+        await Response()
+              .Confirm(strs.level_set($"<@{userId}>", Format.Bold(level.ToString())))
               .SendAsync();
     }
 
@@ -350,14 +341,14 @@ public partial class Xp : NadekoModule<XpService>
     [UserPerm(GuildPerm.Administrator)]
     public async Task XpReset(ulong userId)
     {
-        var embed = _sender.CreateEmbed()
-                           .WithTitle(GetText(strs.reset))
-                           .WithDescription(GetText(strs.reset_user_confirm));
+        var embed = CreateEmbed()
+                    .WithTitle(GetText(strs.reset))
+                    .WithDescription(GetText(strs.reset_user_confirm));
 
         if (!await PromptUserConfirmAsync(embed))
             return;
 
-        _service.XpReset(ctx.Guild.Id, userId);
+        await _service.XpReset(ctx.Guild.Id, userId);
 
         await Response().Confirm(strs.reset_user(userId)).SendAsync();
     }
@@ -367,9 +358,9 @@ public partial class Xp : NadekoModule<XpService>
     [UserPerm(GuildPerm.Administrator)]
     public async Task XpReset()
     {
-        var embed = _sender.CreateEmbed()
-                           .WithTitle(GetText(strs.reset))
-                           .WithDescription(GetText(strs.reset_server_confirm));
+        var embed = CreateEmbed()
+                    .WithTitle(GetText(strs.reset))
+                    .WithDescription(GetText(strs.reset_server_confirm));
 
         if (!await PromptUserConfirmAsync(embed))
             return;
@@ -445,21 +436,21 @@ public partial class Xp : NadekoModule<XpService>
               .Page((items, _) =>
               {
                   if (!items.Any())
-                      return _sender.CreateEmbed()
-                                    .WithDescription(GetText(strs.not_found))
-                                    .WithErrorColor();
+                      return CreateEmbed()
+                             .WithDescription(GetText(strs.not_found))
+                             .WithErrorColor();
 
                   var (key, item) = items.FirstOrDefault();
 
-                  var eb = _sender.CreateEmbed()
-                                  .WithOkColor()
-                                  .WithTitle(item.Name)
-                                  .AddField(GetText(strs.price),
-                                      CurrencyHelper.N(item.Price, Culture, _gss.GetCurrencySign()),
-                                      true)
-                                  .WithImageUrl(string.IsNullOrWhiteSpace(item.Preview)
-                                      ? item.Url
-                                      : item.Preview);
+                  var eb = CreateEmbed()
+                           .WithOkColor()
+                           .WithTitle(item.Name)
+                           .AddField(GetText(strs.price),
+                               CurrencyHelper.N(item.Price, Culture, _gss.GetCurrencySign()),
+                               true)
+                           .WithImageUrl(string.IsNullOrWhiteSpace(item.Preview)
+                               ? item.Url
+                               : item.Preview);
 
                   if (!string.IsNullOrWhiteSpace(item.Desc))
                       eb.AddField(GetText(strs.desc), item.Desc);
@@ -603,16 +594,5 @@ public partial class Xp : NadekoModule<XpService>
         {
             await _service.UseShopItemAsync(ctx.User.Id, type, key);
         }
-    }
-
-    private string GetNotifLocationString(XpNotificationLocation loc)
-    {
-        if (loc == XpNotificationLocation.Channel)
-            return GetText(strs.xpn_notif_channel);
-
-        if (loc == XpNotificationLocation.Dm)
-            return GetText(strs.xpn_notif_dm);
-
-        return GetText(strs.xpn_notif_disabled);
     }
 }

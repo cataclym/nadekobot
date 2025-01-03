@@ -12,7 +12,7 @@ namespace NadekoBot.Modules.Gambling;
 public partial class Gambling
 {
     [Group]
-    public partial class AnimalRacingCommands : GamblingSubmodule<AnimalRaceService>
+    public partial class AnimalRacingCommands : GamblingModule<AnimalRaceService>
     {
         private readonly ICurrencyService _cs;
         private readonly DiscordSocketClient _client;
@@ -74,10 +74,14 @@ public partial class Gambling
                 if (race.FinishedUsers[0].Bet > 0)
                 {
                     return Response()
-                           .Confirm(GetText(strs.animal_race),
-                               GetText(strs.animal_race_won_money(Format.Bold(winner.Username),
-                                   winner.Animal.Icon,
-                                   (race.FinishedUsers[0].Bet * (race.Users.Count - 1)) + CurrencySign)))
+                           .Embed(CreateEmbed()
+                                         .WithOkColor()
+                                         .WithTitle(GetText(strs.animal_race))
+                                         .WithDescription(GetText(strs.animal_race_won_money(
+                                             Format.Bold(winner.Username),
+                                             winner.Animal.Icon,
+                                             N(race.FinishedUsers[0].Bet * race.Multi))))
+                                         .WithFooter($"x{race.Multi:F2}"))
                            .SendAsync();
                 }
 
@@ -113,14 +117,14 @@ public partial class Gambling
 
         private async Task Ar_OnStateUpdate(AnimalRace race)
         {
-            var text = $@"|🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🔚|
+            var text = $@"|🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁🔚|
 {string.Join("\n", race.Users.Select(p =>
 {
     var index = race.FinishedUsers.IndexOf(p);
     var extra = index == -1 ? "" : $"#{index + 1} {(index == 0 ? "🏆" : "")}";
     return $"{(int)(p.Progress / 60f * 100),-2}%|{new string('‣', p.Progress) + p.Animal.Icon + extra}";
 }))}
-|🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🏁🔚|";
+|🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🏁 🔚|";
 
             var msg = raceMessage;
 
@@ -128,11 +132,11 @@ public partial class Gambling
                 raceMessage = await Response().Confirm(text).SendAsync();
             else
             {
-                await msg.ModifyAsync(x => x.Embed = _sender.CreateEmbed()
-                                                        .WithTitle(GetText(strs.animal_race))
-                                                        .WithDescription(text)
-                                                        .WithOkColor()
-                                                        .Build());
+                await msg.ModifyAsync(x => x.Embed = CreateEmbed()
+                                                            .WithTitle(GetText(strs.animal_race))
+                                                            .WithDescription(text)
+                                                            .WithOkColor()
+                                                            .Build());
             }
         }
 

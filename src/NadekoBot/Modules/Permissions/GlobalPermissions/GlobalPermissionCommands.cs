@@ -30,7 +30,7 @@ public partial class Permissions
                 return;
             }
 
-            var embed = _sender.CreateEmbed().WithOkColor();
+            var embed = CreateEmbed().WithOkColor();
 
             if (blockedModule.Any())
                 embed.AddField(GetText(strs.blocked_modules), string.Join("\n", _service.BlockedModules));
@@ -72,6 +72,39 @@ public partial class Permissions
             }
 
             await Response().Confirm(strs.gcmd_remove(Format.Bold(cmd.Name))).SendAsync();
+        }
+
+        [Cmd]
+        [OwnerOnly]
+        public async Task DmModule(ModuleOrExpr module)
+        {
+            var moduleName = module.Name.ToLowerInvariant();
+
+            var added = _service.ToggleModule(moduleName, true);
+
+            if (added)
+            {
+                await Response().Confirm(strs.dmmod_add(Format.Bold(module.Name))).SendAsync();
+                return;
+            }
+
+            await Response().Confirm(strs.dmmod_remove(Format.Bold(module.Name))).SendAsync();
+        }
+
+        [Cmd]
+        [OwnerOnly]
+        public async Task DmCommand(CommandOrExprInfo cmd)
+        {
+            var commandName = cmd.Name.ToLowerInvariant();
+            var added = _service.ToggleCommand(commandName, true);
+
+            if (added)
+            {
+                await Response().Confirm(strs.dmcmd_add(Format.Bold(cmd.Name))).SendAsync();
+                return;
+            }
+
+            await Response().Confirm(strs.dmcmd_remove(Format.Bold(cmd.Name))).SendAsync();
         }
     }
 }

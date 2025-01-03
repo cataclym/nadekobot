@@ -10,7 +10,7 @@ namespace NadekoBot.Modules.Gambling;
 public partial class Gambling
 {
     [Group]
-    public partial class WaifuClaimCommands : GamblingSubmodule<WaifuService>
+    public partial class WaifuClaimCommands : GamblingModule<WaifuService>
     {
         public WaifuClaimCommands(GamblingConfigService gamblingConfService)
             : base(gamblingConfService)
@@ -21,7 +21,7 @@ public partial class Gambling
         public async Task WaifuReset()
         {
             var price = _service.GetResetPrice(ctx.User);
-            var embed = _sender.CreateEmbed()
+            var embed = CreateEmbed()
                                .WithTitle(GetText(strs.waifu_reset_confirm))
                                .WithDescription(GetText(strs.waifu_reset_price(Format.Bold(N(price)))));
 
@@ -35,6 +35,45 @@ public partial class Gambling
             }
 
             await Response().Error(strs.waifu_reset_fail).SendAsync();
+        }
+
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        public async Task WaifuClaims()
+        {
+            await Response()
+                  .Paginated()
+                  .PageItems(async (page) => await _service.GetClaimsAsync(ctx.User.Id, page))
+                  .Page((items, page) =>
+                  {
+                      var eb = CreateEmbed()
+                                      .WithOkColor()
+                                      .WithTitle("Waifus");
+
+                      if (items.Count == 0)
+                      {
+                          eb
+                              .WithPendingColor()
+                              .WithDescription(GetText(strs.empty_page));
+
+                          return eb;
+                      }
+
+                      for (var i = 0; i < items.Count; i++)
+                      {
+                          var item = items[i];
+                          eb.AddField($"`#{(page * 9) + 1 + i}`  {N(item.Price)}",
+                              $"""
+                               {item.Username}
+                               ||{item.UserId}||
+                               """,
+                              true
+                          );
+                      }
+
+                      return eb;
+                  })
+                  .SendAsync();
         }
 
         [Cmd]
@@ -74,7 +113,7 @@ public partial class Gambling
                 Format.Bold(ctx.User.ToString()),
                 Format.Bold(target.ToString()),
                 N(amount)));
-            
+
             if (w.Affinity?.UserId == ctx.User.Id)
                 msg += "\n" + GetText(strs.waifu_fulfilled(target, N(w.Price)));
             else
@@ -144,7 +183,7 @@ public partial class Gambling
             if (targetId == ctx.User.Id)
                 return;
 
-            var (w, result, amount, remaining) = await _service.DivorceWaifuAsync(ctx.User, targetId);
+            var (w, result, amount) = await _service.DivorceWaifuAsync(ctx.User, targetId);
 
             if (result == DivorceResult.SucessWithPenalty)
             {
@@ -157,14 +196,6 @@ public partial class Gambling
                 await Response().Confirm(strs.waifu_divorced_notlike(N(amount))).SendAsync();
             else if (result == DivorceResult.NotYourWife)
                 await Response().Error(strs.waifu_not_yours).SendAsync();
-            else if (remaining is { } rem)
-            {
-                await Response()
-                      .Error(strs.waifu_recent_divorce(
-                          Format.Bold(((int)rem.TotalHours).ToString()),
-                          Format.Bold(rem.Minutes.ToString())))
-                      .SendAsync();
-            }
         }
 
         [Cmd]
@@ -235,7 +266,7 @@ public partial class Gambling
                 return;
             }
 
-            var embed = _sender.CreateEmbed().WithTitle(GetText(strs.waifus_top_waifus)).WithOkColor();
+            var embed = CreateEmbed().WithTitle(GetText(strs.waifus_top_waifus)).WithOkColor();
 
             var i = 0;
             foreach (var w in waifus)
@@ -319,7 +350,7 @@ public partial class Gambling
             if (string.IsNullOrWhiteSpace(fansStr))
                 fansStr = "-";
 
-            var embed = _sender.CreateEmbed()
+            var embed = CreateEmbed()
                                .WithOkColor()
                                .WithTitle(GetText(strs.waifu)
                                           + " "
@@ -362,7 +393,7 @@ public partial class Gambling
                   .CurrentPage(page)
                   .Page((items, _) =>
                   {
-                      var embed = _sender.CreateEmbed().WithTitle(GetText(strs.waifu_gift_shop)).WithOkColor();
+                      var embed = CreateEmbed().WithTitle(GetText(strs.waifu_gift_shop)).WithOkColor();
 
                       items
                           .ToList()

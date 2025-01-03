@@ -451,6 +451,69 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.ToTable("blacklist", (string)null);
                 });
 
+            modelBuilder.Entity("NadekoBot.Db.Models.ButtonRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ButtonId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("buttonid");
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("channelid");
+
+                    b.Property<string>("Emote")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("emote");
+
+                    b.Property<bool>("Exclusive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("exclusive");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("label");
+
+                    b.Property<decimal>("MessageId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("messageid");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("roleid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_buttonrole");
+
+                    b.HasAlternateKey("RoleId", "MessageId")
+                        .HasName("ak_buttonrole_roleid_messageid");
+
+                    b.HasIndex("GuildId")
+                        .HasDatabaseName("ix_buttonrole_guildid");
+
+                    b.ToTable("buttonrole", (string)null);
+                });
+
             modelBuilder.Entity("NadekoBot.Db.Models.ClubApplicants", b =>
                 {
                     b.Property<int>("ClubId")
@@ -751,10 +814,6 @@ namespace NadekoBot.Migrations.PostgreSql
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("dateadded");
 
-                    b.Property<string>("Discriminator")
-                        .HasColumnType("text")
-                        .HasColumnName("discriminator");
-
                     b.Property<bool>("IsClubAdmin")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -798,6 +857,9 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_discorduser_userid");
+
+                    b.HasIndex("Username")
+                        .HasDatabaseName("ix_discorduser_username");
 
                     b.ToTable("discorduser", (string)null);
                 });
@@ -995,6 +1057,37 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.ToTable("filteredword", (string)null);
                 });
 
+            modelBuilder.Entity("NadekoBot.Db.Models.FlagTranslateChannel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("channelid");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("dateadded");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_flagtranslatechannel");
+
+                    b.HasIndex("GuildId", "ChannelId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_flagtranslatechannel_guildid_channelid");
+
+                    b.ToTable("flagtranslatechannel", (string)null);
+                });
+
             modelBuilder.Entity("NadekoBot.Db.Models.FollowedStream", b =>
                 {
                     b.Property<int>("Id")
@@ -1172,7 +1265,7 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.ToTable("giveawayuser", (string)null);
                 });
 
-            modelBuilder.Entity("NadekoBot.Db.Models.GroupName", b =>
+            modelBuilder.Entity("NadekoBot.Db.Models.GuildColors", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1181,30 +1274,33 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("DateAdded")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("dateadded");
+                    b.Property<string>("ErrorColor")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)")
+                        .HasColumnName("errorcolor");
 
-                    b.Property<int>("GuildConfigId")
-                        .HasColumnType("integer")
-                        .HasColumnName("guildconfigid");
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("text")
-                        .HasColumnName("name");
+                    b.Property<string>("OkColor")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)")
+                        .HasColumnName("okcolor");
 
-                    b.Property<int>("Number")
-                        .HasColumnType("integer")
-                        .HasColumnName("number");
+                    b.Property<string>("PendingColor")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)")
+                        .HasColumnName("pendingcolor");
 
                     b.HasKey("Id")
-                        .HasName("pk_groupname");
+                        .HasName("pk_guildcolors");
 
-                    b.HasIndex("GuildConfigId", "Number")
+                    b.HasIndex("GuildId")
                         .IsUnique()
-                        .HasDatabaseName("ix_groupname_guildconfigid_number");
+                        .HasDatabaseName("ix_guildcolors_guildid");
 
-                    b.ToTable("groupname", (string)null);
+                    b.ToTable("guildcolors", (string)null);
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.GuildConfig", b =>
@@ -1627,6 +1723,49 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.ToTable("muteduserid", (string)null);
                 });
 
+            modelBuilder.Entity("NadekoBot.Db.Models.NCPixel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("Color")
+                        .HasColumnType("bigint")
+                        .HasColumnName("color");
+
+                    b.Property<decimal>("OwnerId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("ownerid");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<long>("Price")
+                        .HasColumnType("bigint")
+                        .HasColumnName("price");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ncpixel");
+
+                    b.HasAlternateKey("Position")
+                        .HasName("ak_ncpixel_position");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_ncpixel_ownerid");
+
+                    b.ToTable("ncpixel", (string)null);
+                });
+
             modelBuilder.Entity("NadekoBot.Db.Models.NadekoExpression", b =>
                 {
                     b.Property<int>("Id")
@@ -1676,6 +1815,42 @@ namespace NadekoBot.Migrations.PostgreSql
                         .HasName("pk_expressions");
 
                     b.ToTable("expressions", (string)null);
+                });
+
+            modelBuilder.Entity("NadekoBot.Db.Models.Notify", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("ChannelId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("channelid");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)")
+                        .HasColumnName("message");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notify");
+
+                    b.HasAlternateKey("GuildId", "Type")
+                        .HasName("ak_notify_guildid_type");
+
+                    b.ToTable("notify", (string)null);
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.PatronUser", b =>
@@ -2127,7 +2302,7 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.ToTable("rotatingstatus", (string)null);
                 });
 
-            modelBuilder.Entity("NadekoBot.Db.Models.SelfAssignedRole", b =>
+            modelBuilder.Entity("NadekoBot.Db.Models.Sar", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -2136,36 +2311,98 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("DateAdded")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("dateadded");
-
-                    b.Property<int>("Group")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0)
-                        .HasColumnName("group");
-
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("guildid");
 
-                    b.Property<int>("LevelRequirement")
+                    b.Property<int>("LevelReq")
                         .HasColumnType("integer")
-                        .HasColumnName("levelrequirement");
+                        .HasColumnName("levelreq");
 
                     b.Property<decimal>("RoleId")
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("roleid");
 
+                    b.Property<int>("SarGroupId")
+                        .HasColumnType("integer")
+                        .HasColumnName("sargroupid");
+
                     b.HasKey("Id")
-                        .HasName("pk_selfassignableroles");
+                        .HasName("pk_sar");
 
-                    b.HasIndex("GuildId", "RoleId")
+                    b.HasAlternateKey("GuildId", "RoleId")
+                        .HasName("ak_sar_guildid_roleid");
+
+                    b.HasIndex("SarGroupId")
+                        .HasDatabaseName("ix_sar_sargroupid");
+
+                    b.ToTable("sar", (string)null);
+                });
+
+            modelBuilder.Entity("NadekoBot.Db.Models.SarAutoDelete", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isenabled");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sarautodelete");
+
+                    b.HasIndex("GuildId")
                         .IsUnique()
-                        .HasDatabaseName("ix_selfassignableroles_guildid_roleid");
+                        .HasDatabaseName("ix_sarautodelete_guildid");
 
-                    b.ToTable("selfassignableroles", (string)null);
+                    b.ToTable("sarautodelete", (string)null);
+                });
+
+            modelBuilder.Entity("NadekoBot.Db.Models.SarGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GroupNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("groupnumber");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
+
+                    b.Property<bool>("IsExclusive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isexclusive");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<decimal?>("RoleReq")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("rolereq");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sargroup");
+
+                    b.HasAlternateKey("GuildId", "GroupNumber")
+                        .HasName("ak_sargroup_guildid_groupnumber");
+
+                    b.ToTable("sargroup", (string)null);
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.ShopEntry", b =>
@@ -2501,6 +2738,47 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.ToTable("streamrolewhitelisteduser", (string)null);
                 });
 
+            modelBuilder.Entity("NadekoBot.Db.Models.TempRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("expiresat");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
+
+                    b.Property<bool>("Remove")
+                        .HasColumnType("boolean")
+                        .HasColumnName("remove");
+
+                    b.Property<decimal>("RoleId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("roleid");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("userid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_temprole");
+
+                    b.HasAlternateKey("GuildId", "UserId", "RoleId")
+                        .HasName("ak_temprole_guildid_userid_roleid");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_temprole_expiresat");
+
+                    b.ToTable("temprole", (string)null);
+                });
+
             modelBuilder.Entity("NadekoBot.Db.Models.TodoModel", b =>
                 {
                     b.Property<int>("Id")
@@ -2657,10 +2935,6 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<long>("AwardedXp")
-                        .HasColumnType("bigint")
-                        .HasColumnName("awardedxp");
-
                     b.Property<DateTime?>("DateAdded")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("dateadded");
@@ -2668,10 +2942,6 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)")
                         .HasColumnName("guildid");
-
-                    b.Property<int>("NotifyOnLevelUp")
-                        .HasColumnType("integer")
-                        .HasColumnName("notifyonlevelup");
 
                     b.Property<decimal>("UserId")
                         .HasColumnType("numeric(20,0)")
@@ -2683,9 +2953,6 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     b.HasKey("Id")
                         .HasName("pk_userxpstats");
-
-                    b.HasIndex("AwardedXp")
-                        .HasDatabaseName("ix_userxpstats_awardedxp");
 
                     b.HasIndex("GuildId")
                         .HasDatabaseName("ix_userxpstats_guildid");
@@ -2938,9 +3205,9 @@ namespace NadekoBot.Migrations.PostgreSql
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("dateadded");
 
-                    b.Property<int?>("GuildConfigId")
-                        .HasColumnType("integer")
-                        .HasColumnName("guildconfigid");
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("guildid");
 
                     b.Property<int>("Punishment")
                         .HasColumnType("integer")
@@ -2957,8 +3224,8 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.HasKey("Id")
                         .HasName("pk_warningpunishment");
 
-                    b.HasIndex("GuildConfigId")
-                        .HasDatabaseName("ix_warningpunishment_guildconfigid");
+                    b.HasAlternateKey("GuildId", "Count")
+                        .HasName("ak_warningpunishment_guildid_count");
 
                     b.ToTable("warningpunishment", (string)null);
                 });
@@ -3152,6 +3419,77 @@ namespace NadekoBot.Migrations.PostgreSql
                         .HasDatabaseName("ix_greetsettings_guildid_greettype");
 
                     b.ToTable("greetsettings", (string)null);
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.Rakeback", b =>
+                {
+                    b.Property<decimal>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("userid");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_rakeback");
+
+                    b.ToTable("rakeback", (string)null);
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.UserBetStats", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Game")
+                        .HasColumnType("integer")
+                        .HasColumnName("game");
+
+                    b.Property<long>("LoseCount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("losecount");
+
+                    b.Property<long>("MaxBet")
+                        .HasColumnType("bigint")
+                        .HasColumnName("maxbet");
+
+                    b.Property<long>("MaxWin")
+                        .HasColumnType("bigint")
+                        .HasColumnName("maxwin");
+
+                    b.Property<decimal>("PaidOut")
+                        .HasColumnType("numeric")
+                        .HasColumnName("paidout");
+
+                    b.Property<decimal>("TotalBet")
+                        .HasColumnType("numeric")
+                        .HasColumnName("totalbet");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)")
+                        .HasColumnName("userid");
+
+                    b.Property<long>("WinCount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("wincount");
+
+                    b.HasKey("Id")
+                        .HasName("pk_userbetstats");
+
+                    b.HasIndex("MaxWin")
+                        .HasDatabaseName("ix_userbetstats_maxwin");
+
+                    b.HasIndex("UserId", "Game")
+                        .IsUnique()
+                        .HasDatabaseName("ix_userbetstats_userid_game");
+
+                    b.ToTable("userbetstats", (string)null);
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.AntiAltSetting", b =>
@@ -3386,18 +3724,6 @@ namespace NadekoBot.Migrations.PostgreSql
                         .HasConstraintName("fk_giveawayuser_giveawaymodel_giveawayid");
                 });
 
-            modelBuilder.Entity("NadekoBot.Db.Models.GroupName", b =>
-                {
-                    b.HasOne("NadekoBot.Db.Models.GuildConfig", "GuildConfig")
-                        .WithMany("SelfAssignableRoleGroupNames")
-                        .HasForeignKey("GuildConfigId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_groupname_guildconfigs_guildconfigid");
-
-                    b.Navigation("GuildConfig");
-                });
-
             modelBuilder.Entity("NadekoBot.Db.Models.IgnoredLogItem", b =>
                 {
                     b.HasOne("NadekoBot.Db.Models.LogSetting", "LogSetting")
@@ -3435,6 +3761,16 @@ namespace NadekoBot.Migrations.PostgreSql
                         .HasForeignKey("MusicPlaylistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("fk_playlistsong_musicplaylists_musicplaylistid");
+                });
+
+            modelBuilder.Entity("NadekoBot.Db.Models.Sar", b =>
+                {
+                    b.HasOne("NadekoBot.Db.Models.SarGroup", null)
+                        .WithMany("Roles")
+                        .HasForeignKey("SarGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sar_sargroup_sargroupid");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.ShopEntry", b =>
@@ -3616,15 +3952,6 @@ namespace NadekoBot.Migrations.PostgreSql
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("NadekoBot.Db.Models.WarningPunishment", b =>
-                {
-                    b.HasOne("NadekoBot.Db.Models.GuildConfig", null)
-                        .WithMany("WarnPunishments")
-                        .HasForeignKey("GuildConfigId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .HasConstraintName("fk_warningpunishment_guildconfigs_guildconfigid");
-                });
-
             modelBuilder.Entity("NadekoBot.Db.Models.XpCurrencyReward", b =>
                 {
                     b.HasOne("NadekoBot.Db.Models.XpSettings", "XpSettings")
@@ -3722,8 +4049,6 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     b.Navigation("Permissions");
 
-                    b.Navigation("SelfAssignableRoleGroupNames");
-
                     b.Navigation("ShopEntries");
 
                     b.Navigation("SlowmodeIgnoredRoles");
@@ -3740,8 +4065,6 @@ namespace NadekoBot.Migrations.PostgreSql
 
                     b.Navigation("VcRoleInfos");
 
-                    b.Navigation("WarnPunishments");
-
                     b.Navigation("XpSettings");
                 });
 
@@ -3753,6 +4076,11 @@ namespace NadekoBot.Migrations.PostgreSql
             modelBuilder.Entity("NadekoBot.Db.Models.MusicPlaylist", b =>
                 {
                     b.Navigation("Songs");
+                });
+
+            modelBuilder.Entity("NadekoBot.Db.Models.SarGroup", b =>
+                {
+                    b.Navigation("Roles");
                 });
 
             modelBuilder.Entity("NadekoBot.Db.Models.ShopEntry", b =>

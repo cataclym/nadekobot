@@ -1,20 +1,19 @@
-﻿#nullable disable
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace NadekoBot.Common.TypeReaders.Models;
 
-public class StoopidTime
+public class ParsedTimespan
 {
     private static readonly Regex _regex = new(
         @"^(?:(?<months>\d)mo)?(?:(?<weeks>\d{1,2})w)?(?:(?<days>\d{1,2})d)?(?:(?<hours>\d{1,4})h)?(?:(?<minutes>\d{1,5})m)?(?:(?<seconds>\d{1,6})s)?$",
         RegexOptions.Compiled | RegexOptions.Multiline);
 
-    public string Input { get; set; }
-    public TimeSpan Time { get; set; }
+    public string Input { get; set; } = string.Empty;
+    public TimeSpan Time { get; set; } = default;
 
-    private StoopidTime() { }
+    private ParsedTimespan() { }
 
-    public static StoopidTime FromInput(string input)
+    public static ParsedTimespan FromInput(string input)
     {
         var m = _regex.Match(input);
 
@@ -52,4 +51,14 @@ public class StoopidTime
             Time = ts
         };
     }
+
+    public static implicit operator TimeSpan?(ParsedTimespan? st)
+        => st?.Time;
+    
+    public static implicit operator ParsedTimespan(TimeSpan ts)
+        => new()
+        {
+            Input = ts.ToString(),
+            Time = ts
+        };
 }

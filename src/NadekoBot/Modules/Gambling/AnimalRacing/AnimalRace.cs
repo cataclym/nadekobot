@@ -6,6 +6,10 @@ namespace NadekoBot.Modules.Gambling.Common.AnimalRacing;
 
 public sealed class AnimalRace : IDisposable
 {
+    public const double BASE_MULTIPLIER = 0.87;
+    public const double MAX_MULTIPLIER = 0.94;
+    public const double MULTI_PER_USER = 0.005;
+
     public enum Phase
     {
         WaitingForPlayers,
@@ -100,7 +104,7 @@ public sealed class AnimalRace : IDisposable
             foreach (var user in _users)
             {
                 if (user.Bet > 0)
-                    await _currency.AddAsync(user.UserId, user.Bet, new("animalrace", "refund"));
+                    await _currency.AddAsync(user.UserId, (long)(user.Bet * BASE_MULTIPLIER), new("animalrace", "refund"));
             }
 
             _ = OnStartingFailed?.Invoke(this);
@@ -116,7 +120,7 @@ public sealed class AnimalRace : IDisposable
             {
                 foreach (var user in _users)
                 {
-                    user.Progress += rng.Next(1, 11);
+                    user.Progress += rng.Next(1, 10);
                     if (user.Progress >= 60)
                         user.Progress = 60;
                 }
@@ -126,19 +130,23 @@ public sealed class AnimalRace : IDisposable
                 FinishedUsers.AddRange(finished);
 
                 _ = OnStateUpdate?.Invoke(this);
-                await Task.Delay(2500);
+                await Task.Delay(1750);
             }
 
             if (FinishedUsers[0].Bet > 0)
             {
+                Multi = FinishedUsers.Count
+                        * Math.Min(MAX_MULTIPLIER, BASE_MULTIPLIER + (MULTI_PER_USER * FinishedUsers.Count));
                 await _currency.AddAsync(FinishedUsers[0].UserId,
-                    FinishedUsers[0].Bet * (_users.Count - 1),
+                    (long)(FinishedUsers[0].Bet * Multi),
                     new("animalrace", "win"));
             }
 
             _ = OnEnded?.Invoke(this);
         });
     }
+
+    public double Multi { get; set; } = BASE_MULTIPLIER;
 
     public void Dispose()
     {

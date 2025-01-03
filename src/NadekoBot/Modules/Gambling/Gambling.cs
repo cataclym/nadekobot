@@ -14,6 +14,13 @@ using System.Text;
 using NadekoBot.Modules.Gambling.Rps;
 using NadekoBot.Common.TypeReaders;
 using NadekoBot.Modules.Patronage;
+using SixLabors.Fonts;
+using SixLabors.Fonts.Unicode;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using Color = SixLabors.ImageSharp.Color;
 
 namespace NadekoBot.Modules.Gambling;
 
@@ -26,10 +33,13 @@ public partial class Gambling : GamblingModule<GamblingService>
     private readonly NumberFormatInfo _enUsCulture;
     private readonly DownloadTracker _tracker;
     private readonly GamblingConfigService _configService;
+    private readonly FontProvider _fonts;
     private readonly IBankService _bank;
     private readonly IRemindService _remind;
     private readonly GamblingTxTracker _gamblingTxTracker;
     private readonly IPatronageService _ps;
+    private readonly RakebackService _rb;
+    private readonly IBotCache _cache;
 
     public Gambling(
         IGamblingService gs,
@@ -38,10 +48,13 @@ public partial class Gambling : GamblingModule<GamblingService>
         DiscordSocketClient client,
         DownloadTracker tracker,
         GamblingConfigService configService,
+        FontProvider fonts,
         IBankService bank,
         IRemindService remind,
         IPatronageService patronage,
-        GamblingTxTracker gamblingTxTracker)
+        GamblingTxTracker gamblingTxTracker,
+        RakebackService rb,
+        IBotCache cache)
         : base(configService)
     {
         _gs = gs;
@@ -51,13 +64,17 @@ public partial class Gambling : GamblingModule<GamblingService>
         _bank = bank;
         _remind = remind;
         _gamblingTxTracker = gamblingTxTracker;
+        _rb = rb;
+        _cache = cache;
         _ps = patronage;
+        _rng = new NadekoRandom();
 
         _enUsCulture = new CultureInfo("en-US", false).NumberFormat;
         _enUsCulture.NumberDecimalDigits = 0;
         _enUsCulture.NumberGroupSeparator = " ";
         _tracker = tracker;
         _configService = configService;
+        _fonts = fonts;
     }
 
     public async Task<string> GetBalanceStringAsync(ulong userId)
@@ -66,42 +83,6 @@ public partial class Gambling : GamblingModule<GamblingService>
         return N(bal);
     }
 
-    [Cmd]
-    public async Task BetStats()
-    {
-        var stats = await _gamblingTxTracker.GetAllAsync();
-
-        var eb = _sender.CreateEmbed()
-                        .WithOkColor();
-
-        var str = "` Feature `｜`   Bet  `｜`Paid Out`｜`  RoI  `\n";
-        str += "――――――――――――――――――――\n";
-        foreach (var stat in stats)
-        {
-            var perc = (stat.PaidOut / stat.Bet).ToString("P2", Culture);
-            str += $"`{stat.Feature.PadBoth(9)}`"
-                   + $"｜`{stat.Bet.ToString("N0").PadLeft(8, ' ')}`"
-                   + $"｜`{stat.PaidOut.ToString("N0").PadLeft(8, ' ')}`"
-                   + $"｜`{perc.PadLeft(6, ' ')}`\n";
-        }
-
-        var bet = stats.Sum(x => x.Bet);
-        var paidOut = stats.Sum(x => x.PaidOut);
-
-        if (bet == 0)
-            bet = 1;
-
-        var tPerc = (paidOut / bet).ToString("P2", Culture);
-        str += "――――――――――――――――――――\n";
-        str += $"` {("TOTAL").PadBoth(7)}` "
-               + $"｜**{N(bet).PadLeft(8, ' ')}**"
-               + $"｜**{N(paidOut).PadLeft(8, ' ')}**"
-               + $"｜`{tPerc.PadLeft(6, ' ')}`";
-
-        eb.WithDescription(str);
-
-        await Response().Embed(eb).SendAsync();
-    }
 
     private async Task RemindTimelyAction(SocketMessageComponent smc, DateTime when)
     {
@@ -140,6 +121,19 @@ public partial class Gambling : GamblingModule<GamblingService>
                 (smc) => RemindTimelyAction(smc, DateTime.UtcNow.Add(TimeSpan.FromMilliseconds(ms)))
             );
 
+    private NadekoInteractionBase CreateTimelyInteraction()
+        => _inter
+            .Create(ctx.User.Id,
+                new ButtonBuilder(
+                    label: "Timely",
+                    emote: Emoji.Parse("💰"),
+                    customId: "timely:" + _rng.Next(123456, 999999)),
+                async (smc) =>
+                {
+                    await smc.DeferAsync();
+                    await ClaimTimely();
+                });
+
     [Cmd]
     public async Task Timely()
     {
@@ -151,6 +145,94 @@ public partial class Gambling : GamblingModule<GamblingService>
             return;
         }
 
+        if (Config.Timely.ProtType == TimelyProt.Button)
+        {
+            var interaction = CreateTimelyInteraction();
+            var msg = await Response().Pending(strs.timely_button).Interaction(interaction).SendAsync();
+            await msg.DeleteAsync();
+            return;
+        }
+        else if (Config.Timely.ProtType == TimelyProt.Captcha)
+        {
+            var password = await GetUserTimelyPassword(ctx.User.Id);
+            var img = GetPasswordImage(password);
+            using var stream = await img.ToStreamAsync();
+            var captcha = await Response()
+                                .File(stream, "timely.png")
+                                .SendAsync();
+            try
+            {
+                var userInput = await GetUserInputAsync(ctx.User.Id, ctx.Channel.Id);
+                if (userInput?.ToLowerInvariant() != password?.ToLowerInvariant())
+                {
+                    return;
+                }
+
+                await ClearUserTimelyPassword(ctx.User.Id);
+            }
+            finally
+            {
+                _ = captcha.DeleteAsync();
+            }
+        }
+
+        await ClaimTimely();
+    }
+
+    private static TypedKey<string> TimelyPasswordKey(ulong userId)
+        => new($"timely_password:{userId}");
+
+    private async Task<string> GetUserTimelyPassword(ulong userId)
+    {
+        var pw = await _cache.GetOrAddAsync(TimelyPasswordKey(userId),
+            () =>
+            {
+                var password = _service.GeneratePassword();
+                return Task.FromResult(password);
+            });
+
+        return pw;
+    }
+
+    private ValueTask<bool> ClearUserTimelyPassword(ulong userId)
+        => _cache.RemoveAsync(TimelyPasswordKey(userId));
+
+    private Image<Rgba32> GetPasswordImage(string password)
+    {
+        var img = new Image<Rgba32>(50, 24);
+
+        var font = _fonts.NotoSans.CreateFont(22);
+        var outlinePen = new SolidPen(Color.Black, 0.5f);
+        var strikeoutRun = new RichTextRun
+        {
+            Start = 0,
+            End = password.GetGraphemeCount(),
+            Font = font,
+            StrikeoutPen = new SolidPen(Color.White, 4),
+            TextDecorations = TextDecorations.Strikeout
+        };
+        // draw password on the image
+        img.Mutate(x =>
+        {
+            x.DrawText(new RichTextOptions(font)
+                {
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FallbackFontFamilies = _fonts.FallBackFonts,
+                    Origin = new(25, 12),
+                    TextRuns = [strikeoutRun]
+                },
+                password,
+                Brushes.Solid(Color.White),
+                outlinePen);
+        });
+
+        return img;
+    }
+
+    private async Task ClaimTimely()
+    {
+        var period = Config.Timely.Cooldown;
         if (await _service.ClaimTimelyAsync(ctx.User.Id, period) is { } remainder)
         {
             // Get correct time form remainder
@@ -169,6 +251,30 @@ public partial class Gambling : GamblingModule<GamblingService>
         }
 
 
+        var val = Config.Timely.Amount;
+        var boostGuilds = Config.BoostBonus.GuildIds ?? new();
+        var guildUsers = await boostGuilds
+                               .Select(async gid =>
+                               {
+                                   try
+                                   {
+                                       var guild = await _client.Rest.GetGuildAsync(gid, false);
+                                       var user = await _client.Rest.GetGuildUserAsync(gid, ctx.User.Id);
+                                       return (guild, user);
+                                   }
+                                   catch
+                                   {
+                                       return default;
+                                   }
+                               })
+                               .WhenAll();
+
+        var userInfo = guildUsers.FirstOrDefault(x => x.user?.PremiumSince is not null);
+        var booster = userInfo != default;
+
+        if (booster)
+            val += Config.BoostBonus.BaseTimelyBonus;
+
         var patron = await _ps.GetPatronAsync(ctx.User.Id);
 
         var percentBonus = (_ps.PercentBonus(patron) / 100f);
@@ -179,7 +285,21 @@ public partial class Gambling : GamblingModule<GamblingService>
 
         await _cs.AddAsync(ctx.User.Id, val, new("timely", "claim"));
 
-        await Response().Confirm(strs.timely(N(val), period)).Interaction(inter).SendAsync();
+        var msg = GetText(strs.timely(N(val), period));
+        if (booster || percentBonus > float.Epsilon)
+        {
+            msg += "\n\n";
+            if (booster)
+                msg += $"*+{N(Config.BoostBonus.BaseTimelyBonus)} bonus for boosting {userInfo.guild}!*\n";
+
+            if (percentBonus > float.Epsilon)
+                msg +=
+                    $"*+{percentBonus:P0} bonus for the [Patreon](https://patreon.com/nadekobot) pledge! <:hart:746995901758832712>*";
+
+            await Response().Confirm(msg).Interaction(inter).SendAsync();
+        }
+        else
+            await Response().Confirm(strs.timely(N(val), period)).Interaction(inter).SendAsync();
     }
 
     [Cmd]
@@ -272,6 +392,12 @@ public partial class Gambling : GamblingModule<GamblingService>
 
     [Cmd]
     [OwnerOnly]
+    [Priority(-1)]
+    public Task CurrencyTransactions([Leftover] ulong userId)
+        => InternalCurrencyTransactions(userId, 1);
+
+    [Cmd]
+    [OwnerOnly]
     [Priority(1)]
     public Task CurrencyTransactions(IUser usr, int page)
         => InternalCurrencyTransactions(usr.Id, page);
@@ -289,10 +415,11 @@ public partial class Gambling : GamblingModule<GamblingService>
             trs = await uow.Set<CurrencyTransaction>().GetPageFor(userId, page);
         }
 
-        var embed = _sender.CreateEmbed()
-                           .WithTitle(GetText(strs.transactions(((SocketGuild)ctx.Guild)?.GetUser(userId)?.ToString()
-                                                                ?? $"{userId}")))
-                           .WithOkColor();
+        var embed = CreateEmbed()
+                    .WithTitle(GetText(strs.transactions(
+                        ((SocketGuild)ctx.Guild)?.GetUser(userId)?.ToString()
+                        ?? $"{userId}")))
+                    .WithOkColor();
 
         var sb = new StringBuilder();
         foreach (var tr in trs)
@@ -339,7 +466,7 @@ public partial class Gambling : GamblingModule<GamblingService>
             return;
         }
 
-        var eb = _sender.CreateEmbed().WithOkColor();
+        var eb = CreateEmbed().WithOkColor();
 
         eb.WithAuthor(ctx.User);
         eb.WithTitle(GetText(strs.transaction));
@@ -547,7 +674,9 @@ public partial class Gambling : GamblingModule<GamblingService>
         }
         else
         {
-            await Response().Error(strs.take_fail(N(amount), Format.Bold(user.ToString()), CurrencySign)).SendAsync();
+            await Response()
+                  .Error(strs.take_fail(N(amount), Format.Bold(user.ToString()), CurrencySign))
+                  .SendAsync();
         }
     }
 
@@ -568,7 +697,9 @@ public partial class Gambling : GamblingModule<GamblingService>
         }
         else
         {
-            await Response().Error(strs.take_fail(N(amount), Format.Code(usrId.ToString()), CurrencySign)).SendAsync();
+            await Response()
+                  .Error(strs.take_fail(N(amount), Format.Code(usrId.ToString()), CurrencySign))
+                  .SendAsync();
         }
     }
 
@@ -592,18 +723,20 @@ public partial class Gambling : GamblingModule<GamblingService>
         string str;
         if (win > 0)
         {
-            str = GetText(strs.br_win(N(win), result.Threshold + (result.Roll == 100 ? " 👑" : "")));
+            str = GetText(strs.betroll_win(result.Threshold + (result.Roll == 100 ? " 👑" : "")));
         }
         else
         {
             str = GetText(strs.better_luck);
         }
 
-        var eb = _sender.CreateEmbed()
-                        .WithAuthor(ctx.User)
-                        .WithDescription(Format.Bold(str))
-                        .AddField(GetText(strs.roll2), result.Roll.ToString(CultureInfo.InvariantCulture))
-                        .WithOkColor();
+        var eb = CreateEmbed()
+                 .WithAuthor(ctx.User)
+                 .WithDescription(Format.Bold(str))
+                 .AddField(GetText(strs.roll2), result.Roll.ToString(CultureInfo.InvariantCulture), true)
+                 .AddField(GetText(strs.bet), N(amount), true)
+                 .AddField(GetText(strs.won), N((long)result.Won), true)
+                 .WithOkColor();
 
         await Response().Embed(eb).SendAsync();
     }
@@ -666,9 +799,9 @@ public partial class Gambling : GamblingModule<GamblingService>
               .CurrentPage(page)
               .Page((toSend, curPage) =>
               {
-                  var embed = _sender.CreateEmbed()
-                                     .WithOkColor()
-                                     .WithTitle(CurrencySign + " " + GetText(strs.leaderboard));
+                  var embed = CreateEmbed()
+                              .WithOkColor()
+                              .WithTitle(CurrencySign + " " + GetText(strs.leaderboard));
 
                   if (!toSend.Any())
                   {
@@ -729,7 +862,7 @@ public partial class Gambling : GamblingModule<GamblingService>
             return;
         }
 
-        var embed = _sender.CreateEmbed();
+        var embed = CreateEmbed();
 
         string msg;
         if (result.Result == RpsResultType.Draw)
@@ -738,9 +871,6 @@ public partial class Gambling : GamblingModule<GamblingService>
         }
         else if (result.Result == RpsResultType.Win)
         {
-            if ((long)result.Won > 0)
-                embed.AddField(GetText(strs.won), N((long)result.Won));
-
             msg = GetText(strs.rps_win(ctx.User.Mention,
                 GetRpsPick(pick),
                 GetRpsPick((InputRpsPick)result.ComputerPick)));
@@ -756,11 +886,20 @@ public partial class Gambling : GamblingModule<GamblingService>
             .WithOkColor()
             .WithDescription(msg);
 
+        if (amount > 0)
+        {
+            embed
+                .AddField(GetText(strs.bet), N(amount), true)
+                .AddField(GetText(strs.won), $"{N((long)result.Won)}", true);
+        }
+
         await Response().Embed(embed).SendAsync();
     }
 
     private static readonly ImmutableArray<string> _emojis =
         new[] { "⬆", "↖", "⬅", "↙", "⬇", "↘", "➡", "↗" }.ToImmutableArray();
+
+    private readonly NadekoRandom _rng;
 
 
     [Cmd]
@@ -791,12 +930,12 @@ public partial class Gambling : GamblingModule<GamblingService>
             sb.AppendLine();
         }
 
-        var eb = _sender.CreateEmbed()
-                        .WithOkColor()
-                        .WithDescription(sb.ToString())
-                        .AddField(GetText(strs.multiplier), $"{result.Multiplier:0.##}x", true)
-                        .AddField(GetText(strs.won), $"{(long)result.Won}", true)
-                        .WithAuthor(ctx.User);
+        var eb = CreateEmbed()
+                 .WithOkColor()
+                 .WithDescription(sb.ToString())
+                 .AddField(GetText(strs.bet), N(amount), true)
+                 .AddField(GetText(strs.won), $"{N((long)result.Won)}", true)
+                 .WithAuthor(ctx.User);
 
 
         await Response().Embed(eb).SendAsync();
@@ -898,6 +1037,47 @@ public partial class Gambling : GamblingModule<GamblingService>
               .Confirm(GetText(strs.test_results_for(target)),
                   sb.ToString(),
                   footer: $"Total Bet: {tests} | Payout: {payout:F0} | {payout * 1.0M / tests * 100}%")
+              .SendAsync();
+    }
+
+    private NadekoInteractionBase CreateRakebackInteraction()
+        => _inter.Create(ctx.User.Id,
+            new ButtonBuilder(
+                customId: "cash:rakeback",
+                emote: new Emoji("💸")),
+            RakebackAction);
+
+    private async Task RakebackAction(SocketMessageComponent arg)
+    {
+        var rb = await _rb.ClaimRakebackAsync(ctx.User.Id);
+
+        if (rb == 0)
+        {
+            await arg.DeferAsync();
+            return;
+        }
+
+        await arg.RespondAsync(_sender, GetText(strs.rakeback_claimed(N(rb))), MsgType.Ok);
+    }
+
+    [Cmd]
+    public async Task Rakeback()
+    {
+        var rb = await _rb.GetRakebackAsync(ctx.User.Id);
+
+        if (rb < 1)
+        {
+            await Response()
+                  .Error(strs.rakeback_none)
+                  .SendAsync();
+
+            return;
+        }
+
+        var inter = CreateRakebackInteraction();
+        await Response()
+              .Pending(strs.rakeback_available(N(rb)))
+              .Interaction(inter)
               .SendAsync();
     }
 }

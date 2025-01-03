@@ -1,5 +1,5 @@
 # DO NOT CHANGE
-version: 8
+version: 12
 # Currency settings
 currency:
   # What is the emoji/character which represents the currency
@@ -28,7 +28,7 @@ betRoll:
       multiplyBy: 10
     - whenAbove: 90
       multiplyBy: 4
-    - whenAbove: 66
+    - whenAbove: 64
       multiplyBy: 2
 # Automatic currency generation settings.
 generation:
@@ -56,6 +56,9 @@ timely:
   # How often (in hours) can users claim currency with .timely command
   # setting to 0 or less will disable this feature
   cooldown: 12
+  # How will timely be protected?
+  # None, Button (users have to click the button) or Captcha (users have to type the captcha from an image)
+  protType: Captcha
 # How much will each user's owned currency decay over time.
 decay:
   # Percentage of user's current currency which will be deducted every 24h.
@@ -82,7 +85,7 @@ luckyLadder:
     - 2.4
     - 1.7
     - 1.5
-    - 1.2
+    - 1.1
     - 0.5
     - 0.3
     - 0.2
@@ -125,12 +128,13 @@ waifu:
   # Settings for periodic waifu price decay.
   # Waifu price decays only if the waifu has no claimer.
   decay:
-    # Percentage (0 - 100) of the waifu value to reduce.
-    # Set 0 to disable
+    # Unclaimed waifus will decay by this percentage (0 - 100).
+    # Default is 0 (disabled)
     # For example if a waifu has a price of 500$, setting this value to 10 would reduce the waifu value by 10% (50$)
     unclaimedDecayPercent: 0
     # Claimed waifus will decay by this percentage (0 - 100).
     # Default is 0 (disabled)
+    # For example if a waifu has a price of 500$, setting this value to 10 would reduce the waifu value by 10% (50$)
     claimedDecayPercent: 0
     # How often to decay waifu values, in hours
     hourInterval: 24
@@ -270,3 +274,10 @@ voteReward: 100
 slots:
   # Hex value of the color which the numbers on the slot image will have.
   currencyFontColor: ff0000
+# Bonus config for server boosts
+boostBonus:
+  # Users will receive a bonus if they boost any of these servers
+  guildIds:
+    - 117523346618318850
+  # This bonus will be added before any other multiplier is applied to the .timely command
+  baseTimelyBonus: 50

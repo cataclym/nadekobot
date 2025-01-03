@@ -24,19 +24,22 @@ public partial class Administration
         private readonly IMedusaLoaderService _medusaLoader;
         private readonly ICoordinator _coord;
         private readonly DbService _db;
+        private readonly IBotActivityService _bas;
 
         public SelfCommands(
             DiscordSocketClient client,
             DbService db,
             IBotStrings strings,
             ICoordinator coord,
-            IMedusaLoaderService medusaLoader)
+            IMedusaLoaderService medusaLoader,
+            IBotActivityService bas)
         {
             _client = client;
             _db = db;
             _strings = strings;
             _coord = coord;
             _medusaLoader = medusaLoader;
+            _bas = bas;
         }
 
 
@@ -62,10 +65,10 @@ public partial class Administration
             var (added, updated) = await _service.RefreshUsersAsync(users);
 
             await message.ModifyAsync(x =>
-                x.Embed = _sender.CreateEmbed()
-                                 .WithDescription(GetText(strs.cache_users_done(added, updated)))
-                                 .WithOkColor()
-                                 .Build()
+                x.Embed = CreateEmbed()
+                          .WithDescription(GetText(strs.cache_users_done(added, updated)))
+                          .WithOkColor()
+                          .Build()
             );
         }
 
@@ -115,14 +118,14 @@ public partial class Administration
             _service.AddNewAutoCommand(cmd);
 
             await Response()
-                  .Embed(_sender.CreateEmbed()
-                                .WithOkColor()
-                                .WithTitle(GetText(strs.scadd))
-                                .AddField(GetText(strs.server),
-                                    cmd.GuildId is null ? "-" : $"{cmd.GuildName}/{cmd.GuildId}",
-                                    true)
-                                .AddField(GetText(strs.channel), $"{cmd.ChannelName}/{cmd.ChannelId}", true)
-                                .AddField(GetText(strs.command_text), cmdText))
+                  .Embed(CreateEmbed()
+                         .WithOkColor()
+                         .WithTitle(GetText(strs.scadd))
+                         .AddField(GetText(strs.server),
+                             cmd.GuildId is null ? "-" : $"{cmd.GuildName}/{cmd.GuildId}",
+                             true)
+                         .AddField(GetText(strs.channel), $"{cmd.ChannelName}/{cmd.ChannelId}", true)
+                         .AddField(GetText(strs.command_text), cmdText))
                   .SendAsync();
         }
 
@@ -343,7 +346,7 @@ public partial class Administration
                       if (string.IsNullOrWhiteSpace(str))
                           str = GetText(strs.no_shards_on_page);
 
-                      return _sender.CreateEmbed().WithOkColor().WithDescription($"{status}\n\n{str}");
+                      return CreateEmbed().WithOkColor().WithDescription($"{status}\n\n{str}");
                   })
                   .SendAsync();
         }
@@ -496,7 +499,7 @@ public partial class Administration
             // var rep = new ReplacementBuilder().WithDefault(Context).Build();
 
             var repCtx = new ReplacementContext(ctx);
-            await _service.SetActivityAsync(game is null ? game : await repSvc.ReplaceAsync(game, repCtx), type);
+            await _bas.SetActivityAsync(game is null ? game : await repSvc.ReplaceAsync(game, repCtx), type);
 
             await Response().Confirm(strs.set_activity).SendAsync();
         }
@@ -518,7 +521,7 @@ public partial class Administration
         {
             name ??= "";
 
-            await _service.SetStreamAsync(name, url);
+            await _bas.SetStreamAsync(name, url);
 
             await Response().Confirm(strs.set_stream).SendAsync();
         }

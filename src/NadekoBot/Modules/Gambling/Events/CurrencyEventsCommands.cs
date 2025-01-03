@@ -9,7 +9,7 @@ namespace NadekoBot.Modules.Gambling;
 public partial class Gambling
 {
     [Group]
-    public partial class CurrencyEventsCommands : GamblingSubmodule<CurrencyEventsService>
+    public partial class CurrencyEventsCommands : GamblingModule<CurrencyEventsService>
     {
         public CurrencyEventsCommands(GamblingConfigService gamblingConf)
             : base(gamblingConf)
@@ -30,12 +30,12 @@ public partial class Gambling
         private EmbedBuilder GetEmbed(CurrencyEvent.Type type, EventOptions opts, long currentPot)
             => type switch
             {
-                CurrencyEvent.Type.Reaction => _sender.CreateEmbed()
+                CurrencyEvent.Type.Reaction => CreateEmbed()
                                                   .WithOkColor()
                                                   .WithTitle(GetText(strs.event_title(type.ToString())))
                                                   .WithDescription(GetReactionDescription(opts.Amount, currentPot))
                                                   .WithFooter(GetText(strs.event_duration_footer(opts.Hours))),
-                CurrencyEvent.Type.GameStatus => _sender.CreateEmbed()
+                CurrencyEvent.Type.GameStatus => CreateEmbed()
                                                     .WithOkColor()
                                                     .WithTitle(GetText(strs.event_title(type.ToString())))
                                                     .WithDescription(GetGameStatusDescription(opts.Amount, currentPot))

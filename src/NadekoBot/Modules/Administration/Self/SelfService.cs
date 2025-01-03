@@ -28,7 +28,6 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
     private readonly IMessageSenderService _sender;
 
     //keys
-    private readonly TypedKey<ActivityPubData> _activitySetKey;
     private readonly TypedKey<string> _guildLeaveKey;
 
     public SelfService(
@@ -51,10 +50,7 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
         _bss = bss;
         _pubSub = pubSub;
         _sender = sender;
-        _activitySetKey = new("activity.set");
         _guildLeaveKey = new("guild.leave");
-
-        HandleStatusChanges();
 
         _pubSub.Sub(_guildLeaveKey,
             async input =>
@@ -71,7 +67,6 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
                 if (server.OwnerId != _client.CurrentUser.Id)
                 {
                     await server.LeaveAsync();
-                    Log.Information("Left server {Name} [{Id}]", server.Name, server.Id);
                 }
                 else
                 {
@@ -395,49 +390,6 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
         return channelId is not null;
     }
 
-    private void HandleStatusChanges()
-        => _pubSub.Sub(_activitySetKey,
-            async data =>
-            {
-                try
-                {
-                    if (data.Type is { } activityType)
-                        await _client.SetGameAsync(data.Name, data.Link, activityType);
-                    else
-                        await _client.SetCustomStatusAsync(data.Name);
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning(ex, "Error setting activity");
-                }
-            });
-
-    public Task SetActivityAsync(string game, ActivityType? type)
-        => _pubSub.Pub(_activitySetKey,
-            new()
-            {
-                Name = game,
-                Link = null,
-                Type = type
-            });
-
-    public Task SetStreamAsync(string name, string link)
-        => _pubSub.Pub(_activitySetKey,
-            new()
-            {
-                Name = name,
-                Link = link,
-                Type = ActivityType.Streaming
-            });
-
-    private sealed class ActivityPubData
-    {
-        public string Name { get; init; }
-        public string Link { get; init; }
-        public ActivityType? Type { get; init; }
-    }
-
-
     /// <summary>
     /// Adds the specified <paramref name="users"/> to the database. If a database user with placeholder name
     /// and discriminator is present in <paramref name="users"/>, their name and discriminator get updated accordingly.
@@ -453,7 +405,6 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
                                       {
                                           x.UserId,
                                           x.Username,
-                                          x.Discriminator
                                       })
                                       .Where(x => users.Select(y => y.Id).Contains(x.UserId))
                                       .ToArrayAsyncEF();
@@ -465,12 +416,11 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
                              UserId = x.Id,
                              AvatarId = x.AvatarId,
                              Username = x.Username,
-                             Discriminator = x.Discriminator
                          });
 
         var added = (await ctx.BulkCopyAsync(usersToAdd)).RowsCopied;
         var toUpdateUserIds = presentDbUsers
-                              .Where(x => x.Username == "Unknown" && x.Discriminator == "????")
+                              .Where(x => x.Username.StartsWith("??"))
                               .Select(x => x.UserId)
                               .ToArray();
 
@@ -481,7 +431,6 @@ public sealed class SelfService : IExecNoCommand, IReadyExecutor, INService
                      .UpdateAsync(x => new DiscordUser()
                      {
                          Username = user.Username,
-                         Discriminator = user.Discriminator,
 
                          // .award tends to set AvatarId and DateAdded to NULL, so account for that.
                          AvatarId = user.AvatarId,

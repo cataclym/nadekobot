@@ -6,6 +6,14 @@ public partial class Searches
     [Group]
     public partial class TranslateCommands : NadekoModule<ITranslateService>
     {
+        private readonly FlagTranslateService _flagSvc;
+
+        public TranslateCommands(FlagTranslateService flagSvc)
+        {
+            _flagSvc = flagSvc;
+        }
+
+
         public enum AutoDeleteAutoTranslate
         {
             Del,
@@ -20,9 +28,19 @@ public partial class Searches
                 await ctx.Channel.TriggerTypingAsync();
                 var translation = await _service.Translate(fromLang, toLang, text);
 
-                var embed = _sender.CreateEmbed().WithOkColor().AddField(fromLang, text).AddField(toLang, translation);
+                var embed = CreateEmbed()
+                            .WithOkColor()
+                            .WithTitle(fromLang)
+                            .WithDescription(text);
 
-                await Response().Embed(embed).SendAsync();
+                var embed2 = CreateEmbed()
+                             .WithOkColor()
+                             .WithTitle(toLang)
+                             .WithDescription(translation);
+
+                await Response()
+                      .Embeds([embed, embed2])
+                      .SendAsync();
             }
             catch
             {
@@ -57,7 +75,10 @@ public partial class Searches
         [RequireContext(ContextType.Guild)]
         public async Task AutoTransLang(string fromLang, string toLang)
         {
-            var succ = await _service.RegisterUserAsync(ctx.User.Id, ctx.Channel.Id, fromLang.ToLower(), toLang.ToLower());
+            var succ = await _service.RegisterUserAsync(ctx.User.Id,
+                ctx.Channel.Id,
+                fromLang.ToLower(),
+                toLang.ToLower());
 
             if (succ is null)
             {
@@ -79,10 +100,10 @@ public partial class Searches
         public async Task Translangs()
         {
             var langs = _service.GetLanguages().ToList();
-            
-            var eb = _sender.CreateEmbed()
-                        .WithTitle(GetText(strs.supported_languages))
-                        .WithOkColor();
+
+            var eb = CreateEmbed()
+                     .WithTitle(GetText(strs.supported_languages))
+                     .WithOkColor();
 
             foreach (var chunk in langs.Chunk(15))
             {
@@ -90,6 +111,19 @@ public partial class Searches
             }
 
             await Response().Embed(eb).SendAsync();
+        }
+
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(ChannelPermission.ManageChannels)]
+        [BotPerm(ChannelPermission.SendMessages | ChannelPermission.EmbedLinks)]
+        public async Task TranslateFlags()
+        {
+            var enabled = await _flagSvc.Toggle(ctx.Guild.Id, ctx.Channel.Id);
+            if (enabled)
+                await Response().Confirm(strs.trfl_enabled).SendAsync();
+            else
+                await Response().Confirm(strs.trfl_disabled).SendAsync();
         }
     }
 }

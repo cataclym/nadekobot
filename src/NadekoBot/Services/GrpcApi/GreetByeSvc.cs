@@ -3,7 +3,7 @@ using GreetType = NadekoBot.Services.GreetType;
 
 namespace NadekoBot.GrpcApi;
 
-public sealed class GreetByeSvc : GrpcGreet.GrpcGreetBase, INService
+public sealed class GreetByeSvc : GrpcGreet.GrpcGreetBase, IGrpcSvc, INService
 {
     private readonly GreetService _gs;
     private readonly DiscordSocketClient _client;
@@ -14,10 +14,16 @@ public sealed class GreetByeSvc : GrpcGreet.GrpcGreetBase, INService
         _client = client;
     }
 
-    private static GrpcGreetSettings ToConf(GreetSettings? conf)
+    public ServerServiceDefinition Bind()
+        => GrpcGreet.BindService(this);
+
+    private static GrpcGreetSettings ToConf(GreetSettings? conf, GreetType type)
     {
         if (conf is null)
-            return new GrpcGreetSettings();
+            return new GrpcGreetSettings()
+            {
+                Type = (GrpcGreetType)type
+            };
 
         return new GrpcGreetSettings()
         {
@@ -32,9 +38,10 @@ public sealed class GreetByeSvc : GrpcGreet.GrpcGreetBase, INService
     {
         var guildId = request.GuildId;
 
-        var conf = await _gs.GetGreetSettingsAsync(guildId, (GreetType)request.Type);
+        var type = (GreetType)request.Type;
+        var conf = await _gs.GetGreetSettingsAsync(guildId, type);
 
-        return ToConf(conf);
+        return ToConf(conf, type);
     }
 
     public override async Task<UpdateGreetReply> UpdateGreet(UpdateGreetRequest request, ServerCallContext context)
@@ -50,11 +57,14 @@ public sealed class GreetByeSvc : GrpcGreet.GrpcGreetBase, INService
         var settings = await _gs.GetGreetSettingsAsync(gid, type);
 
         if (settings is null)
-            return new();
-        
+            return new()
+            {
+                Success = false
+            };
+
         return new()
         {
-            Settings = ToConf(settings)
+            Success = true
         };
     }
 

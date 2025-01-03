@@ -57,8 +57,7 @@ public static class GuildConfigExtensions
         List<ulong> availableGuilds)
     {
         var result = await configs
-                           .AsQueryable()
-                           .Include(x => x.CommandCooldowns)
+                           .IncludeEverything()
                            .Where(x => availableGuilds.Contains(x.GuildId))
                            .AsNoTracking()
                            .ToArrayAsync();
@@ -96,7 +95,6 @@ public static class GuildConfigExtensions
                    GuildId = guildId,
                    Permissions = Permissionv2.GetDefaultPermlist,
                    WarningsInitialized = true,
-                   WarnPunishments = DefaultWarnPunishments
                });
             ctx.SaveChanges();
         }
@@ -104,7 +102,6 @@ public static class GuildConfigExtensions
         if (!config.WarningsInitialized)
         {
             config.WarningsInitialized = true;
-            config.WarnPunishments = DefaultWarnPunishments;
         }
 
         return config;

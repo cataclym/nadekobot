@@ -396,6 +396,21 @@
     },
     {
       "Aliases": [
+        ".leaveunkeptservers"
+      ],
+      "Description": "Leaves all servers whose owners didn't run .keep",
+      "Usage": [
+        ".leaveunkeptservers"
+      ],
+      "Submodule": "CleanupCommands",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
         ".sqlselect"
       ],
       "Description": "Executes provided sql query and returns the results. Dangerous.",
@@ -586,13 +601,11 @@
     },
     {
       "Aliases": [
-        ".greetdel",
-        ".grdel"
+        ".greet"
       ],
-      "Description": "Sets the time it takes (in seconds) for greet messages to be auto-deleted. Set it to `0` to disable automatic deletion.",
+      "Description": "Toggles announcements on the current channel when someone joins the server.",
       "Usage": [
-        ".greetdel 0",
-        ".greetdel 30"
+        ".greet"
       ],
       "Submodule": "GreetCommands",
       "Module": "Administration",
@@ -603,11 +616,13 @@
     },
     {
       "Aliases": [
-        ".greet"
+        ".greetdel",
+        ".grdel"
       ],
-      "Description": "Toggles announcements on the current channel when someone joins the server.",
+      "Description": "Sets the time it takes (in seconds) for greet messages to be auto-deleted. Set it to `0` to disable automatic deletion.",
       "Usage": [
-        ".greet"
+        ".greetdel 0",
+        ".greetdel 30"
       ],
       "Submodule": "GreetCommands",
       "Module": "Administration",
@@ -678,21 +693,6 @@
     },
     {
       "Aliases": [
-        ".byemsg"
-      ],
-      "Description": "Sets a new leave announcement message which will be shown in the current channel. \nUsing this command with no message will show the current bye message. \nSupports [placeholders](https://docs.nadeko.bot/en/latest/placeholders/) and [embeds](https://eb.nadeko.bot/)",
-      "Usage": [
-        ".byemsg %user.name% has left."
-      ],
-      "Submodule": "GreetCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": [
-        "ManageServer Server Permission"
-      ]
-    },
-    {
-      "Aliases": [
         ".byedel"
       ],
       "Description": "Sets the time it takes (in seconds) for bye messages to be auto-deleted. Set it to `0` to disable automatic deletion.",
@@ -709,12 +709,11 @@
     },
     {
       "Aliases": [
-        ".byetest"
+        ".byemsg"
       ],
-      "Description": "Sends the bye message in the current channel as if you just left the server. You can optionally specify a different user.",
+      "Description": "Sets a new leave announcement message which will be shown in the current channel. \nUsing this command with no message will show the current bye message. \nSupports [placeholders](https://docs.nadeko.bot/en/latest/placeholders/) and [embeds](https://eb.nadeko.bot/)",
       "Usage": [
-        ".byetest",
-        ".byetest @SomeoneElse"
+        ".byemsg %user.name% has left."
       ],
       "Submodule": "GreetCommands",
       "Module": "Administration",
@@ -747,6 +746,22 @@
       "Usage": [
         ".greetdmtest",
         ".greetdmtest @SomeoneElse"
+      ],
+      "Submodule": "GreetCommands",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageServer Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".byetest"
+      ],
+      "Description": "Sends the bye message in the current channel as if you just left the server. You can optionally specify a different user.",
+      "Usage": [
+        ".byetest",
+        ".byetest @SomeoneElse"
       ],
       "Submodule": "GreetCommands",
       "Module": "Administration",
@@ -948,6 +963,56 @@
     },
     {
       "Aliases": [
+        ".notify",
+        ".nfy"
+      ],
+      "Description": "Sends a message to the current channel once the specified event occurs.\nProvide no parameters to see all available events.",
+      "Usage": [
+        ".notify levelup Congratulations to user %user.name% for reaching level %event.level%"
+      ],
+      "Submodule": "NotifyCommands",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
+        ".notifylist",
+        ".notifyl"
+      ],
+      "Description": "Lists all active notifications in this server.",
+      "Usage": [
+        ".notifylist"
+      ],
+      "Submodule": "NotifyCommands",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
+        ".notifyclear",
+        ".notifyremove",
+        ".notifyrm",
+        ".notifclr"
+      ],
+      "Description": "Removes the specified notify event.",
+      "Usage": [
+        ".notifyclear levelup"
+      ],
+      "Submodule": "NotifyCommands",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
         ".dpo"
       ],
       "Description": "Overrides required user permissions that the command has with the specified ones. You can only use server-level permissions. This action will make the bot ignore user permission requirements which command has by default. Provide no permissions to reset to default.",
@@ -1090,7 +1155,7 @@
       "Aliases": [
         ".antialt"
       ],
-      "Description": "Applies a punishment action to any user whose account is younger than the specified threshold. Specify time after the punishment to have a timed punishment (not all punishments support timers).",
+      "Description": "Applies a punishment action to any user whose account is younger than the specified threshold. \nAvailable Punishments are: Ban, Kick, Softban, Mute, VoiceMute, ChatMute, RemoveRoles, AddRole, Warn, TimeOut\nYou can specify an additional time argument to do a timed punishment for actions which support it (Ban, Mute, etc) up to 24h.\nMax message count is 10.\nProvide no parameters to disable.",
       "Usage": [
         ".antialt 1h Ban",
         ".antialt 3d Mute 1h"
@@ -1106,7 +1171,7 @@
       "Aliases": [
         ".antiraid"
       ],
-      "Description": "Sets an anti-raid protection on the server. Provide no parameters to disable. First parameter is number of people which will trigger the protection. Second parameter is a time interval in which that number of people needs to join in order to trigger the protection, and third parameter is punishment for those people. You can specify an additional time argument to do a timed punishment for actions which support it (Ban, Mute, etc) up to 24h. Available punishments: Ban, Kick, Softban, Mute, VoiceMute, ChatMute, RemoveRoles, AddRole, Warn, TimeOut",
+      "Description": "Sets an anti-raid protection on the server.\n\nFirst parameter is number of people which will trigger the protection.\n\nSecond parameter is a time interval in which that number of people needs to join in order to trigger the protection.\n\nThird parameter is punishment for those people.\nAvailable punishments: Ban, Kick, Softban, Mute, VoiceMute, ChatMute, RemoveRoles, AddRole, Warn, TimeOut\nYou can specify an additional time argument to do a timed punishment for actions which support it (Ban, Mute, etc) up to 24h.\n\nProvide no parameters to disable.",
       "Usage": [
         ".antiraid 5 20 Kick",
         ".antiraid 7 9 Ban",
@@ -1124,7 +1189,7 @@
       "Aliases": [
         ".antispam"
       ],
-      "Description": "Stops people from repeating same message X times in a row. Provide no parameters to disable. You can specify to either mute, kick or ban the offenders. You can specify an additional time argument to do a timed punishment for actions which support it (Ban, Mute, etc) up to 24h. Max message count is 10. Available punishments: Ban, Kick, Softban, Mute, VoiceMute, ChatMute, AddRole, RemoveRoles, Warn, TimeOut",
+      "Description": "Applies a Punishment to people who repeat the same message X times in a row.\nAvailable Punishments are: Ban, Kick, Softban, Mute, VoiceMute, ChatMute, RemoveRoles, AddRole, Warn, TimeOut\nYou can specify an additional time argument to do a timed punishment for actions which support it (Ban, Mute, etc) up to 24h.\nMax message count is 10. \nProvide no parameters to disable.",
       "Usage": [
         ".antispam 3 Mute",
         ".antispam 5 Ban",
@@ -1206,6 +1271,80 @@
       "Requirements": [
         "ManageMessages Channel Permission"
       ]
+    },
+    {
+      "Aliases": [
+        ".btr add",
+        ".btr a"
+      ],
+      "Description": "Adds a button role to the specified message (link or id).\nSpecify a message followed by an emote, followed by a role.\nIf the role already exists on that message, the button will be updated instead.\nUsers clicking on the button will receive the role.",
+      "Usage": [
+        ".btr add <msglink> :thumbsup: Good Guy"
+      ],
+      "Submodule": "btr",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".btr rem",
+        ".btr r",
+        ".btr rm"
+      ],
+      "Description": "Removes a button role from the message specified by link or id.\nProvide a message followed by a role you wish to remove.",
+      "Usage": [
+        ".btr rem <msglink> Good Guy"
+      ],
+      "Submodule": "btr",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".btr removeall",
+        ".btr rma"
+      ],
+      "Description": "Removes all button roles from the message specified by link or id.",
+      "Usage": [
+        ".btr removeall <msglink>",
+        ".btr removeall 123123123123"
+      ],
+      "Submodule": "btr",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".btr list",
+        ".btr l",
+        ".btr ls"
+      ],
+      "Description": "Lists all button roles on this server.\nOne message per page.",
+      "Usage": [
+        ".btr list"
+      ],
+      "Submodule": "btr",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".btr excl",
+        ".btr e"
+      ],
+      "Description": "Toggles whether button roles are exclusive or not.\nIf enabled, users can only pick one role from the buttons per message.\nIf disabled, users can pick any number of roles.",
+      "Usage": [
+        ".btr excl 123123123 enable",
+        ".btr excl 123123123 disable"
+      ],
+      "Submodule": "btr",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": []
     },
     {
       "Aliases": [
@@ -1436,113 +1575,18 @@
     },
     {
       "Aliases": [
-        ".adsarm"
+        ".temprole"
       ],
-      "Description": "Toggles the automatic deletion of the user's message and Nadeko's confirmations for `.iam` and `.iamn` commands.",
+      "Description": "Grants a user a temporary role for the specified number of time.\nThe role must exist and be lower in the role hierarchy than your highest role.",
       "Usage": [
-        ".adsarm"
+        ".temprole 15m @User Jail",
+        ".temprole 7d @Newbie Trial Member"
       ],
-      "Submodule": "SelfAssignedRolesCommands",
+      "Submodule": "RoleCommands",
       "Module": "Administration",
       "Options": null,
       "Requirements": [
-        "ManageMessages Server Permission"
-      ]
-    },
-    {
-      "Aliases": [
-        ".asar"
-      ],
-      "Description": "Adds a role to the list of self-assignable roles. You can also specify a group. If 'Exclusive self-assignable roles' feature is enabled (`.tesar`), users will be able to pick one role per group.",
-      "Usage": [
-        ".asar Gamer",
-        ".asar 1 Alliance",
-        ".asar 1 Horde"
-      ],
-      "Submodule": "SelfAssignedRolesCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": [
-        "ManageRoles Server Permission"
-      ]
-    },
-    {
-      "Aliases": [
-        ".sargn"
-      ],
-      "Description": "Sets a self assignable role group name. Provide no name to remove.",
-      "Usage": [
-        ".sargn 1 Faction",
-        ".sargn 2"
-      ],
-      "Submodule": "SelfAssignedRolesCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": [
-        "ManageRoles Server Permission"
-      ]
-    },
-    {
-      "Aliases": [
-        ".rsar"
-      ],
-      "Description": "Removes a specified role from the list of self-assignable roles.",
-      "Usage": [
-        ".rsar Gamer",
-        ".rsar Alliance",
-        ".rsar Horde"
-      ],
-      "Submodule": "SelfAssignedRolesCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": [
-        "ManageRoles Server Permission"
-      ]
-    },
-    {
-      "Aliases": [
-        ".lsar"
-      ],
-      "Description": "Lists self-assignable roles. Shows 20 roles per page.",
-      "Usage": [
-        ".lsar",
-        ".lsar 2"
-      ],
-      "Submodule": "SelfAssignedRolesCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": []
-    },
-    {
-      "Aliases": [
-        ".togglexclsar",
-        ".tesar"
-      ],
-      "Description": "Toggles whether self-assigned roles are exclusive. While enabled, users can only have one self-assignable role per group.",
-      "Usage": [
-        ".togglexclsar"
-      ],
-      "Submodule": "SelfAssignedRolesCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": [
-        "ManageRoles Server Permission"
-      ]
-    },
-    {
-      "Aliases": [
-        ".rolelevelreq",
-        ".rlr"
-      ],
-      "Description": "Set a level requirement on a self-assignable role.",
-      "Usage": [
-        ".rolelevelreq 5 SomeRole"
-      ],
-      "Submodule": "SelfAssignedRolesCommands",
-      "Module": "Administration",
-      "Options": null,
-      "Requirements": [
-        "ManageRoles Server Permission"
+        "Administrator Server Permission"
       ]
     },
     {
@@ -1553,7 +1597,7 @@
       "Usage": [
         ".iam Gamer"
       ],
-      "Submodule": "SelfAssignedRolesCommands",
+      "Submodule": "SelfAssignedRolesHelpers",
       "Module": "Administration",
       "Options": null,
       "Requirements": []
@@ -1567,10 +1611,168 @@
       "Usage": [
         ".iamnot Gamer"
       ],
-      "Submodule": "SelfAssignedRolesCommands",
+      "Submodule": "SelfAssignedRolesHelpers",
       "Module": "Administration",
       "Options": null,
       "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".sar ad",
+        ".sar autodel",
+        ".sar adsarm"
+      ],
+      "Description": "Toggles the automatic deletion of the user's message and Nadeko's confirmations for `.iam` and `.iamn` commands.",
+      "Usage": [
+        ".sar ad"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageMessages Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar add",
+        ".sar a",
+        ".sar asar"
+      ],
+      "Description": "Adds a role to the list of self-assignable roles. You can also specify a group. If 'Exclusive self-assignable roles' feature is enabled (`.tesar`), users will be able to pick one role per group.",
+      "Usage": [
+        ".sar add Gamer",
+        ".sar add 1 Alliance",
+        ".sar add 1 Horde"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar groupname",
+        ".sar gn",
+        ".sar sargn"
+      ],
+      "Description": "Sets a self assignable role group name. Provide no name to remove.",
+      "Usage": [
+        ".sar groupname 1 Faction",
+        ".sar groupname 2"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar remove",
+        ".sar rm",
+        ".sar rem",
+        ".sar rsar"
+      ],
+      "Description": "Removes a specified role from the list of self-assignable roles.",
+      "Usage": [
+        ".sar remove Gamer",
+        ".sar remove Alliance",
+        ".sar remove Horde"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar list",
+        ".sar l",
+        ".sar ls",
+        ".sar lsar"
+      ],
+      "Description": "Lists self-assignable roles. Shows 20 roles per page.",
+      "Usage": [
+        ".sar list",
+        ".sar list 2"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".sar exclusive",
+        ".sar ex",
+        ".sar excl",
+        ".sar tesar"
+      ],
+      "Description": "Toggles the sar group as exclusive.\nWhile enabled, users can only have one self-assignable role from that group.",
+      "Usage": [
+        ".sar exclusive 1"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar rolelvlreq",
+        ".sar rlr"
+      ],
+      "Description": "Set a level requirement on a self-assignable role.",
+      "Usage": [
+        ".sar rolelvlreq 5 SomeRole"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar grouprolereq",
+        ".sar grr"
+      ],
+      "Description": "Set a role that users have to have in order to assign a self-assignable role from the specified group.",
+      "Usage": [
+        ".sar grouprolereq 1 SomeRole"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sar groupdelete",
+        ".sar gd",
+        ".sar gdel"
+      ],
+      "Description": "Deletes a self-assignable role group",
+      "Usage": [
+        ".sar groupdelete 0"
+      ],
+      "Submodule": "sar",
+      "Module": "Administration",
+      "Options": null,
+      "Requirements": [
+        "ManageRoles Server Permission"
+      ]
     },
     {
       "Aliases": [
@@ -1939,13 +2141,14 @@
     },
     {
       "Aliases": [
+        ".setactivity",
         ".setgame"
       ],
-      "Description": "Sets the bots game status to either Playing, Listening, or Watching.",
+      "Description": "Sets the bots game status to a Custom, Playing, Listening, or Watching status.",
       "Usage": [
-        ".setgame Playing with snakes.",
-        ".setgame Watching anime.",
-        ".setgame Listening music."
+        ".setactivity Just chilling",
+        ".setactivity Playing with snakes",
+        ".setactivity Listening music"
       ],
       "Submodule": "SelfCommands",
       "Module": "Administration",
@@ -2742,19 +2945,6 @@
   "Gambling": [
     {
       "Aliases": [
-        ".betstats"
-      ],
-      "Description": "Shows the total stats of several gambling features.\nUpdates once an hour.",
-      "Usage": [
-        ".betstats"
-      ],
-      "Submodule": "Gambling",
-      "Module": "Gambling",
-      "Options": null,
-      "Requirements": []
-    },
-    {
-      "Aliases": [
         ".timely"
       ],
       "Description": "Use to claim your timely currency.\nThis is usually set by the bot owners to be daily, hourly or once every 12 hours.\nBot owner has to specify the amount and the period on how often you can claim your currency.",
@@ -2923,7 +3113,7 @@
         ".betroll",
         ".br"
       ],
-      "Description": "Bets the specified amount of currency and rolls a dice.\nRolling over 66 yields x2 of your currency, over 90 - x4 and 100 x10.\nYou can specify 'all', 'half' or 'X%' instead of the amount to bet that part of your current balance.",
+      "Description": "Bets the specified amount of currency and rolls a dice.\nRolling over 65 yields x2 of your currency, over 90 - x4 and 100 x10.\nYou can specify 'all', 'half' or 'X%' instead of the amount to bet that part of your current balance.",
       "Usage": [
         ".betroll 5"
       ],
@@ -2995,6 +3185,20 @@
       "Requirements": [
         "Bot Owner Only"
       ]
+    },
+    {
+      "Aliases": [
+        ".rakeback",
+        ".rb"
+      ],
+      "Description": "Try to claim any rakeback that you have available.\nRakeback is accumulated by betting (not by winning or losing).\nDefault rakeback is 0.05 * house edge\nHouse edge is defined per game",
+      "Usage": [
+        ".rakeback"
+      ],
+      "Submodule": "Gambling",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": []
     },
     {
       "Aliases": [
@@ -3097,6 +3301,85 @@
         ".bank award 99999 @Bestie"
       ],
       "Submodule": "Bank",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
+        ".betstatsreset",
+        ".bsr",
+        ".bsreset"
+      ],
+      "Description": "Reset all of your Bet Stats for a fee.\nYou can alternatively reset Bet Stats for the specified game.",
+      "Usage": [
+        ".betstatsreset",
+        ".betstatsreset game"
+      ],
+      "Submodule": "BetStatsCommands",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".betstats",
+        ".bs"
+      ],
+      "Description": "Shows the current bet stats for yourself, or the targetted user.\nYou may optionally specify the game to show stats for.\nSupported games right now are: bf, br, bd, lula, slot, race",
+      "Usage": [
+        ".betstats",
+        ".betstats @someone",
+        ".betstats @someone lula",
+        ".betstats bd"
+      ],
+      "Submodule": "BetStatsCommands",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".winlb",
+        ".wins"
+      ],
+      "Description": "Shows the biggest wins leaderboard",
+      "Usage": [
+        ".winlb",
+        ".winlb 5"
+      ],
+      "Submodule": "BetStatsCommands",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".gamblestats",
+        ".gs"
+      ],
+      "Description": "Shows the total stats of several gambling features.\nUpdates once an hour.",
+      "Usage": [
+        ".gamblestats"
+      ],
+      "Submodule": "BetStatsCommands",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".gamblestatsreset",
+        ".gsr",
+        ".gsreset"
+      ],
+      "Description": "Resets the gamble stats.",
+      "Usage": [
+        ".gamblestatsreset"
+      ],
+      "Submodule": "BetStatsCommands",
       "Module": "Gambling",
       "Options": null,
       "Requirements": [
@@ -3569,8 +3852,24 @@
     },
     {
       "Aliases": [
+        ".waifuclaims",
+        ".claims",
+        ".wcs"
+      ],
+      "Description": "Shows all of your currently claimed waifus.",
+      "Usage": [
+        ".waifuclaims"
+      ],
+      "Submodule": "WaifuClaimCommands",
+      "Module": "Gambling",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
         ".waifuclaim",
-        ".claim"
+        ".claim",
+        ".wc"
       ],
       "Description": "Claim a waifu for yourself by spending currency.  You must spend at least 10% more than her current value unless she set `.affinity` towards you.",
       "Usage": [
@@ -3674,7 +3973,7 @@
       "Aliases": [
         ".choose"
       ],
-      "Description": "Chooses a thing from a list of things",
+      "Description": "Chooses a thing from a list of things. Separate items with a semicolon ;",
       "Usage": [
         ".choose Get up;Sleep;Sleep more"
       ],
@@ -3691,6 +3990,20 @@
       "Description": "Ask the 8ball a yes/no question.",
       "Usage": [
         ".eightball Is b1nzy a nice guy?"
+      ],
+      "Submodule": "Games",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".minesweeper",
+        ".mw"
+      ],
+      "Description": "Creates a spoiler-based minesweeper mini game.\nYou may specify the number of mines.",
+      "Usage": [
+        ".minesweeper 15"
       ],
       "Submodule": "Games",
       "Module": "Games",
@@ -3771,6 +4084,98 @@
       "Module": "Games",
       "Options": null,
       "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".ncanvas",
+        ".nc",
+        ".ncanv"
+      ],
+      "Description": "Shows the current nCanvas.\nThe canvas allows users to set each pixel's color and text using currency.",
+      "Usage": [
+        ".ncanvas"
+      ],
+      "Submodule": "NCanvasCommands",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".nczoom",
+        ".ncz"
+      ],
+      "Description": "Zooms in on the nCanvas.\nBot will show the 10x10 grid with the position of each cell for use with `ncset`.\nYou can either use alphanumeric position (ex. s4u) or pixel x and y (ex. 123 123)",
+      "Usage": [
+        ".nczoom sgu",
+        ".nczoom 123 123"
+      ],
+      "Submodule": "NCanvasCommands",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".ncsetpixel",
+        ".ncsp",
+        ".ncs"
+      ],
+      "Description": "Sets a pixel's color and text on the nCanvas.\nYou must specify the position of the pixel to set in alphanumeric format.\nYou can obtain alphanumeric position of the pixel by using `nczoom` or `ncp <x> <y>`",
+      "Usage": [
+        ".ncsetpixel sgu #ff0000 Some text"
+      ],
+      "Submodule": "NCanvasCommands",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".ncpixel",
+        ".ncp",
+        ".ncgp"
+      ],
+      "Description": "Shows the pixel at the specified position.\nYou can get pixel positions by using `nczoom`",
+      "Usage": [
+        ".ncpixel sgu",
+        ".ncpixel 123 123"
+      ],
+      "Submodule": "NCanvasCommands",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".ncsetimg",
+        ".ncsi"
+      ],
+      "Description": "Attach the image to the message sending the command to overwrite the nCanvas with it.\nAll prices and colors will be reset.\nThe image must be equal to the size of the nCanvas (default is 500x350)\nThis command is dangerous and irreversible.",
+      "Usage": [
+        ".ncsetimg"
+      ],
+      "Submodule": "NCanvasCommands",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
+        ".ncreset"
+      ],
+      "Description": "Clears the nCanvas.\nAll prices and colors will be reset.\nThis command is dangerous and irreversible.",
+      "Usage": [
+        ".ncreset"
+      ],
+      "Submodule": "NCanvasCommands",
+      "Module": "Games",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
     },
     {
       "Aliases": [
@@ -4581,6 +4986,22 @@
     },
     {
       "Aliases": [
+        ".wrongsong",
+        ".wrongtrack"
+      ],
+      "Description": "Removes the last queued song.\nIf the queue was shuffled or fairly re-ordered the song will not be removed.",
+      "Usage": [
+        ".wrongsong"
+      ],
+      "Submodule": "Music",
+      "Module": "Music",
+      "Options": null,
+      "Requirements": [
+        "No Public Bot"
+      ]
+    },
+    {
+      "Aliases": [
         ".playlists",
         ".pls"
       ],
@@ -5171,7 +5592,7 @@
       ],
       "Description": "Toggles whether a module can be used on any server.",
       "Usage": [
-        ".globalmodule nsfw"
+        ".globalmodule Gambling"
       ],
       "Submodule": "GlobalPermissionCommands",
       "Module": "Permissions",
@@ -5188,6 +5609,38 @@
       "Description": "Toggles whether a command can be used on any server.",
       "Usage": [
         ".globalcommand .stats"
+      ],
+      "Submodule": "GlobalPermissionCommands",
+      "Module": "Permissions",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
+        ".dmmodule",
+        ".dmmod"
+      ],
+      "Description": "Toggles whether a module can be used in DMs.",
+      "Usage": [
+        ".dmmodule Gambling"
+      ],
+      "Submodule": "GlobalPermissionCommands",
+      "Module": "Permissions",
+      "Options": null,
+      "Requirements": [
+        "Bot Owner Only"
+      ]
+    },
+    {
+      "Aliases": [
+        ".dmcommand",
+        ".dmcmd"
+      ],
+      "Description": "Toggles whether a command can be used in DMs.",
+      "Usage": [
+        ".dmcommand .stats"
       ],
       "Submodule": "GlobalPermissionCommands",
       "Module": "Permissions",
@@ -5459,6 +5912,19 @@
       "Description": "Shows a mentioned person's avatar.",
       "Usage": [
         ".avatar @Someone"
+      ],
+      "Submodule": "Searches",
+      "Module": "Searches",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".banner"
+      ],
+      "Description": "Shows a mentioned person's banner.",
+      "Usage": [
+        ".banner @Someone"
       ],
       "Submodule": "Searches",
       "Module": "Searches",
@@ -6054,6 +6520,24 @@
     },
     {
       "Aliases": [
+        ".translateflags",
+        ".trfl",
+        ".fltr",
+        ".transflags"
+      ],
+      "Description": "Toggles translate flags on the current channel.\nReacting with a country flag will translate the message to that country's language.",
+      "Usage": [
+        ".translateflags"
+      ],
+      "Submodule": "TranslateCommands",
+      "Module": "Searches",
+      "Options": null,
+      "Requirements": [
+        "ManageChannels Channel Permission"
+      ]
+    },
+    {
+      "Aliases": [
         ".xkcd"
       ],
       "Description": "Shows a XKCD comic. Specify no parameters to retrieve a random one. Number parameter will retrieve a specific comic, and \"latest\" will get the latest one.",
@@ -6402,6 +6886,20 @@
     },
     {
       "Aliases": [
+        ".snipe",
+        ".sn"
+      ],
+      "Description": "Snipe the message you replied to with this command.\nOtherwise, if you don't reply to a message, it will snipe the last message sent in the channel (out of the last few messages) which has text or an image.",
+      "Usage": [
+        ".snipe"
+      ],
+      "Submodule": "Utility",
+      "Module": "Utility",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
         ".prompt"
       ],
       "Description": "Ask the bot to do something for you.\nThis will fall back to the chatbot service in case of an error.",
@@ -6605,6 +7103,74 @@
     },
     {
       "Aliases": [
+        ".sclr show",
+        ".sclr list",
+        ".sclr l"
+      ],
+      "Description": "Shows current Ok, Error and Pending colors for this server.",
+      "Usage": [
+        ".sclr show"
+      ],
+      "Submodule": "sclr",
+      "Module": "Utility",
+      "Options": null,
+      "Requirements": [
+        "ManageServer Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sclr ok",
+        ".sclr success"
+      ],
+      "Description": "Sets the Ok color for this server.",
+      "Usage": [
+        ".sclr ok #00ff00"
+      ],
+      "Submodule": "sclr",
+      "Module": "Utility",
+      "Options": null,
+      "Requirements": [
+        "ManageServer Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sclr pending",
+        ".sclr warn",
+        ".sclr warning",
+        ".sclr pend"
+      ],
+      "Description": "Sets the Pending/Warning color for this server.",
+      "Usage": [
+        ".sclr pending #ffff00"
+      ],
+      "Submodule": "sclr",
+      "Module": "Utility",
+      "Options": null,
+      "Requirements": [
+        "ManageServer Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
+        ".sclr error",
+        ".sclr fail",
+        ".sclr err"
+      ],
+      "Description": "Sets the Error color for this server.",
+      "Usage": [
+        ".sclr error #ff0000"
+      ],
+      "Submodule": "sclr",
+      "Module": "Utility",
+      "Options": null,
+      "Requirements": [
+        "ManageServer Server Permission"
+      ]
+    },
+    {
+      "Aliases": [
         ".serverinfo",
         ".sinfo"
       ],
@@ -6719,13 +7285,15 @@
     },
     {
       "Aliases": [
-        ".listquotes",
-        ".liqu"
+        ".quotelist",
+        ".qli",
+        ".quli",
+        ".qulist"
       ],
       "Description": "Lists all quotes on the server ordered alphabetically or by ID. 15 Per page.",
       "Usage": [
-        ".listquotes 3",
-        ".listquotes 3 id"
+        ".quotelist 3",
+        ".quotelist 3 id"
       ],
       "Submodule": "QuoteCommands",
       "Module": "Utility",
@@ -6735,7 +7303,10 @@
     {
       "Aliases": [
         ".quoteprint",
-        "..."
+        ".qp",
+        ".qup",
+        "...",
+        ".qprint"
       ],
       "Description": "Prints a random quote with a specified name.",
       "Usage": [
@@ -6749,7 +7320,9 @@
     {
       "Aliases": [
         ".quoteshow",
-        ".qshow"
+        ".qsh",
+        ".qshow",
+        ".qushow"
       ],
       "Description": "Shows information about a quote with the specified ID.",
       "Usage": [
@@ -6763,6 +7336,7 @@
     {
       "Aliases": [
         ".quotesearch",
+        ".qse",
         ".qsearch"
       ],
       "Description": "Shows a random quote given a search query. Partially matches in several ways: 1) Only content of any quote, 2) only by author, 3) keyword and content, 3) or keyword and author",
@@ -6782,7 +7356,7 @@
         ".quoteid",
         ".qid"
       ],
-      "Description": "Displays the quote with the specified ID number. Quote ID numbers can be found by typing `.liqu [num]` where `[num]` is a number of a page which contains 15 quotes.",
+      "Description": "-| Displays the quote with the specified ID number.",
       "Usage": [
         ".quoteid 123456"
       ],
@@ -6794,6 +7368,9 @@
     {
       "Aliases": [
         ".quoteadd",
+        ".qa",
+        ".qadd",
+        ".quadd",
         ".."
       ],
       "Description": "Adds a new quote with the specified name and message.",
@@ -6808,6 +7385,8 @@
     {
       "Aliases": [
         ".quoteedit",
+        ".qe",
+        ".que",
         ".qedit"
       ],
       "Description": "Edits a quote with the specified ID.",
@@ -6822,7 +7401,9 @@
     {
       "Aliases": [
         ".quotedelete",
-        ".qdel"
+        ".qd",
+        ".qdel",
+        ".qdelete"
       ],
       "Description": "Deletes a quote with the specified ID. You have to either have the Manage Messages permission or be the creator of the quote to delete it.",
       "Usage": [
@@ -6836,6 +7417,7 @@
     {
       "Aliases": [
         ".quotedeleteauthor",
+        ".qda",
         ".qdelauth"
       ],
       "Description": "Deletes all quotes by the specified author. If the author is not you, then ManageMessage server permission is required.",
@@ -6849,13 +7431,13 @@
     },
     {
       "Aliases": [
-        ".delallquotes",
-        ".daq",
-        ".delallq"
+        ".quotesdeleteall",
+        ".qdall",
+        ".qdeleteall"
       ],
-      "Description": "Deletes all quotes on a specified keyword.",
+      "Description": "Deletes all quotes with the specified keyword.",
       "Usage": [
-        ".delallquotes kek"
+        ".quotesdeleteall kek"
       ],
       "Submodule": "QuoteCommands",
       "Module": "Utility",
@@ -6867,6 +7449,7 @@
     {
       "Aliases": [
         ".quotesexport",
+        ".qex",
         ".qexport"
       ],
       "Description": "Exports quotes from the current server into a .yml file",
@@ -6883,6 +7466,8 @@
     {
       "Aliases": [
         ".quotesimport",
+        ".qim",
+        ".qimp",
         ".qimport"
       ],
       "Description": "Upload the file or send the raw .yml data with this command to import all quotes from the specified string or file into the current server.",
@@ -7188,6 +7773,21 @@
     },
     {
       "Aliases": [
+        ".todo uncomplete",
+        ".todo undone",
+        ".todo unfinish"
+      ],
+      "Description": "Marks a todo with the specified ID as not done.",
+      "Usage": [
+        ".todo uncomplete 4a"
+      ],
+      "Submodule": "todo",
+      "Module": "Utility",
+      "Options": null,
+      "Requirements": []
+    },
+    {
+      "Aliases": [
         ".todo delete",
         ".todo del",
         ".todo remove",
@@ -7320,21 +7920,6 @@
     },
     {
       "Aliases": [
-        ".xpnotify",
-        ".xpn"
-      ],
-      "Description": "Sets how the bot should notify you when you get a `server` or `global` level. This is a personal setting and affects only how you receive Global or Server level-up notifications. You can set `dm` (for the bot to send you a direct message), `channel` (to get notified in the channel you sent the last message in) or `none` to disable.",
-      "Usage": [
-        ".xpnotify global dm",
-        ".xpnotify server channel"
-      ],
-      "Submodule": "Xp",
-      "Module": "Xp",
-      "Options": null,
-      "Requirements": []
-    },
-    {
-      "Aliases": [
         ".xpexclude",
         ".xpex"
       ],
@@ -7393,6 +7978,21 @@
       "Module": "Xp",
       "Options": null,
       "Requirements": []
+    },
+    {
+      "Aliases": [
+        ".xplevelset"
+      ],
+      "Description": "Sets the level of the user you specify.",
+      "Usage": [
+        ".xplevelset 10 @User"
+      ],
+      "Submodule": "Xp",
+      "Module": "Xp",
+      "Options": null,
+      "Requirements": [
+        "Administrator Server Permission"
+      ]
     },
     {
       "Aliases": [

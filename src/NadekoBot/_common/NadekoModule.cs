@@ -19,7 +19,6 @@ public abstract class NadekoModule : ModuleBase
     public INadekoInteractionService _inter { get; set; }
     public IReplacementService repSvc { get; set; }
     public IMessageSenderService _sender { get; set; }
-    public BotConfigService _bcs { get; set; }
 
     protected string prefix
         => _cmdHandler.GetPrefix(ctx.Guild);
@@ -27,8 +26,11 @@ public abstract class NadekoModule : ModuleBase
     protected ICommandContext ctx
         => Context;
 
+    protected EmbedBuilder CreateEmbed()
+        => _sender.CreateEmbed(ctx.Guild?.Id);
+    
     public ResponseBuilder Response()
-        => new ResponseBuilder(Strings, _bcs, (DiscordSocketClient)ctx.Client)
+        => new ResponseBuilder(Strings, _sender, (DiscordSocketClient)ctx.Client)
             .Context(ctx);
 
     protected override void BeforeExecute(CommandInfo command)
@@ -91,7 +93,7 @@ public abstract class NadekoModule : ModuleBase
 
                 if (validate is not null && !validate(arg.Content))
                     return Task.CompletedTask;
-                
+
                 if (userInputTask.TrySetResult(arg.Content))
                     userMsg.DeleteAfter(1);
 
@@ -99,6 +101,46 @@ public abstract class NadekoModule : ModuleBase
             });
             return Task.CompletedTask;
         }
+    }
+
+    protected async Task<bool> CheckRoleHierarchy(IGuildUser target)
+    {
+        var curUser = ((SocketGuild)ctx.Guild).CurrentUser;
+        var ownerId = ctx.Guild.OwnerId;
+        var modMaxRole = ((IGuildUser)ctx.User).GetRoles().Max(r => r.Position);
+        var targetMaxRole = target.GetRoles().Max(r => r.Position);
+        var botMaxRole = curUser.GetRoles().Max(r => r.Position);
+        // bot can't punish a user who is higher in the hierarchy. Discord will return 403
+        // moderator can be owner, in which case role hierarchy doesn't matter
+        // otherwise, moderator has to have a higher role
+        if (botMaxRole <= targetMaxRole
+            || (ctx.User.Id != ownerId && targetMaxRole >= modMaxRole)
+            || target.Id == ownerId)
+        {
+            await Response().Error(strs.hierarchy).SendAsync();
+            return false;
+        }
+
+        return true;
+    }
+
+    protected async Task<bool> CheckRoleHierarchy(IRole role)
+    {
+        var botUser = ((SocketGuild)ctx.Guild).CurrentUser;
+        var ownerId = ctx.Guild.OwnerId;
+        var modMaxRole = ((IGuildUser)ctx.User).GetRoles().Max(r => r.Position);
+        var botMaxRole = botUser.GetRoles().Max(r => r.Position);
+
+        // role must be lower than the bot role
+        // and the mod must have a higher role
+        if (botMaxRole <= role.Position
+            || (ctx.User.Id != ownerId && role.Position >= modMaxRole))
+        {
+            await Response().Error(strs.hierarchy).SendAsync();
+            return false;
+        }
+
+        return true;
     }
 }
 

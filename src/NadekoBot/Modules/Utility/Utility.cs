@@ -131,12 +131,12 @@ public partial class Utility : NadekoModule
               {
                   if (names.Count == 0)
                   {
-                      return _sender.CreateEmbed()
+                      return CreateEmbed()
                                     .WithErrorColor()
                                     .WithDescription(GetText(strs.nobody_playing_game));
                   }
 
-                  var eb = _sender.CreateEmbed()
+                  var eb = CreateEmbed()
                                   .WithOkColor();
 
                   var users = names.Join('\n');
@@ -180,13 +180,13 @@ public partial class Utility : NadekoModule
               .Page((pageUsers, _) =>
               {
                   if (pageUsers.Count == 0)
-                      return _sender.CreateEmbed().WithOkColor().WithDescription(GetText(strs.no_user_on_this_page));
+                      return CreateEmbed().WithOkColor().WithDescription(GetText(strs.no_user_on_this_page));
 
                   var roleName = Format.Bold(role?.Name ?? "No Role");
 
-                  return _sender.CreateEmbed()
+                  return CreateEmbed()
                                 .WithOkColor()
-                                .WithTitle(GetText(strs.inrole_list(roleName, roleUsers.Count)))
+                                .WithTitle(GetText(strs.inrole_list(role?.GetIconUrl() + roleName, roleUsers.Count)))
                                 .WithDescription(string.Join("\n", pageUsers));
               })
               .SendAsync();
@@ -327,7 +327,7 @@ public partial class Utility : NadekoModule
         if (string.IsNullOrWhiteSpace(ownerIds))
             ownerIds = "-";
 
-        var eb = _sender.CreateEmbed()
+        var eb = CreateEmbed()
                         .WithOkColor()
                         .WithAuthor($"NadekoBot v{StatsService.BotVersion}",
                             "https://nadeko-pictures.nyc3.digitaloceanspaces.com/other/avatar.png",
@@ -583,12 +583,12 @@ public partial class Utility : NadekoModule
               {
                   if (!guilds.Any())
                   {
-                      return _sender.CreateEmbed()
+                      return CreateEmbed()
                                     .WithDescription(GetText(strs.listservers_none))
                                     .WithErrorColor();
                   }
 
-                  var embed = _sender.CreateEmbed()
+                  var embed = CreateEmbed()
                                      .WithOkColor();
                   foreach (var guild in guilds)
                       embed.AddField(guild.Name, GetText(strs.listservers(guild.Id, guild.MemberCount, guild.OwnerId)));
@@ -770,7 +770,7 @@ public partial class Utility : NadekoModule
             var output = result.ReturnValue?.ToString();
             if (!string.IsNullOrWhiteSpace(output))
             {
-                var eb = _sender.CreateEmbed()
+                var eb = CreateEmbed()
                                 .WithOkColor()
                                 .AddField("Code", scriptText)
                                 .AddField("Output", output.TrimTo(512)!);
@@ -782,5 +782,29 @@ public partial class Utility : NadekoModule
         {
             await Response().Error(ex.Message).SendAsync();
         }
+    }
+
+    [Cmd]
+    public async Task Snipe()
+    {
+        if (ctx.Message.ReferencedMessage is not { } msg)
+        {
+            var msgs = await ctx.Channel.GetMessagesAsync(ctx.Message, Direction.Before, 3).FlattenAsync();
+            msg = msgs.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Content) || (x.Attachments.FirstOrDefault()?.Width is not null)) as IUserMessage;
+
+            if (msg is null)
+                return;
+        }
+
+        var eb = CreateEmbed()
+                        .WithOkColor()
+                        .WithDescription(msg.Content)
+                        .WithAuthor(msg.Author)
+                        .WithTimestamp(msg.Timestamp)
+                        .WithImageUrl(msg.Attachments.FirstOrDefault()?.Url)
+                        .WithFooter(GetText(strs.sniped_by(ctx.User.ToString())), ctx.User.GetDisplayAvatarUrl());
+
+        ctx.Message.DeleteAfter(1);
+        await Response().Embed(eb).SendAsync();
     }
 }
