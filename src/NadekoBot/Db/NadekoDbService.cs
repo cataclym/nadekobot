@@ -2,7 +2,7 @@
 using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Nadeko.Bot.Db;
+namespace NadekoBot.Db;
 
 public sealed class NadekoDbService : DbService 
 {
@@ -44,8 +44,6 @@ public sealed class NadekoDbService : DbService
             case "postgres":
             case "pgsql":
                 return new PostgreSqlContext(connString);
-            case "mysql":
-                return new MysqlContext(connString);
             case "sqlite":
                 return new SqliteContext(connString);
             default:

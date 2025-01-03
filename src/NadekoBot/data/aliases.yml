@@ -1,6 +1,6 @@
 h:
-  - help
   - h
+  - help
 gencmdlist:
   - gencmdlist
 donate:
@@ -30,6 +30,8 @@ greettest:
   - greettest
 greetdmtest:
   - greetdmtest
+boosttest:
+  - boosttest
 byetest:
   - byetest
 boost:
@@ -37,7 +39,7 @@ boost:
 boostmsg:
   - boostmsg
 boostdel:
-  - boostde
+  - boostdel
 logserver:
   - logserver
 logignore:
@@ -185,6 +187,9 @@ threaddelete:
 prune:
   - prune
   - clear
+prunecancel:
+  - prunecancel
+  - prunec
 die:
   - die
 setname:
@@ -192,10 +197,19 @@ setname:
   - newnm
 setnick:
   - setnick
+setserverbanner:
+  - setserverbanner
+  - serverbanner
+setservericon:
+  - setservericon
+  - servericon
 setavatar:
   - setavatar
   - setav
-setgame:
+setbanner:
+  - setbanner
+setactivity:
+  - setactivity
   - setgame
 send:
   - send
@@ -329,25 +343,56 @@ allcmdcooldowns:
   - cmdcds
 quoteadd:
   - quoteadd
+  - qa
+  - qadd
+  - quadd
   - .
+quoteedit:
+  - quoteedit
+  - qe
+  - que
+  - qedit
 quoteprint:
   - quoteprint
+  - qp
+  - qup
   - ..
+  - qprint
 quoteshow:
   - quoteshow
+  - qsh
   - qshow
+  - qushow
 quotesearch:
   - quotesearch
+  - qse
   - qsearch
 quoteid:
   - quoteid
   - qid
 quotedelete:
   - quotedelete
+  - qd
   - qdel
+  - qdelete
 quotedeleteauthor:
   - quotedeleteauthor
+  - qda
   - qdelauth
+quotesexport:
+  - quotesexport
+  - qex
+  - qexport
+quotesimport:
+  - quotesimport
+  - qim
+  - qimp
+  - qimport
+quotelist:
+  - quotelist
+  - qli
+  - quli
+  - qulist
 draw:
   - draw
 drawnew:
@@ -416,8 +461,6 @@ typestop:
   - typestop
 typeadd:
   - typeadd
-pollend:
-  - pollend
 pick:
   - pick
 plant:
@@ -432,8 +475,6 @@ choose:
   - choose
 rps:
   - rps
-linux:
-  - linux
 next:
   - next
   - n
@@ -461,9 +502,6 @@ queuesearch:
   - queuesearch
   - qs
   - yqs
-soundcloudqueue:
-  - soundcloudqueue
-  - sq
 listqueue:
   - listqueue
   - lq
@@ -477,9 +515,6 @@ volume:
 playlist:
   - playlist
   - pl
-soundcloudpl:
-  - soundcloudpl
-  - scpl
 localplaylist:
   - localplaylist
   - lopl
@@ -511,6 +546,8 @@ queuerepeat:
 queueautoplay:
   - queueautoplay
   - qap
+queuefairplay:
+  - qfp
 save:
   - save
 streamrole:
@@ -579,10 +616,6 @@ pokemon:
 pokemonability:
   - pokemonability
   - pokeab
-memelist:
-  - memelist
-memegen:
-  - memegen
 weather:
   - weather
   - we
@@ -647,8 +680,6 @@ chucknorris:
 magicitem:
   - magicitem
   - mi
-safebooru:
-  - safebooru
 wiki:
   - wiki
   - wikipedia
@@ -658,25 +689,6 @@ color:
 avatar:
   - avatar
   - av
-hentai:
-  - hentai
-danbooru:
-  - danbooru
-derpibooru:
-  - derpibooru
-  - derpi
-gelbooru:
-  - gelbooru
-rule34:
-  - rule34
-e621:
-  - e621
-boobs:
-  - boobs
-butts:
-  - butts
-  - ass
-  - butt
 translate:
   - translate
   - trans
@@ -687,10 +699,10 @@ guide:
   - readme
 calcops:
   - calcops
-delallquotes:
-  - delallquotes
-  - daq
-  - delallq
+quotesdeleteall:
+  - quotesdeleteall
+  - qdall
+  - qdeleteall
 greetdmmsg:
   - greetdmmsg
 cash:
@@ -757,10 +769,6 @@ chatmute:
   - chatmute
 voicemute:
   - voicemute
-konachan:
-  - konachan
-sankaku:
-  - sankaku
 muterole:
   - muterole
   - setmuterole
@@ -774,13 +782,6 @@ unmute:
   - unmute
 xkcd:
   - xkcd
-placelist:
-  - placelist
-place:
-  - place
-poll:
-  - poll
-  - ppoll
 autotranslang:
   - autotranslang
   - atl
@@ -788,27 +789,21 @@ autotranslate:
   - autotranslate
   - at
   - autotrans
-listquotes:
-  - listquotes
-  - liqu
 typedel:
   - typedel
 typelist:
   - typelist
-listservers:
+serverlist:
   - listservers
-hentaibomb:
-  - hentaibomb
 cleverbot:
   - cleverbot
+  - chatbot
   - chatgpt
 shorten:
   - shorten
 wikia:
   - wikia
   - fandom
-yandere:
-  - yandere
 magicthegathering:
   - magicthegathering
   - mtg
@@ -831,10 +826,6 @@ autodisconnect:
 define:
   - define
   - def
-activity:
-  - activity
-autohentai:
-  - autohentai
 setstatus:
   - setstatus
 invitecreate:
@@ -848,8 +839,6 @@ invitedelete:
   - invitedelete
   - invrm
   - invdel
-pollstats:
-  - pollstats
 antilist:
   - antilist
   - antilst
@@ -886,8 +875,6 @@ divorce:
 waifuinfo:
   - waifuinfo
   - waifustats
-mal:
-  - mal
 setmusicchannel:
   - setmusicchannel
   - smch
@@ -919,8 +906,6 @@ languageset:
 languageslist:
   - languageslist
   - langli
-rategirl:
-  - rategirl
 aliaslist:
   - aliaslist
   - cmdmaplist
@@ -980,6 +965,10 @@ warnexpire:
 warnclear:
   - warnclear
   - warnc
+warndelete:
+  - warndelete
+  - warnrm
+  - warnd
 warnpunishlist:
   - warnpunishlist
   - warnpl
@@ -1055,9 +1044,6 @@ configreload:
   - creload
   - confreload
   - crel
-nsfwtagblacklist:
-  - nsfwtagbl
-  - nsfwtbl
 experience:
   - experience
   - xp
@@ -1137,10 +1123,8 @@ clubleaderboard:
   - clubs
 clubadmin:
   - clubadmin
-autoboobs:
-  - autoboobs
-autobutts:
-  - autobutts
+clubrename:
+  - clubrename
 eightball:
   - eightball
   - 8ball
@@ -1163,6 +1147,8 @@ sqlexec:
   - sqlexec
 sqlselect:
   - sqlselect
+sqlselectcsv:
+  - sqlselectcsv
 deletewaifus:
   - deletewaifus
 deletewaifu:
@@ -1180,10 +1166,6 @@ discordpermoverridelist:
   - dpoli
 discordpermoverridereset:
   - dpor
-rafflecur:
-  - rafflecur
-rip:
-  - rip
 timelyset:
   - timelyset
 timely:
@@ -1200,30 +1182,19 @@ massban:
   - massban
 masskill:
   - masskill
-pathofexile:
-  - pathofexile
-  - poe
-pathofexileleagues:
-  - pathofexileleagues
-  - poel
-pathofexilecurrency:
-  - pathofexilecurrency
-  - poec
-rollduel:
-  - rollduel
-reactionroleadd:
-  - reactionroleadd
+reroadd:
+  - reroadd
   - reroa
-reactionroleslist:
-  - reactionroleslist
+rerolist:
+  - rerolist
   - reroli
-reactionrolesremove:
-  - reactionrolesremove
+reroremove:
+  - reroremove
   - rerorm
-reactionrolesdeleteall:
+rerodeleteall:
   - rerodeleteall
   - rerodela
-reactionrolestransfer:
+rerotransfer:
   - rerotransfer
   - rerot
 blackjack:
@@ -1239,6 +1210,8 @@ xpreset:
   - xpreset
 bible:
   - bible
+quran:
+  - quran
 edit:
   - edit
 delete:
@@ -1247,12 +1220,9 @@ delete:
 roleid:
   - roleid
   - rid
-nsfwtoggle:
+agerestricttoggle:
   - nsfwtoggle
-  - nsfw
-  - nsfwtgl
-economy:
-  - economy
+  - artoggle
 purgeuser:
   - purgeuser
 imageonlychannel:
@@ -1265,12 +1235,6 @@ linkonlychannel:
   - linkssonly
 coordreload:
   - coordreload
-quotesexport:
-  - quotesexport
-  - qexport
-quotesimport:
-  - quotesimport
-  - qimport
 showembed:
   - showembed
 # NadekoExpressions
@@ -1392,3 +1356,72 @@ doas:
   - execas
 cacheusers:
   - cacheusers
+giveawaystart:
+  - start
+giveawayend:
+  - end
+giveawaycancel:
+  - cancel
+giveawayreroll:
+  - reroll
+giveawaylist:
+  - list
+# todos
+todoadd:
+  - add
+  - a
+todolist:
+  - list
+  - ls
+tododelete:
+  - delete
+  - del
+  - remove
+  - rm
+todoclear:
+  - clear
+  - clr
+  - cls
+todocomplete:
+  - complete
+  - done
+  - finish
+todoarchiveadd:
+  - add
+  - create
+  - new
+todoarchiveshow:
+  - show
+todoarchivelist:
+  - list
+  - ls
+todoarchivedelete:
+  - delete
+  - del
+  - remove
+  - rm
+todoedit:
+  - edit
+  - change
+todoshow:
+  - show
+  - sh
+  - see
+stickyroles:
+  - stickyroles
+cleanupguilddata:
+  - cleanupguilddata
+prompt:
+  - prompt
+honeypot:
+  - honeypot
+coins:
+  - coins
+  - crypto
+  - cryptos
+afk:
+  - afk
+keep:
+  - keep
+leaveunkeptservers:
+  - leaveunkeptservers

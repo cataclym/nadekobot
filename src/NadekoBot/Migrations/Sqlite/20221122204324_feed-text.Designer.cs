@@ -4,17 +4,16 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Nadeko.Bot.Db;
+using NadekoBot.Services.Database;
 
 #nullable disable
 
-namespace NadekoBot.Db.Migrations.Sqlite
+namespace NadekoBot.Migrations
 {
     [DbContext(typeof(SqliteContext))]
     [Migration("20221122204324_feed-text")]
-    partial class init_v5
+    partial class feedtext
     {
-        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
@@ -804,6 +803,28 @@ namespace NadekoBot.Db.Migrations.Sqlite
                     b.ToTable("FilterChannelId");
                 });
 
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.FilteredWord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("GuildConfigId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Word")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildConfigId");
+
+                    b.ToTable("FilteredWord");
+                });
+
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FilterLinksChannelId", b =>
                 {
                     b.Property<int>("Id")
@@ -848,50 +869,6 @@ namespace NadekoBot.Db.Migrations.Sqlite
                     b.ToTable("FilterWordsChannelId");
                 });
 
-            modelBuilder.Entity("NadekoBot.Services.Database.Models.FilteredWord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("DateAdded")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("GuildConfigId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Word")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GuildConfigId");
-
-                    b.ToTable("FilteredWord");
-                });
-
-            modelBuilder.Entity("NadekoBot.Services.Database.Models.GCChannelId", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<ulong>("ChannelId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("DateAdded")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("GuildConfigId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GuildConfigId");
-
-                    b.ToTable("GCChannelId");
-                });
-
             modelBuilder.Entity("NadekoBot.Services.Database.Models.GamblingStats", b =>
                 {
                     b.Property<int>("Id")
@@ -916,6 +893,28 @@ namespace NadekoBot.Db.Migrations.Sqlite
                         .IsUnique();
 
                     b.ToTable("GamblingStats");
+                });
+
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.GCChannelId", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("GuildConfigId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildConfigId");
+
+                    b.ToTable("GCChannelId");
                 });
 
             modelBuilder.Entity("NadekoBot.Services.Database.Models.GroupName", b =>
@@ -2516,6 +2515,13 @@ namespace NadekoBot.Db.Migrations.Sqlite
                         .HasForeignKey("GuildConfigId");
                 });
 
+            modelBuilder.Entity("NadekoBot.Services.Database.Models.FilteredWord", b =>
+                {
+                    b.HasOne("NadekoBot.Services.Database.Models.GuildConfig", null)
+                        .WithMany("FilteredWords")
+                        .HasForeignKey("GuildConfigId");
+                });
+
             modelBuilder.Entity("NadekoBot.Services.Database.Models.FilterLinksChannelId", b =>
                 {
                     b.HasOne("NadekoBot.Services.Database.Models.GuildConfig", null)
@@ -2527,13 +2533,6 @@ namespace NadekoBot.Db.Migrations.Sqlite
                 {
                     b.HasOne("NadekoBot.Services.Database.Models.GuildConfig", null)
                         .WithMany("FilterWordsChannelIds")
-                        .HasForeignKey("GuildConfigId");
-                });
-
-            modelBuilder.Entity("NadekoBot.Services.Database.Models.FilteredWord", b =>
-                {
-                    b.HasOne("NadekoBot.Services.Database.Models.GuildConfig", null)
-                        .WithMany("FilteredWords")
                         .HasForeignKey("GuildConfigId");
                 });
 

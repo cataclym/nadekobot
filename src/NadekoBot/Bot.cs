@@ -1,24 +1,11 @@
 #nullable disable
+using DryIoc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Nadeko.Bot.Db;
 using NadekoBot.Common.Configs;
 using NadekoBot.Common.ModuleBehaviors;
-using NadekoBot.Db;
-using NadekoBot.Modules.Administration;
-using NadekoBot.Modules.Gambling;
-using NadekoBot.Modules.Help;
-using NadekoBot.Modules.Music;
-using NadekoBot.Modules.NadekoExpressions;
-using NadekoBot.Modules.Patronage;
-using NadekoBot.Modules.Permissions;
-using NadekoBot.Modules.Searches;
-using NadekoBot.Modules.Utility;
-using NadekoBot.Modules.Xp;
-
-using Nadeko.Bot.Db.Models;
-using Ninject;
-using Ninject.Planning;
+using NadekoBot.Db.Models;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Reflection;
@@ -33,12 +20,12 @@ public sealed class Bot : IBot
     public DiscordSocketClient Client { get; }
     public IReadOnlyCollection<GuildConfig> AllGuildConfigs { get; private set; }
 
-    private IKernel Services { get; set; }
+    private IContainer Services { get; set; }
 
     public bool IsReady { get; private set; }
     public int ShardId { get; set; }
 
-    private readonly IBotCredentials _creds;
+    private readonly IBotCreds _creds;
     private readonly CommandService _commandService;
     private readonly DbService _db;
 
@@ -49,12 +36,14 @@ public sealed class Bot : IBot
 
     public Bot(int shardId, int? totalShards, string credPath = null)
     {
-        if (shardId < 0)
-            throw new ArgumentOutOfRangeException(nameof(shardId));
+        ArgumentOutOfRangeException.ThrowIfLessThan(shardId, 0);
 
         ShardId = shardId;
         _credsProvider = new BotCredsProvider(totalShards, credPath);
         _creds = _credsProvider.GetCreds();
+
+        LogSetup.SetupLogger(shardId, _creds);
+        Log.Information("Pid: {ProcessId}", Environment.ProcessId);
 
         _db = new NadekoDbService(_credsProvider);
 
@@ -95,45 +84,41 @@ public sealed class Bot : IBot
         // _interactionService = new(Client.Rest);
 
         Client.Log += Client_Log;
-        _loadedAssemblies = new[]
-        {
-            typeof(Bot).Assembly, // bot
-            typeof(Creds).Assembly, // bot.common
-
-            // modules
-            typeof(NadekoExpressions).Assembly, typeof(Administration).Assembly, typeof(Gambling).Assembly,
-            typeof(Help).Assembly, typeof(Music).Assembly, typeof(Patronage).Assembly, typeof(Permissions).Assembly,
-            typeof(Searches).Assembly, typeof(Utility).Assembly, typeof(Xp).Assembly,
-        };
+        _loadedAssemblies =
+        [
+            typeof(Bot).Assembly // bot
+        ];
     }
 
 
     public IReadOnlyList<ulong> GetCurrentGuildIds()
-        => Client.Guilds.Select(x => x.Id).ToList();
+        => Client.Guilds.Select(x => x.Id).ToList().AsReadOnly();
 
-    private void AddServices()
+    private async Task AddServices()
     {
-        var startingGuildIdList = GetCurrentGuildIds();
-        var sw = Stopwatch.StartNew();
+        var startingGuildIdList = GetCurrentGuildIds().ToList();
+        var startTime = Stopwatch.GetTimestamp();
         var bot = Client.CurrentUser;
 
-        using (var uow = _db.GetDbContext())
+        await using (var uow = _db.GetDbContext())
         {
+            AllGuildConfigs = await uow.GuildConfigs.GetAllGuildConfigs(startingGuildIdList);
             uow.EnsureUserCreated(bot.Id, bot.Username, bot.Discriminator, bot.AvatarId);
-            AllGuildConfigs = uow.Set<GuildConfig>().GetAllGuildConfigs(startingGuildIdList).ToImmutableArray();
         }
 
-        var svcs = new StandardKernel(new NinjectSettings()
-        {
-            ThrowOnGetServiceNotFound = true,
-            ActivationCacheDisabled = true,
-        });
+        // var svcs = new StandardKernel(new NinjectSettings()
+        // {
+        //     // ThrowOnGetServiceNotFound = true,
+        //     ActivationCacheDisabled = true,
+        // });
+
+        var svcs = new Container();
 
         // this is required in order for medusa unloading to work
-        svcs.Components.Remove<IPlanner, Planner>();
-        svcs.Components.Add<IPlanner, RemovablePlanner>();
+        // svcs.Components.Remove<IPlanner, Planner>();
+        // svcs.Components.Add<IPlanner, RemovablePlanner>();
 
-        svcs.AddSingleton<IBotCredentials, IBotCredentials>(_ => _credsProvider.GetCreds());
+        svcs.AddSingleton<IBotCreds>(_ => _credsProvider.GetCreds());
         svcs.AddSingleton<DbService, DbService>(_db);
         svcs.AddSingleton<IBotCredsProvider>(_credsProvider);
         svcs.AddSingleton<DiscordSocketClient>(Client);
@@ -145,12 +130,12 @@ public sealed class Bot : IBot
         svcs.AddSingleton<IConfigSeria, YamlSeria>();
         svcs.AddSingleton<IMemoryCache, MemoryCache>(new MemoryCache(new MemoryCacheOptions()));
         svcs.AddSingleton<IBehaviorHandler, BehaviorHandler>();
+        svcs.AddSingleton<ILocalization, Localization>();
 
 
         foreach (var a in _loadedAssemblies)
         {
             svcs.AddConfigServices(a)
-                .AddConfigMigrators(a)
                 .AddLifetimeServices(a);
         }
 
@@ -175,29 +160,18 @@ public sealed class Bot : IBot
         Services = svcs;
         Services.GetRequiredService<IBehaviorHandler>().Initialize();
 
-        if (Client.ShardId == 0)
-            ApplyConfigMigrations();
-
         foreach (var a in _loadedAssemblies)
         {
             LoadTypeReaders(a);
         }
 
-        sw.Stop();
-        Log.Information("All services loaded in {ServiceLoadTime:F2}s", sw.Elapsed.TotalSeconds);
-    }
-
-    private void ApplyConfigMigrations()
-    {
-        // execute all migrators
-        var migrators = Services.GetServices<IConfigMigrator>();
-        foreach (var migrator in migrators)
-            migrator.EnsureMigrated();
+        Log.Information("All services loaded in {ServiceLoadTime:F2}s",
+            Stopwatch.GetElapsedTime(startTime).TotalSeconds);
     }
 
     private void LoadTypeReaders(Assembly assembly)
     {
-        var filteredTypes = assembly.GetTypes()
+        var filteredTypes = assembly.GetExportedTypes()
                                     .Where(x => x.IsSubclassOf(typeof(TypeReader))
                                                 && x.BaseType?.GetGenericArguments().Length > 0
                                                 && !x.IsAbstract);
@@ -289,14 +263,14 @@ public sealed class Bot : IBot
         if (ShardId == 0)
             await _db.SetupAsync();
 
-        var sw = Stopwatch.StartNew();
+        var startTime = Stopwatch.GetTimestamp();
 
         await LoginAsync(_creds.Token);
-        
+
         Log.Information("Shard {ShardId} loading services...", Client.ShardId);
         try
         {
-            AddServices();
+            await AddServices();
         }
         catch (Exception ex)
         {
@@ -304,8 +278,9 @@ public sealed class Bot : IBot
             Helpers.ReadErrorAndExit(9);
         }
 
-        sw.Stop();
-        Log.Information("Shard {ShardId} connected in {Elapsed:F2}s", Client.ShardId, sw.Elapsed.TotalSeconds);
+        Log.Information("Shard {ShardId} connected in {Elapsed:F2}s",
+            Client.ShardId,
+            Stopwatch.GetElapsedTime(startTime).TotalSeconds);
         var commandHandler = Services.GetRequiredService<CommandHandler>();
 
         // start handling messages received in commandhandler
@@ -370,26 +345,26 @@ public sealed class Bot : IBot
         if (arg.Exception is { InnerException: WebSocketClosedException { CloseCode: 4014 } })
         {
             Log.Error("""
-                Login failed.
-                
-                *** Please enable privileged intents ***
-                
-                Certain Nadeko features require Discord's privileged gateway intents.
-                These include greeting and goodbye messages, as well as creating the Owner message channels for DM forwarding.
-                
-                How to enable privileged intents:
-                1. Head over to the Discord Developer Portal https://discord.com/developers/applications/
-                2. Select your Application.
-                3. Click on `Bot` in the left side navigation panel, and scroll down to the intents section.
-                4. Enable all intents.
-                5. Restart your bot.
-                
-                Read this only if your bot is in 100 or more servers:
-                
-                You'll need to apply to use the intents with Discord, but for small selfhosts, all that is required is enabling the intents in the developer portal.
-                Yes, this is a new thing from Discord, as of October 2020. No, there's nothing we can do about it. Yes, we're aware it worked before.
-                While waiting for your bot to be accepted, you can change the 'usePrivilegedIntents' inside your creds.yml to 'false', although this will break many of the nadeko's features
-                """);
+                      Login failed.
+
+                      *** Please enable privileged intents ***
+
+                      Certain Nadeko features require Discord's privileged gateway intents.
+                      These include greeting and goodbye messages, as well as creating the Owner message channels for DM forwarding.
+
+                      How to enable privileged intents:
+                      1. Head over to the Discord Developer Portal https://discord.com/developers/applications/
+                      2. Select your Application.
+                      3. Click on `Bot` in the left side navigation panel, and scroll down to the intents section.
+                      4. Enable all intents.
+                      5. Restart your bot.
+
+                      Read this only if your bot is in 100 or more servers:
+
+                      You'll need to apply to use the intents with Discord, but for small selfhosts, all that is required is enabling the intents in the developer portal.
+                      Yes, this is a new thing from Discord, as of October 2020. No, there's nothing we can do about it. Yes, we're aware it worked before.
+                      While waiting for your bot to be accepted, you can change the 'usePrivilegedIntents' inside your creds.yml to 'false', although this will break many of the nadeko's features
+                      """);
             return Task.CompletedTask;
         }
 

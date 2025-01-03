@@ -1,11 +1,10 @@
 ﻿using Discord;
-using Nadeko.Snake;
 
-namespace NadekoBot;
+namespace NadekoBot.Medusa;
 
 public static class MedusaExtensions
 {
-    public static Task<IUserMessage> EmbedAsync(this IMessageChannel ch, IEmbedBuilder embed, string msg = "")
+    public static Task<IUserMessage> EmbedAsync(this IMessageChannel ch, EmbedBuilder embed, string msg = "")
         => ch.SendMessageAsync(msg,
             embed: embed.Build(),
             options: new()
@@ -14,24 +13,20 @@ public static class MedusaExtensions
             });
 
     // unlocalized
-    public static Task<IUserMessage> SendConfirmAsync(this IMessageChannel ch, AnyContext ctx, string msg)
-        => ch.EmbedAsync(ctx.Embed().WithOkColor().WithDescription(msg));
-
-    public static Task<IUserMessage> SendPendingAsync(this IMessageChannel ch, AnyContext ctx, string msg)
-        => ch.EmbedAsync(ctx.Embed().WithPendingColor().WithDescription(msg));
-
-    public static Task<IUserMessage> SendErrorAsync(this IMessageChannel ch, AnyContext ctx, string msg)
-        => ch.EmbedAsync(ctx.Embed().WithErrorColor().WithDescription(msg));
-
-    // unlocalized
     public static Task<IUserMessage> SendConfirmAsync(this AnyContext ctx, string msg)
-        => ctx.Channel.SendConfirmAsync(ctx, msg);
+        => ctx.Channel.EmbedAsync(new EmbedBuilder()
+                           .WithColor(0, 200, 0)
+                           .WithDescription(msg));
 
     public static Task<IUserMessage> SendPendingAsync(this AnyContext ctx, string msg)
-        => ctx.Channel.SendPendingAsync(ctx, msg);
+        => ctx.Channel.EmbedAsync(new EmbedBuilder()
+                           .WithColor(200, 200, 0)
+                           .WithDescription(msg));
 
     public static Task<IUserMessage> SendErrorAsync(this AnyContext ctx, string msg)
-        => ctx.Channel.SendErrorAsync(ctx, msg);
+        => ctx.Channel.EmbedAsync(new EmbedBuilder()
+                           .WithColor(200, 0, 0)
+                           .WithDescription(msg));
 
     // localized
     public static Task ConfirmAsync(this AnyContext ctx)
